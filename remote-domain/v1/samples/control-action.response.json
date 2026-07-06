@@ -1,0 +1,57 @@
+{
+  "protocolVersion": "remote-domain.v1",
+  "requestId": "88888888-8888-4888-8888-888888888888",
+  "operation": "control-action",
+  "result": {
+    "runtimeIdentity": "campaign-approver-42",
+    "projection": {
+      "runtimeMetadata": {
+        "domainId": "marketing-ops",
+        "lastAction": "control-action"
+      },
+      "lifecycleSchedule": [],
+      "inspectionSchedule": [],
+      "statusView": {
+        "lastControlAction": "broadcast-message"
+      },
+      "inspectionView": {
+        "controlActions": [
+          {
+            "actionId": "broadcast-message",
+            "message": "Branch outage drill is active."
+          }
+        ]
+      }
+    },
+    "controlAction": {
+      "actionId": "broadcast-message",
+      "targetScope": "AGENT",
+      "applied": true,
+      "affectedAgentIds": ["agent-42"]
+    },
+    "evidenceEvents": [
+      {
+        "eventType": "remote_domain_control_action_applied",
+        "source": "marketing-ops",
+        "severity": "INFO",
+        "payload": {
+          "actionId": "broadcast-message",
+          "message": "Branch outage drill is active."
+        }
+      }
+    ]
+  },
+  "nextState": {
+    "schemaVersion": "marketing-ops.state.v1",
+    "data": {
+      "controlActions": [
+        {
+          "actionId": "broadcast-message",
+          "message": "Branch outage drill is active.",
+          "appliedAtEpochMs": 1776175500000
+        }
+      ]
+    }
+  },
+  "warnings": []
+}

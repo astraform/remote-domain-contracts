@@ -1,0 +1,50 @@
+{
+  "protocolVersion": "remote-domain.v1",
+  "requestId": "88888888-8888-4888-8888-888888888888",
+  "operation": "control-action",
+  "idempotencyKey": "agent-42:control-action:operator-action-20260414-0001",
+  "sentAtEpochMs": 1776175500000,
+  "deadlineEpochMs": 1776175505000,
+  "host": {
+    "service": "agent-runtime",
+    "instanceId": "agent-runtime-7f9c5",
+    "platformVersion": "0.1.1"
+  },
+  "domain": {
+    "domainId": "marketing-ops"
+  },
+  "agent": {
+    "agentId": "agent-42",
+    "conversationId": "conv-42",
+    "runtimeIdentity": "campaign-approver-42",
+    "personaName": "Campaign Approver",
+    "agentType": "Operator",
+    "traits": ["risk-aware", "approval-gated"],
+    "interactionMode": "HYBRID"
+  },
+  "state": {
+    "schemaVersion": "marketing-ops.state.v1",
+    "data": {
+      "controlActions": []
+    }
+  },
+  "payload": {
+    "actionId": "broadcast-message",
+    "operationId": "operator-action-20260414-0001",
+    "target": {
+      "scope": "AGENT",
+      "agentIds": ["agent-42"]
+    },
+    "inputs": {
+      "message": "Branch outage drill is active.",
+      "severity": "INFO"
+    },
+    "requestedBy": "scenario-lab",
+    "reason": "Inject a domain-owned operator message during the simulation.",
+    "simulationTimeEpochMs": 1776175500000,
+    "evidenceContext": {
+      "runId": "run-20260414-001",
+      "cohortId": "cohort-marketing-ops-demo"
+    }
+  }
+}

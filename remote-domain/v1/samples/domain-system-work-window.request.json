@@ -1,0 +1,66 @@
+{
+  "protocolVersion": "remote-domain.v1",
+  "requestId": "66666666-6666-4666-8666-666666666666",
+  "operation": "domain-system-work-window",
+  "idempotencyKey": "agent-42:domain-system-work-window:1776171600000:1776258000000",
+  "sentAtEpochMs": 1776258000000,
+  "deadlineEpochMs": 1776258005000,
+  "host": {
+    "service": "agent-runtime",
+    "instanceId": "agent-runtime-7f9c5",
+    "platformVersion": "0.1.1"
+  },
+  "domain": {
+    "domainId": "marketing-ops"
+  },
+  "agent": {
+    "agentId": "agent-42",
+    "conversationId": "conv-42",
+    "runtimeIdentity": "campaign-approver-42",
+    "personaName": "Campaign Approver",
+    "agentType": "Operator",
+    "traits": ["risk-aware", "approval-gated"],
+    "interactionMode": "HYBRID"
+  },
+  "replay": {
+    "seed": 20260414,
+    "simulationStartEpochMs": 1776171600000,
+    "playback": {
+      "rate": 7200,
+      "paused": false
+    },
+    "deterministic": {
+      "enabled": true,
+      "resetStateOnClockRewind": true,
+      "strictClock": true
+    },
+    "contractVersion": 7,
+    "updatedAtEpochMs": 1776257999000
+  },
+  "state": {
+    "schemaVersion": "marketing-ops.state.v1",
+    "data": {
+      "openCampaigns": [
+        {
+          "campaignId": "cmp-901",
+          "slaDeadlineEpochMs": 1776254400000,
+          "status": "pending-review"
+        }
+      ],
+      "expiredSlaCount": 0
+    }
+  },
+  "payload": {
+    "timeWindow": {
+      "previousTimeEpochMs": 1776171600000,
+      "currentTimeEpochMs": 1776258000000
+    },
+    "workKinds": ["sla-expiry", "budget-refresh"],
+    "maxWorkItems": 100,
+    "executionMode": "EVALUATE_AND_EXECUTE",
+    "context": {
+      "runId": "sim-run-001",
+      "cohortId": "marketing-launch-cohort-001"
+    }
+  }
+}

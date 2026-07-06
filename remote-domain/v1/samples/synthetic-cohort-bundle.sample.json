@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "synthetic_cohort_bundle.v1",
+  "cohortId": "demo-balanced-100-100-0000000000",
+  "domainId": "demo-domain",
+  "recipe": {
+    "schemaVersion": "synthetic_cohort_recipe.v1",
+    "domainId": "demo-domain",
+    "recipeId": "demo-balanced-100",
+    "seed": "demo-balanced-100-seed-01",
+    "targetSize": 100,
+    "mode": "DETERMINISTIC",
+    "segmentMix": {
+      "everyday": 60,
+      "high-risk": 25,
+      "escalation": 15
+    }
+  },
+  "summary": {
+    "totalSubjects": 100,
+    "scheduledWorkEstimate": 240
+  },
+  "customers": [
+    {
+      "personaName": "Demo Subject EVER-0001",
+      "domainId": "demo-domain",
+      "segment": "everyday"
+    }
+  ],
+  "validation": {
+    "status": "valid",
+    "errors": [],
+    "warnings": []
+  },
+  "artifacts": {
+    "subjectsJson": "subjects.json",
+    "summaryCsv": "subjects.csv"
+  },
+  "generatedAt": "2026-05-04T00:00:00Z"
+}

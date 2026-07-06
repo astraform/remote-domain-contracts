@@ -1,0 +1,14 @@
+{
+  "protocolVersion": "remote-domain.v1",
+  "requestId": "66666666-6666-4666-8666-666666666666",
+  "operation": "execute-work",
+  "error": {
+    "code": "remote_state_rejected",
+    "category": "domain_rejected",
+    "message": "State schemaVersion marketing-ops.state.v0 is not supported by this domain service.",
+    "retryable": false,
+    "details": {
+      "expectedSchemaVersion": "marketing-ops.state.v1"
+    }
+  }
+}

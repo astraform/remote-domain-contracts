@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "domain_outcome_score.v1",
+  "status": "SCORED",
+  "recommendation": "WATCH",
+  "scorecardId": "demo.customer-impact.v1",
+  "label": "Customer impact scorecard",
+  "version": "0.1.0",
+  "supportLevel": "EVIDENCE_LINKED",
+  "selectedRule": {
+    "recommendation": "WATCH",
+    "reason": "Affected subjects exist and need human review before launch.",
+    "expression": "subjects.affectedCount > 0",
+    "evidenceRef": "events.jsonl",
+    "supportLevel": "EVIDENCE_LINKED"
+  },
+  "metrics": [
+    {
+      "metricId": "affectedSubjects",
+      "label": "Affected subjects",
+      "value": 12,
+      "resultType": "number",
+      "evidenceRef": "events.jsonl",
+      "supportLevel": "EVIDENCE_LINKED",
+      "expression": "subjects.affectedCount"
+    }
+  ],
+  "gates": [
+    {
+      "gateId": "noBlockingEvidenceGap",
+      "label": "No blocking evidence gap",
+      "passed": true,
+      "status": "PASS",
+      "evidenceRef": "manifest.json",
+      "supportLevel": "EVIDENCE_LINKED",
+      "expression": "evidence.blockingGapCount == 0"
+    }
+  ],
+  "evidenceRefs": ["events.jsonl", "manifest.json"],
+  "limitations": [
+    "Score is stress-test evidence under simulated assumptions, not a production forecast."
+  ]
+}

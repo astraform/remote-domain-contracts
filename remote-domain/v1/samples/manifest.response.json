@@ -1,0 +1,118 @@
+{
+  "protocolVersion": "remote-domain.v1",
+  "domain": {
+    "domainId": "marketing-ops",
+    "displayName": "Marketing Operations",
+    "description": "Campaign approval and scheduled marketing workflow simulation.",
+    "schemaVersion": "marketing-ops.state.v1"
+  },
+  "transport": {
+    "mode": "SYNCHRONOUS_HTTP_JSON",
+    "contentType": "application/vnd.astraform.remote-domain.v1+json"
+  },
+  "operations": {
+    "prepare": {
+      "method": "POST",
+      "path": "/api/remote-domain/v1/prepare",
+      "timeoutMs": 4000
+    },
+    "executeWork": {
+      "method": "POST",
+      "path": "/api/remote-domain/v1/execute-work",
+      "timeoutMs": 4000
+    },
+    "domainSystemWorkWindow": {
+      "method": "POST",
+      "path": "/api/remote-domain/v1/domain-system-work-window",
+      "timeoutMs": 5000
+    },
+    "controlAction": {
+      "method": "POST",
+      "path": "/api/remote-domain/v1/control-actions:execute",
+      "timeoutMs": 5000
+    },
+    "status": {
+      "method": "POST",
+      "path": "/api/remote-domain/v1/status",
+      "timeoutMs": 2000
+    },
+    "inspection": {
+      "method": "POST",
+      "path": "/api/remote-domain/v1/inspection",
+      "timeoutMs": 2000
+    },
+    "shutdown": {
+      "method": "POST",
+      "path": "/api/remote-domain/v1/shutdown",
+      "timeoutMs": 1000
+    }
+  },
+  "capabilities": {
+    "statusProjection": true,
+    "inspectionProjection": true,
+    "shutdownNotification": true,
+    "maxOpaqueStateBytes": 262144,
+    "supportedAgentTypes": ["Operator", "Policy"],
+    "supportedInteractionModes": ["SIMULATION", "HYBRID"],
+    "remoteProviderLanguage": "python",
+    "supportsInitialAccounts": false,
+    "supportsScheduledWork": true,
+    "scheduledWorkKinds": [
+      {
+        "kind": "campaign-review",
+        "label": "Campaign Review",
+        "description": "Review a queued campaign approval item."
+      }
+    ],
+    "supportsDomainSystemWorkWindow": true,
+    "domainSystemWorkKinds": [
+      {
+        "kind": "sla-expiry",
+        "label": "SLA Expiry",
+        "description": "Evaluate domain-owned SLA deadline expiry over a simulated time window."
+      },
+      {
+        "kind": "budget-refresh",
+        "label": "Budget Refresh",
+        "description": "Refresh domain-owned campaign budget state over a simulated time window."
+      }
+    ],
+    "supportsControlActions": true,
+    "controlActions": [
+      {
+        "actionId": "broadcast-message",
+        "label": "Broadcast message",
+        "description": "Apply a host-mediated operator message to selected simulated subjects.",
+        "category": "BROADCAST",
+        "supportedModes": ["CLOCK_DRIVEN_HYBRID"],
+        "targetScopes": ["AGENT", "SEGMENT", "COHORT", "RUN", "BROADCAST"],
+        "inputSchema": {
+          "type": "object",
+          "required": ["message"],
+          "properties": {
+            "message": { "type": "string" },
+            "severity": { "type": "string" }
+          }
+        },
+        "sideEffectLevel": "LOW",
+        "evidenceRequirements": ["domain evidence event", "updated opaque state"],
+        "limitations": ["The host must fan out broad target scopes; the domain applies one scoped action request at a time."]
+      }
+    ],
+    "tools": [
+      {
+        "name": "get_campaign_brief",
+        "description": "Retrieve the campaign brief from the remote domain.",
+        "inputSchema": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    ]
+  },
+  "uiProfile": {
+    "kind": "schema-form-v1",
+    "schemaVersion": "domain-ui-profile.v1",
+    "title": "Marketing Operations Setup"
+  }
+}

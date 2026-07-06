@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://astraform.ai/schema/remote-domain/v1/simulation-run-evidence.v1.schema.json",
+  "title": "Simulation Run Evidence Bundle v1",
+  "description": "Durable run evidence export manifest shared across cohort, Scenario Lab, and remote-domain runs.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "run", "files", "checksums"],
+  "properties": {
+    "schemaVersion": {
+      "const": "simulation_run_evidence.v1"
+    },
+    "run": {
+      "$ref": "#/$defs/run"
+    },
+    "files": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/fileRef"
+      }
+    },
+    "redactions": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "checksums": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "$defs": {
+    "run": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["runId", "status"],
+      "properties": {
+        "runId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parentRunId": {
+          "type": "string"
+        },
+        "domainId": {
+          "type": "string"
+        },
+        "cohortId": {
+          "type": "string"
+        },
+        "executionMode": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "startedAt": {
+          "type": "string"
+        },
+        "completedAt": {
+          "type": "string"
+        },
+        "simulatedDurationDays": {
+          "type": "number"
+        }
+      }
+    },
+    "fileRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "mediaType"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mediaType": {
+          "type": "string",
+          "minLength": 1
+        },
+        "schemaVersion": {
+          "type": "string"
+        },
+        "recordCount": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

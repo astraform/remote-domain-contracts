@@ -1,0 +1,28 @@
+{
+  "bundleId": "remote-domain.v1",
+  "version": "1.0.0",
+  "protocolVersion": "remote-domain.v1",
+  "mediaType": "application/vnd.astraform.remote-domain.v1+json",
+  "releaseArtifact": "remote-domain.v1.zip",
+  "canonicalSources": [
+    "remote-domain/v1/openapi/remote-domain.yaml",
+    "remote-domain/v1/schemas/remote-domain.schema.json",
+    "remote-domain/v1/schemas/*.v1.schema.json",
+    "remote-domain/v1/docs/remote-domain-protocol-v1.md"
+  ],
+  "partnerContents": [
+    "remote-domain/v1/README.md",
+    "remote-domain/v1/VERSION",
+    "remote-domain/v1/manifest.json",
+    "remote-domain/v1/openapi/remote-domain.yaml",
+    "remote-domain/v1/schemas/remote-domain.schema.json",
+    "remote-domain/v1/schemas/*.v1.schema.json",
+    "remote-domain/v1/docs/remote-domain-protocol-v1.md",
+    "remote-domain/v1/samples/*.json"
+  ],
+  "codeGeneration": {
+    "java": "openapi-generator-maven-plugin",
+    "python": "datamodel-code-generator",
+    "policy": "schemas are the source of truth; SDK helpers wrap generated models and do not redefine contract shape"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "protocolVersion": "remote-domain.v1",
+  "requestId": "33333333-3333-4333-8333-333333333333",
+  "operation": "status",
+  "result": {
+    "runtimeIdentity": "campaign-approver-42",
+    "projection": {
+      "runtimeMetadata": {
+        "domainId": "marketing-ops"
+      },
+      "statusView": {
+        "queueDepth": 0,
+        "completedApprovals": 1,
+        "lastDecision": "approved"
+      }
+    }
+  },
+  "warnings": []
+}

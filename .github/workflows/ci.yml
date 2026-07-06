@@ -1,0 +1,29 @@
+name: Contract CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v5
+
+      - name: Verify remote-domain contract
+        run: scripts/verify-remote-domain-contract.sh
+
+      - name: Package remote-domain contract
+        run: scripts/package-remote-domain-contract.sh

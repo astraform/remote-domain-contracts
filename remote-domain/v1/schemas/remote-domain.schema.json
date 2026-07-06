@@ -1,0 +1,686 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://astraform.ai/schema/remote-domain/v1/remote-domain.schema.json",
+  "title": "Remote Domain Protocol v1 Schemas",
+  "description": "JSON Schema bundle for the remote-domain.v1 wire contract.",
+  "$defs": {
+    "genericObject": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "warning": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message"],
+      "properties": {
+        "code": { "type": "string" },
+        "message": { "type": "string" },
+        "details": { "$ref": "#/$defs/genericObject" }
+      }
+    },
+    "operationDescriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "path"],
+      "properties": {
+        "method": { "enum": ["GET", "POST"] },
+        "path": { "type": "string" },
+        "timeoutMs": { "type": "integer" }
+      }
+    },
+    "manifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocolVersion", "domain", "transport", "operations", "capabilities"],
+      "properties": {
+        "protocolVersion": { "const": "remote-domain.v1" },
+        "domain": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["domainId", "displayName"],
+          "properties": {
+            "domainId": { "type": "string" },
+            "displayName": { "type": "string" },
+            "description": { "type": "string" },
+            "schemaVersion": { "type": "string" }
+          }
+        },
+        "transport": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "contentType"],
+          "properties": {
+            "mode": { "const": "SYNCHRONOUS_HTTP_JSON" },
+            "contentType": { "type": "string" }
+          }
+        },
+        "operations": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["prepare", "executeWork", "status", "inspection"],
+          "properties": {
+            "prepare": { "$ref": "#/$defs/operationDescriptor" },
+            "executeWork": { "$ref": "#/$defs/operationDescriptor" },
+            "domainSystemWorkWindow": { "$ref": "#/$defs/operationDescriptor" },
+            "controlAction": { "$ref": "#/$defs/operationDescriptor" },
+            "status": { "$ref": "#/$defs/operationDescriptor" },
+            "inspection": { "$ref": "#/$defs/operationDescriptor" },
+            "shutdown": { "$ref": "#/$defs/operationDescriptor" }
+          }
+        },
+        "capabilities": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "statusProjection",
+            "inspectionProjection",
+            "maxOpaqueStateBytes",
+            "supportedAgentTypes",
+            "supportedInteractionModes"
+          ],
+          "properties": {
+            "statusProjection": { "type": "boolean" },
+            "inspectionProjection": { "type": "boolean" },
+            "shutdownNotification": { "type": "boolean" },
+            "maxOpaqueStateBytes": { "type": "integer" },
+            "supportedAgentTypes": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "supportedInteractionModes": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "remoteProviderLanguage": { "type": "string" },
+            "supportsInitialAccounts": { "type": "boolean" },
+            "supportsScheduledWork": { "type": "boolean" },
+            "scheduledWorkKinds": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["kind", "label"],
+                "properties": {
+                  "kind": { "type": "string" },
+                  "label": { "type": "string" },
+                  "description": { "type": "string" },
+                  "fields": {
+                    "type": "array",
+                    "items": { "$ref": "#/$defs/genericObject" }
+                  }
+                }
+              }
+            },
+            "supportsDomainSystemWorkWindow": { "type": "boolean" },
+            "domainSystemWorkKinds": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["kind", "label"],
+                "properties": {
+                  "kind": { "type": "string" },
+                  "label": { "type": "string" },
+                  "description": { "type": "string" },
+                  "fields": {
+                    "type": "array",
+                    "items": { "$ref": "#/$defs/genericObject" }
+                  }
+                }
+              }
+            },
+            "supportsControlActions": { "type": "boolean" },
+            "controlActions": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/controlActionDescriptor" }
+            },
+            "tools": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["name"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "description": { "type": "string" },
+                  "inputSchema": { "$ref": "#/$defs/genericObject" }
+                }
+              }
+            }
+          }
+        },
+        "uiProfile": {
+          "$ref": "#/$defs/genericObject"
+        }
+      }
+    },
+    "controlActionDescriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actionId", "label", "category", "inputSchema"],
+      "properties": {
+        "actionId": { "type": "string" },
+        "label": { "type": "string" },
+        "description": { "type": "string" },
+        "category": { "enum": ["BROADCAST", "POLICY_CHANGE", "MARKET_EVENT", "INCIDENT", "CAPACITY", "CUSTOM"] },
+        "supportedModes": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "targetScopes": {
+          "type": "array",
+          "items": { "enum": ["AGENT", "SEGMENT", "COHORT", "RUN", "BROADCAST"] }
+        },
+        "inputSchema": { "$ref": "#/$defs/genericObject" },
+        "uiSchema": { "$ref": "#/$defs/genericObject" },
+        "requiredCapabilities": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "sideEffectLevel": { "enum": ["NONE", "LOW", "MEDIUM", "HIGH"] },
+        "evidenceRequirements": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "limitations": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["service", "instanceId", "platformVersion"],
+      "properties": {
+        "service": { "type": "string" },
+        "instanceId": { "type": "string" },
+        "platformVersion": { "type": "string" }
+      }
+    },
+    "domain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["domainId"],
+      "properties": {
+        "domainId": { "type": "string" }
+      }
+    },
+    "agent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["agentId", "personaName"],
+      "properties": {
+        "agentId": { "type": "string" },
+        "conversationId": { "type": "string" },
+        "runtimeIdentity": { "type": "string" },
+        "personaName": { "type": "string" },
+        "agentType": { "type": "string" },
+        "personaDescription": { "type": "string" },
+        "traits": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "interactionMode": { "type": "string" }
+      }
+    },
+    "replay": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "seed": { "type": "integer" },
+        "simulationStartEpochMs": { "type": "integer" },
+        "playback": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "rate": { "type": "number" },
+            "paused": { "type": "boolean" }
+          }
+        },
+        "deterministic": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "resetStateOnClockRewind": { "type": "boolean" },
+            "strictClock": { "type": "boolean" }
+          }
+        },
+        "contractVersion": { "type": "integer" },
+        "updatedAtEpochMs": { "type": "integer" }
+      }
+    },
+    "opaqueState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "data"],
+      "properties": {
+        "schemaVersion": { "type": "string" },
+        "data": { "$ref": "#/$defs/genericObject" }
+      }
+    },
+    "dueWorkItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["workId", "workType", "occurrenceKey", "scheduledForEpochMs", "attemptNumber"],
+      "properties": {
+        "workId": { "type": "string" },
+        "workType": { "type": "string" },
+        "occurrenceKey": { "type": "string" },
+        "scheduledForEpochMs": { "type": "integer" },
+        "attemptNumber": { "type": "integer" },
+        "description": { "type": "string" },
+        "payload": { "$ref": "#/$defs/genericObject" }
+      }
+    },
+    "timeWindow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["previousTimeEpochMs", "currentTimeEpochMs"],
+      "properties": {
+        "previousTimeEpochMs": { "type": "integer" },
+        "currentTimeEpochMs": { "type": "integer" }
+      }
+    },
+    "turnContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["timeWindow", "dueWork"],
+      "properties": {
+        "timeWindow": { "$ref": "#/$defs/timeWindow" },
+        "dueWork": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/dueWorkItem" }
+        }
+      }
+    },
+    "projection": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "runtimeMetadata": { "$ref": "#/$defs/genericObject" },
+        "lifecycleSchedule": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/genericObject" }
+        },
+        "inspectionSchedule": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/genericObject" }
+        },
+        "statusView": { "$ref": "#/$defs/genericObject" },
+        "inspectionView": { "$ref": "#/$defs/genericObject" }
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["projection"],
+      "properties": {
+        "runtimeIdentity": { "type": "string" },
+        "toolResult": { "$ref": "#/$defs/genericObject" },
+        "projection": { "$ref": "#/$defs/projection" },
+        "domainSystemWork": { "$ref": "#/$defs/genericObject" },
+        "controlAction": { "$ref": "#/$defs/genericObject" },
+        "evidenceEvents": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/genericObject" }
+        }
+      }
+    },
+    "mutatingEnvelope": {
+      "type": "object",
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "operation",
+        "idempotencyKey",
+        "sentAtEpochMs",
+        "deadlineEpochMs",
+        "host",
+        "domain",
+        "agent"
+      ],
+      "properties": {
+        "protocolVersion": { "const": "remote-domain.v1" },
+        "requestId": { "type": "string", "format": "uuid" },
+        "operation": { "type": "string" },
+        "idempotencyKey": { "type": "string" },
+        "sentAtEpochMs": { "type": "integer" },
+        "deadlineEpochMs": { "type": "integer" },
+        "host": { "$ref": "#/$defs/host" },
+        "domain": { "$ref": "#/$defs/domain" },
+        "agent": { "$ref": "#/$defs/agent" },
+        "replay": { "$ref": "#/$defs/replay" },
+        "state": { "$ref": "#/$defs/opaqueState" }
+      }
+    },
+    "projectionEnvelope": {
+      "type": "object",
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "operation",
+        "sentAtEpochMs",
+        "deadlineEpochMs",
+        "host",
+        "domain",
+        "agent",
+        "state"
+      ],
+      "properties": {
+        "protocolVersion": { "const": "remote-domain.v1" },
+        "requestId": { "type": "string", "format": "uuid" },
+        "operation": { "type": "string" },
+        "sentAtEpochMs": { "type": "integer" },
+        "deadlineEpochMs": { "type": "integer" },
+        "host": { "$ref": "#/$defs/host" },
+        "domain": { "$ref": "#/$defs/domain" },
+        "agent": { "$ref": "#/$defs/agent" },
+        "replay": { "$ref": "#/$defs/replay" },
+        "state": { "$ref": "#/$defs/opaqueState" }
+      }
+    },
+    "successEnvelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocolVersion", "requestId", "operation", "result", "nextState", "warnings"],
+      "properties": {
+        "protocolVersion": { "const": "remote-domain.v1" },
+        "requestId": { "type": "string", "format": "uuid" },
+        "operation": { "type": "string" },
+        "result": { "$ref": "#/$defs/result" },
+        "nextState": { "$ref": "#/$defs/opaqueState" },
+        "warnings": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/warning" }
+        }
+      }
+    },
+    "projectionResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocolVersion", "requestId", "operation", "result", "warnings"],
+      "properties": {
+        "protocolVersion": { "const": "remote-domain.v1" },
+        "requestId": { "type": "string", "format": "uuid" },
+        "operation": { "type": "string" },
+        "result": { "$ref": "#/$defs/result" },
+        "warnings": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/warning" }
+        }
+      }
+    },
+    "prepareRequest": {
+      "unevaluatedProperties": false,
+      "allOf": [
+        { "$ref": "#/$defs/mutatingEnvelope" },
+        {
+          "type": "object",
+          "required": ["payload"],
+          "properties": {
+            "operation": { "const": "prepare" },
+            "payload": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["personaConfiguration"],
+              "properties": {
+                "personaConfiguration": { "$ref": "#/$defs/genericObject" },
+                "initialProjectionHints": { "$ref": "#/$defs/genericObject" }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "prepareResponse": {
+      "unevaluatedProperties": false,
+      "allOf": [
+        { "$ref": "#/$defs/successEnvelope" },
+        {
+          "type": "object",
+          "properties": {
+            "operation": { "const": "prepare" }
+          }
+        }
+      ]
+    },
+    "executeWorkRequest": {
+      "unevaluatedProperties": false,
+      "allOf": [
+        { "$ref": "#/$defs/mutatingEnvelope" },
+        {
+          "type": "object",
+          "required": ["state", "payload"],
+          "properties": {
+            "operation": { "const": "execute-work" },
+            "payload": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["turnContext"],
+              "properties": {
+                "turnContext": { "$ref": "#/$defs/turnContext" }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "executeWorkResponse": {
+      "unevaluatedProperties": false,
+      "allOf": [
+        { "$ref": "#/$defs/successEnvelope" },
+        {
+          "type": "object",
+          "properties": {
+            "operation": { "const": "execute-work" }
+          }
+        }
+      ]
+    },
+    "domainSystemWorkWindowRequest": {
+      "unevaluatedProperties": false,
+      "allOf": [
+        { "$ref": "#/$defs/mutatingEnvelope" },
+        {
+          "type": "object",
+          "required": ["state", "payload"],
+          "properties": {
+            "operation": { "const": "domain-system-work-window" },
+            "payload": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["timeWindow"],
+              "properties": {
+                "timeWindow": { "$ref": "#/$defs/timeWindow" },
+                "workKinds": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                },
+                "maxWorkItems": { "type": "integer", "minimum": 1 },
+                "executionMode": { "enum": ["EVALUATE_AND_EXECUTE", "EVALUATE_ONLY"] },
+                "context": { "$ref": "#/$defs/genericObject" }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "domainSystemWorkWindowResponse": {
+      "unevaluatedProperties": false,
+      "allOf": [
+        { "$ref": "#/$defs/successEnvelope" },
+        {
+          "type": "object",
+          "properties": {
+            "operation": { "const": "domain-system-work-window" }
+          }
+        }
+      ]
+    },
+    "controlActionRequest": {
+      "unevaluatedProperties": false,
+      "allOf": [
+        { "$ref": "#/$defs/mutatingEnvelope" },
+        {
+          "type": "object",
+          "required": ["state", "payload"],
+          "properties": {
+            "operation": { "const": "control-action" },
+            "payload": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["actionId", "operationId", "target", "inputs"],
+              "properties": {
+                "actionId": { "type": "string" },
+                "operationId": { "type": "string" },
+                "target": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["scope"],
+                  "properties": {
+                    "scope": { "enum": ["AGENT", "SEGMENT", "COHORT", "RUN", "BROADCAST"] },
+                    "agentIds": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "segmentIds": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "cohortId": { "type": "string" },
+                    "selector": { "$ref": "#/$defs/genericObject" }
+                  }
+                },
+                "inputs": { "$ref": "#/$defs/genericObject" },
+                "requestedBy": { "type": "string" },
+                "reason": { "type": "string" },
+                "simulationTimeEpochMs": { "type": "integer" },
+                "evidenceContext": { "$ref": "#/$defs/genericObject" }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "controlActionResponse": {
+      "unevaluatedProperties": false,
+      "allOf": [
+        { "$ref": "#/$defs/successEnvelope" },
+        {
+          "type": "object",
+          "properties": {
+            "operation": { "const": "control-action" }
+          }
+        }
+      ]
+    },
+    "statusRequest": {
+      "unevaluatedProperties": false,
+      "allOf": [
+        { "$ref": "#/$defs/projectionEnvelope" },
+        {
+          "type": "object",
+          "properties": {
+            "operation": { "const": "status" }
+          }
+        }
+      ]
+    },
+    "statusResponse": {
+      "unevaluatedProperties": false,
+      "allOf": [
+        { "$ref": "#/$defs/projectionResponse" },
+        {
+          "type": "object",
+          "properties": {
+            "operation": { "const": "status" }
+          }
+        }
+      ]
+    },
+    "inspectionRequest": {
+      "unevaluatedProperties": false,
+      "allOf": [
+        { "$ref": "#/$defs/projectionEnvelope" },
+        {
+          "type": "object",
+          "properties": {
+            "operation": { "const": "inspection" }
+          }
+        }
+      ]
+    },
+    "inspectionResponse": {
+      "unevaluatedProperties": false,
+      "allOf": [
+        { "$ref": "#/$defs/projectionResponse" },
+        {
+          "type": "object",
+          "properties": {
+            "operation": { "const": "inspection" }
+          }
+        }
+      ]
+    },
+    "shutdownRequest": {
+      "unevaluatedProperties": false,
+      "allOf": [
+        { "$ref": "#/$defs/projectionEnvelope" },
+        {
+          "type": "object",
+          "properties": {
+            "operation": { "const": "shutdown" }
+          }
+        }
+      ]
+    },
+    "shutdownResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocolVersion", "requestId", "operation", "acknowledged"],
+      "properties": {
+        "protocolVersion": { "const": "remote-domain.v1" },
+        "requestId": { "type": "string", "format": "uuid" },
+        "operation": { "const": "shutdown" },
+        "acknowledged": { "type": "boolean" },
+        "warnings": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/warning" }
+        }
+      }
+    },
+    "errorEnvelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocolVersion", "requestId", "operation", "error"],
+      "properties": {
+        "protocolVersion": { "const": "remote-domain.v1" },
+        "requestId": { "type": "string", "format": "uuid" },
+        "operation": { "type": "string" },
+        "error": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["code", "category", "message", "retryable"],
+          "properties": {
+            "code": { "type": "string" },
+            "category": {
+              "enum": [
+                "invalid_request",
+                "unsupported_protocol_version",
+                "domain_rejected",
+                "deadline_exceeded",
+                "transient_failure",
+                "internal_error"
+              ]
+            },
+            "message": { "type": "string" },
+            "retryable": { "type": "boolean" },
+            "details": { "$ref": "#/$defs/genericObject" }
+          }
+        }
+      }
+    }
+  }
+}

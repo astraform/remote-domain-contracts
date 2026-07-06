@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "simulation_run_evidence.v1",
+  "run": {
+    "runId": "sim-run-demo-001",
+    "domainId": "demo-domain",
+    "cohortId": "demo-balanced-100-100-0000000000",
+    "executionMode": "CLOCK_DRIVEN_HYBRID",
+    "status": "COMPLETED",
+    "startedAt": "2026-05-04T00:00:00Z",
+    "completedAt": "2026-05-04T00:05:00Z",
+    "simulatedDurationDays": 30
+  },
+  "files": {
+    "manifest": {
+      "path": "manifest.json",
+      "mediaType": "application/json",
+      "schemaVersion": "simulation_run_evidence.v1"
+    },
+    "events": {
+      "path": "events.jsonl",
+      "mediaType": "application/x-ndjson",
+      "recordCount": 42
+    },
+    "checkpoints": {
+      "path": "checkpoints.jsonl",
+      "mediaType": "application/x-ndjson",
+      "recordCount": 4
+    }
+  },
+  "redactions": {
+    "headers": ["authorization", "x-api-key"]
+  },
+  "checksums": {
+    "events.jsonl": "sha256:demo"
+  }
+}

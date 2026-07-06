@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://astraform.ai/schema/remote-domain/v1/policy-wind-tunnel-pack.v1.schema.json",
+  "title": "Policy Wind Tunnel Pack Metadata v1",
+  "description": "Domain-owned metadata for a schema-driven Wind Tunnel pack.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["capabilities", "controlSchema", "uiSchema", "outcomeSchema", "summarySchemaVersion"],
+  "properties": {
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "controlSchema": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "uiSchema": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "outcomeSchema": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "policyExpressions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/policyExpression"
+      }
+    },
+    "outcomeScorecard": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "outcomeScorecards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "summarySchemaVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "domainLabels": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "reportLabels": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "$defs": {
+    "policyExpression": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expressionId",
+        "language",
+        "resultType",
+        "stage",
+        "contextSchemaVersion",
+        "expression"
+      ],
+      "properties": {
+        "expressionId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "language": {
+          "type": "string",
+          "enum": ["cel"]
+        },
+        "resultType": {
+          "type": "string",
+          "enum": ["boolean", "number", "string"]
+        },
+        "stage": {
+          "type": "string",
+          "enum": ["decision_gate", "kpi_evaluation", "runtime_guardrail", "cohort_filter"]
+        },
+        "contextSchemaVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expression": {
+          "type": "string",
+          "minLength": 1
+        },
+        "executionTarget": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

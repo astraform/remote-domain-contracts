@@ -1,0 +1,50 @@
+{
+  "protocolVersion": "remote-domain.v1",
+  "requestId": "11111111-1111-4111-8111-111111111111",
+  "operation": "prepare",
+  "idempotencyKey": "agent-42:prepare",
+  "sentAtEpochMs": 1776171600000,
+  "deadlineEpochMs": 1776171604000,
+  "host": {
+    "service": "agent-runtime",
+    "instanceId": "agent-runtime-7f9c5",
+    "platformVersion": "0.1.1"
+  },
+  "domain": {
+    "domainId": "marketing-ops"
+  },
+  "agent": {
+    "agentId": "agent-42",
+    "conversationId": "conv-42",
+    "personaName": "Campaign Approver",
+    "agentType": "Operator",
+    "personaDescription": "Reviews campaign approvals against brand and risk policy.",
+    "traits": ["risk-aware", "approval-gated"],
+    "interactionMode": "HYBRID"
+  },
+  "replay": {
+    "seed": 20260414,
+    "simulationStartEpochMs": 1776171600000,
+    "playback": {
+      "rate": 60,
+      "paused": false
+    },
+    "deterministic": {
+      "enabled": true,
+      "resetStateOnClockRewind": true,
+      "strictClock": true
+    },
+    "contractVersion": 7,
+    "updatedAtEpochMs": 1776171599000
+  },
+  "payload": {
+    "personaConfiguration": {
+      "region": "AU",
+      "approvalLimit": 50000,
+      "channels": ["email", "paid-social"]
+    },
+    "initialProjectionHints": {
+      "campaignQueueSize": 1
+    }
+  }
+}

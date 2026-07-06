@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "synthetic_cohort_recipe.v1",
+  "domainId": "demo-domain",
+  "recipeId": "demo-balanced-100",
+  "seed": "demo-balanced-100-seed-01",
+  "targetSize": 100,
+  "mode": "DETERMINISTIC",
+  "segmentMix": {
+    "everyday": 60,
+    "high-risk": 25,
+    "escalation": 15
+  },
+  "generationControls": {
+    "variationIntensity": "medium",
+    "edgeCasePercent": 8
+  },
+  "activationDefaults": {
+    "chunkSize": 50,
+    "modelMode": "STUB_LLM"
+  },
+  "llmPolicy": {
+    "enabled": false,
+    "requiresExplicitOptIn": true,
+    "maxCalls": 0
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "schemaVersion": "domain_population_catalog.v1",
+  "domainId": "example-ops",
+  "domainFamily": "example-ops",
+  "label": "Example Ops",
+  "description": "Provider-published population archetypes and recipes for an example operations domain.",
+  "catalogVersion": "example-ops.population-catalog.v1",
+  "archetypeCatalog": {
+    "schemaVersion": "domain_archetype_catalog.v1",
+    "domainId": "example-ops",
+    "archetypes": [
+      {
+        "archetypeId": "launch-reviewer",
+        "title": "Launch Reviewer",
+        "narrative": "Operator who reviews launch work against clear readiness criteria.",
+        "segmentIds": ["launch-audience"],
+        "traits": ["review-driven", "launch-aware"]
+      }
+    ]
+  },
+  "populationRecipes": {
+    "schemaVersion": "synthetic_cohort_recipe.v1",
+    "domainId": "example-ops",
+    "recipes": [
+      {
+        "recipeId": "launch-review-100",
+        "title": "Launch Review 100",
+        "description": "A deterministic population for launch-readiness review.",
+        "defaultTargetSize": 100,
+        "segmentMix": [
+          {
+            "segmentId": "launch-audience",
+            "label": "Launch audience",
+            "weight": 100,
+            "archetypeIds": ["launch-reviewer"],
+            "memberTemplate": {
+              "domainConfig": {
+                "queueKey": "launch-{cohortId}-{customerIndex}"
+              },
+              "scheduledWork": [
+                {
+                  "kind": "task",
+                  "description": "Launch review"
+                }
+              ]
+            }
+          }
+        ],
+        "memberValidation": {
+          "requiredDomainConfigFields": ["queueKey"],
+          "scheduledWorkRequired": true
+        },
+        "tags": ["launch", "example"]
+      }
+    ]
+  },
+  "runPathEligibility": {
+    "schemaVersion": "synthetic_population_run_path_eligibility.v1",
+    "status": "EXPORT_ONLY",
+    "prepareValid": true,
+    "windTunnelReady": false,
+    "packDebugReady": false,
+    "windTunnelConsumesPopulation": false,
+    "windTunnelReadyMaxTargetSize": 0,
+    "packDebugReadyMaxTargetSize": 0,
+    "exportOnlyAboveTargetSize": 0,
+    "message": "This sample population catalog is prepare-valid but export-only."
+  }
+}

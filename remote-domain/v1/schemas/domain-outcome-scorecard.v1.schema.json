@@ -1,0 +1,213 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://astraform.ai/schema/remote-domain/v1/domain-outcome-scorecard.v1.schema.json",
+  "title": "Domain Outcome Scorecard v1",
+  "description": "Declarative, domain-owned scorecard metadata used to score simulation outcomes against evidence.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "scorecardId",
+    "label",
+    "version",
+    "metrics",
+    "recommendationRules"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "domain_outcome_scorecard.v1"
+    },
+    "scorecardId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "supportLevel": {
+      "$ref": "#/$defs/supportLevel"
+    },
+    "applicablePresetIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "applicableExecutionModes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["FAST_BATCH_COMPARE", "CLOCK_DRIVEN_HYBRID", "AGENTIC_CUSTOMER_SIMULATION"]
+      },
+      "uniqueItems": true
+    },
+    "metrics": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/metricDefinition"
+      }
+    },
+    "gates": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/gateDefinition"
+      }
+    },
+    "recommendationRules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/recommendationRule"
+      }
+    },
+    "evidenceRequirements": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/evidenceRequirement"
+      }
+    },
+    "headlineClaims": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "$defs": {
+    "resultType": {
+      "type": "string",
+      "enum": ["boolean", "number", "string"]
+    },
+    "supportLevel": {
+      "type": "string",
+      "enum": ["EVIDENCE_LINKED", "ARTIFACT_ONLY", "DOMAIN_ASSERTED"]
+    },
+    "metricDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["metricId", "label", "valueExpression", "evidenceRef"],
+      "properties": {
+        "metricId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
+        "resultType": {
+          "$ref": "#/$defs/resultType",
+          "default": "number"
+        },
+        "valueExpression": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidenceRef": {
+          "type": "string",
+          "minLength": 1
+        },
+        "supportLevel": {
+          "$ref": "#/$defs/supportLevel"
+        }
+      }
+    },
+    "gateDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gateId", "label", "expression", "evidenceRef"],
+      "properties": {
+        "gateId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
+        "expression": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidenceRef": {
+          "type": "string",
+          "minLength": 1
+        },
+        "supportLevel": {
+          "$ref": "#/$defs/supportLevel"
+        }
+      }
+    },
+    "recommendationRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["recommendation", "expression", "evidenceRef"],
+      "properties": {
+        "recommendation": {
+          "type": "string",
+          "enum": ["LAUNCH", "WATCH", "BLOCK", "REVIEW"]
+        },
+        "label": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "expression": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidenceRef": {
+          "type": "string",
+          "minLength": 1
+        },
+        "supportLevel": {
+          "$ref": "#/$defs/supportLevel"
+        }
+      }
+    },
+    "evidenceRequirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evidenceRef", "label"],
+      "properties": {
+        "evidenceRef": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

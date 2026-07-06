@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://astraform.ai/schema/remote-domain/v1/synthetic-cohort-recipe.v1.schema.json",
+  "title": "Synthetic Cohort Recipe v1",
+  "description": "Domain-neutral recipe envelope for deterministic or opt-in assisted synthetic customer generation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "domainId", "recipeId", "seed", "targetSize", "mode", "segmentMix"],
+  "properties": {
+    "schemaVersion": {
+      "const": "synthetic_cohort_recipe.v1"
+    },
+    "domainId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "recipeId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "seed": {
+      "type": "string",
+      "minLength": 1
+    },
+    "targetSize": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["DETERMINISTIC", "LLM_ASSISTED"]
+    },
+    "segmentMix": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "generationControls": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "activationDefaults": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "llmPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "requiresExplicitOptIn": {
+          "type": "boolean"
+        },
+        "maxCalls": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

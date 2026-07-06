@@ -1,0 +1,37 @@
+{
+  "protocolVersion": "remote-domain.v1",
+  "requestId": "11111111-1111-4111-8111-111111111111",
+  "operation": "prepare",
+  "result": {
+    "runtimeIdentity": "campaign-approver-42",
+    "projection": {
+      "runtimeMetadata": {
+        "domainId": "marketing-ops",
+        "schemaVersion": "marketing-ops.state.v1"
+      },
+      "lifecycleSchedule": [],
+      "inspectionSchedule": [],
+      "statusView": {
+        "queueDepth": 1,
+        "ready": true
+      },
+      "inspectionView": {
+        "policyVersion": "brand-risk-policy.v3"
+      }
+    }
+  },
+  "nextState": {
+    "schemaVersion": "marketing-ops.state.v1",
+    "data": {
+      "pendingApprovals": [
+        {
+          "approvalId": "apr-100",
+          "campaignId": "cmp-901",
+          "amount": 25000
+        }
+      ],
+      "completedApprovals": []
+    }
+  },
+  "warnings": []
+}

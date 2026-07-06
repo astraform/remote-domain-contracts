@@ -1,0 +1,75 @@
+{
+  "protocolVersion": "remote-domain.v1",
+  "requestId": "22222222-2222-4222-8222-222222222222",
+  "operation": "execute-work",
+  "idempotencyKey": "agent-42:execute-work:2026-04-14T14:00:00Z",
+  "sentAtEpochMs": 1776175200000,
+  "deadlineEpochMs": 1776175204000,
+  "host": {
+    "service": "agent-runtime",
+    "instanceId": "agent-runtime-7f9c5",
+    "platformVersion": "0.1.1"
+  },
+  "domain": {
+    "domainId": "marketing-ops"
+  },
+  "agent": {
+    "agentId": "agent-42",
+    "conversationId": "conv-42",
+    "runtimeIdentity": "campaign-approver-42",
+    "personaName": "Campaign Approver",
+    "agentType": "Operator",
+    "traits": ["risk-aware", "approval-gated"],
+    "interactionMode": "HYBRID"
+  },
+  "replay": {
+    "seed": 20260414,
+    "simulationStartEpochMs": 1776171600000,
+    "playback": {
+      "rate": 60,
+      "paused": false
+    },
+    "deterministic": {
+      "enabled": true,
+      "resetStateOnClockRewind": true,
+      "strictClock": true
+    },
+    "contractVersion": 7,
+    "updatedAtEpochMs": 1776175199000
+  },
+  "state": {
+    "schemaVersion": "marketing-ops.state.v1",
+    "data": {
+      "pendingApprovals": [
+        {
+          "approvalId": "apr-100",
+          "campaignId": "cmp-901",
+          "amount": 25000
+        }
+      ],
+      "completedApprovals": []
+    }
+  },
+  "payload": {
+    "turnContext": {
+      "timeWindow": {
+        "previousTimeEpochMs": 1776175140000,
+        "currentTimeEpochMs": 1776175200000
+      },
+      "dueWork": [
+        {
+          "workId": "work-100",
+          "workType": "SCHEDULED_ACTION",
+          "occurrenceKey": "campaign-review|2026-04-14T14:00:00Z",
+          "scheduledForEpochMs": 1776175200000,
+          "attemptNumber": 1,
+          "description": "Campaign review reminder",
+          "payload": {
+            "actionType": "REVIEW_CAMPAIGN",
+            "campaignId": "cmp-901"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "capabilities": {
+    "remoteProviderReady": true,
+    "scorecards": true
+  },
+  "controlSchema": {
+    "type": "object",
+    "properties": {
+      "simulationHorizonDays": {
+        "type": "integer",
+        "minimum": 1
+      }
+    }
+  },
+  "uiSchema": {
+    "fields": [
+      {
+        "field": "simulationHorizonDays",
+        "label": "Simulation horizon"
+      }
+    ]
+  },
+  "outcomeSchema": {
+    "schemaVersion": "customer_outcome_decision_comparison.v1"
+  },
+  "policyExpressions": [
+    {
+      "expressionId": "demo.affected-subjects-watch",
+      "language": "cel",
+      "resultType": "boolean",
+      "stage": "decision_gate",
+      "contextSchemaVersion": "policy-expression-context.v1",
+      "expression": "subjects.affectedCount > 0"
+    }
+  ],
+  "outcomeScorecards": [
+    {
+      "schemaVersion": "domain_outcome_scorecard.v1",
+      "scorecardId": "demo.customer-impact.v1",
+      "label": "Customer impact scorecard",
+      "version": "0.1.0",
+      "metrics": [
+        {
+          "metricId": "affectedSubjects",
+          "label": "Affected subjects",
+          "valueExpression": "subjects.affectedCount",
+          "evidenceRef": "events.jsonl"
+        }
+      ],
+      "recommendationRules": [
+        {
+          "recommendation": "WATCH",
+          "expression": "subjects.affectedCount > 0",
+          "evidenceRef": "events.jsonl"
+        }
+      ]
+    }
+  ],
+  "summarySchemaVersion": "policy_wind_tunnel_summary.v1",
+  "domainLabels": {
+    "actorSingular": "subject",
+    "actorPlural": "subjects"
+  }
+}

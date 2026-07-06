@@ -1,0 +1,7 @@
+{
+  "protocolVersion": "remote-domain.v1",
+  "requestId": "55555555-5555-4555-8555-555555555555",
+  "operation": "shutdown",
+  "acknowledged": true,
+  "warnings": []
+}

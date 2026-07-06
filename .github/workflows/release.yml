@@ -1,0 +1,97 @@
+name: Remote Domain Contract Release
+
+on:
+  push:
+    tags:
+      - "remote-domain-v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Contract version to publish, for example 1.0.0"
+        required: true
+        type: string
+      overwrite_existing_assets:
+        description: "Replace assets on an existing GitHub Release"
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  publish-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v5
+
+      - name: Resolve release metadata
+        id: release
+        env:
+          REQUESTED_VERSION: ${{ inputs.version || '' }}
+        run: |
+          set -euo pipefail
+
+          version="$(tr -d '[:space:]' < remote-domain/v1/VERSION)"
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            requested_version="${REQUESTED_VERSION}"
+            if [ "${requested_version}" != "${version}" ]; then
+              echo "Requested version ${requested_version} does not match remote-domain contract VERSION ${version}" >&2
+              exit 1
+            fi
+            release_tag="remote-domain-v${requested_version}"
+          else
+            release_tag="${GITHUB_REF_NAME}"
+          fi
+
+          expected_tag="remote-domain-v${version}"
+          if [ "${release_tag}" != "${expected_tag}" ]; then
+            echo "Release tag ${release_tag} does not match remote-domain contract VERSION ${version}" >&2
+            exit 1
+          fi
+
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+          echo "tag=${release_tag}" >> "${GITHUB_OUTPUT}"
+
+      - name: Verify contract manifest metadata
+        run: scripts/verify-remote-domain-contract.sh
+
+      - name: Package remote-domain contract
+        run: scripts/package-remote-domain-contract.sh
+
+      - name: Generate checksum
+        run: |
+          cd build/remote-domain-contract
+          sha256sum remote-domain.v1.zip > remote-domain.v1.zip.sha256
+
+      - name: Publish GitHub release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+          RELEASE_TITLE: remote-domain.v1 ${{ steps.release.outputs.tag }}
+          OVERWRITE_EXISTING_ASSETS: ${{ inputs.overwrite_existing_assets || false }}
+        run: |
+          set -euo pipefail
+
+          zip_path="build/remote-domain-contract/remote-domain.v1.zip"
+          checksum_path="build/remote-domain-contract/remote-domain.v1.zip.sha256"
+
+          if gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
+            if [ "${OVERWRITE_EXISTING_ASSETS}" != "true" ]; then
+              echo "Release ${RELEASE_TAG} already exists. Re-run manually with overwrite_existing_assets=true to replace assets." >&2
+              exit 1
+            fi
+            gh release upload "${RELEASE_TAG}" "${zip_path}" "${checksum_path}" --clobber
+          else
+            gh release create "${RELEASE_TAG}" "${zip_path}" "${checksum_path}" \
+              --title "${RELEASE_TITLE}" \
+              --generate-notes \
+              --target "${GITHUB_SHA}" \
+              --latest=false
+          fi

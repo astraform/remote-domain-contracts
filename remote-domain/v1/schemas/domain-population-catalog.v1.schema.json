@@ -1,0 +1,252 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://astraform.ai/schema/remote-domain/v1/domain-population-catalog.v1.schema.json",
+  "title": "Domain Population Catalog v1",
+  "description": "Domain-owned catalog of archetypes, population recipes, and run-path eligibility for Population Builder.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion",
+    "domainId",
+    "domainFamily",
+    "label",
+    "description",
+    "catalogVersion",
+    "archetypeCatalog",
+    "populationRecipes",
+    "runPathEligibility"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "domain_population_catalog.v1"
+    },
+    "domainId": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]*$"
+    },
+    "domainFamily": {
+      "type": "string",
+      "minLength": 1
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "catalogVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "archetypeCatalog": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["schemaVersion", "domainId", "archetypes"],
+      "properties": {
+        "schemaVersion": {
+          "const": "domain_archetype_catalog.v1"
+        },
+        "domainId": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]*$"
+        },
+        "archetypes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": ["archetypeId", "title", "narrative", "traits"],
+            "properties": {
+              "archetypeId": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9._-]*$"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
+              "narrative": {
+                "type": "string",
+                "minLength": 1
+              },
+              "traits": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9][a-z0-9._-]*$"
+                }
+              },
+              "segmentIds": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "populationRecipes": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["schemaVersion", "domainId", "recipes"],
+      "properties": {
+        "schemaVersion": {
+          "const": "synthetic_cohort_recipe.v1"
+        },
+        "domainId": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]*$"
+        },
+        "recipes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": [
+              "recipeId",
+              "title",
+              "description",
+              "defaultTargetSize",
+              "segmentMix",
+              "memberValidation"
+            ],
+            "properties": {
+              "recipeId": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9._-]*$"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1
+              },
+              "defaultTargetSize": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "segmentMix": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "required": ["segmentId", "label", "weight", "archetypeIds", "memberTemplate"],
+                  "properties": {
+                    "segmentId": {
+                      "type": "string",
+                      "pattern": "^[a-z0-9][a-z0-9._-]*$"
+                    },
+                    "label": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "weight": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 10000
+                    },
+                    "archetypeIds": {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[a-z0-9][a-z0-9._-]*$"
+                      }
+                    },
+                    "memberTemplate": {
+                      "type": "object",
+                      "minProperties": 1,
+                      "additionalProperties": true
+                    }
+                  }
+                }
+              },
+              "memberTemplate": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": true
+              },
+              "memberValidation": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": true
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "runPathEligibility": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "schemaVersion",
+        "status",
+        "prepareValid",
+        "windTunnelReady",
+        "packDebugReady",
+        "windTunnelConsumesPopulation",
+        "windTunnelReadyMaxTargetSize",
+        "packDebugReadyMaxTargetSize",
+        "exportOnlyAboveTargetSize",
+        "message"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "synthetic_population_run_path_eligibility.v1"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["SCENARIO_READY", "EXPORT_ONLY"]
+        },
+        "prepareValid": {
+          "type": "boolean"
+        },
+        "windTunnelReady": {
+          "type": "boolean"
+        },
+        "packDebugReady": {
+          "type": "boolean"
+        },
+        "windTunnelConsumesPopulation": {
+          "type": "boolean"
+        },
+        "windTunnelReadyMaxTargetSize": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "packDebugReadyMaxTargetSize": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "exportOnlyAboveTargetSize": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

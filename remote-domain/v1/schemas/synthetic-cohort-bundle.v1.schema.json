@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://astraform.ai/schema/remote-domain/v1/synthetic-cohort-bundle.v1.schema.json",
+  "title": "Synthetic Cohort Bundle v1",
+  "description": "Generated cohort artifact envelope used by Scenario Lab and Evidence export flows.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "cohortId",
+    "domainId",
+    "recipe",
+    "summary",
+    "customers",
+    "validation",
+    "artifacts",
+    "generatedAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "synthetic_cohort_bundle.v1"
+    },
+    "cohortId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "domainId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "recipe": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "customers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["valid", "warning", "invalid"]
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "generatedAt": {
+      "type": "string"
+    }
+  }
+}

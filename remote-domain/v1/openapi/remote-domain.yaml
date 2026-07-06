@@ -1,0 +1,1479 @@
+openapi: 3.0.3
+info:
+  title: Remote Domain Protocol API
+  version: 0.1.1
+  description: >
+    Versioned HTTP/JSON contract for synchronous out-of-process domain services.
+    This spec publishes the v1 wire contract for remote domains owned by issue #231.
+servers:
+  - url: http://localhost:8090
+    description: Example remote domain endpoint
+paths:
+  /api/remote-domain/v1/manifest:
+    get:
+      tags:
+        - RemoteDomainProtocol
+      summary: Fetch remote domain manifest and capability declaration
+      operationId: getRemoteDomainManifest
+      responses:
+        '200':
+          description: Manifest returned successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainManifest'
+            application/vnd.astraform.remote-domain.v1+json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainManifest'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+            application/vnd.astraform.remote-domain.v1+json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+  /api/remote-domain/v1/prepare:
+    post:
+      tags:
+        - RemoteDomainProtocol
+      summary: Validate persona input and produce initial opaque state
+      operationId: prepareRemoteDomainAgent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RemoteDomainPrepareRequest'
+          application/vnd.astraform.remote-domain.v1+json:
+            schema:
+              $ref: '#/components/schemas/RemoteDomainPrepareRequest'
+      responses:
+        '200':
+          description: Prepare request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainPrepareResponse'
+            application/vnd.astraform.remote-domain.v1+json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainPrepareResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+            application/vnd.astraform.remote-domain.v1+json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+        '422':
+          description: Domain rejected the persona/configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+            application/vnd.astraform.remote-domain.v1+json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+            application/vnd.astraform.remote-domain.v1+json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+  /api/remote-domain/v1/execute-work:
+    post:
+      tags:
+        - RemoteDomainProtocol
+      summary: Apply one host-owned work cycle to the current opaque state
+      operationId: executeRemoteDomainWork
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RemoteDomainExecuteWorkRequest'
+          application/vnd.astraform.remote-domain.v1+json:
+            schema:
+              $ref: '#/components/schemas/RemoteDomainExecuteWorkRequest'
+      responses:
+        '200':
+          description: Work execution succeeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainExecuteWorkResponse'
+            application/vnd.astraform.remote-domain.v1+json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainExecuteWorkResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+            application/vnd.astraform.remote-domain.v1+json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+        '422':
+          description: Domain rejected the supplied state or work context
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+            application/vnd.astraform.remote-domain.v1+json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+            application/vnd.astraform.remote-domain.v1+json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+  /api/remote-domain/v1/domain-system-work-window:
+    post:
+      tags:
+        - RemoteDomainProtocol
+      summary: Let the remote domain evaluate and execute domain-owned work for a simulated time window
+      operationId: executeRemoteDomainSystemWorkWindow
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RemoteDomainSystemWorkWindowRequest'
+          application/vnd.astraform.remote-domain.v1+json:
+            schema:
+              $ref: '#/components/schemas/RemoteDomainSystemWorkWindowRequest'
+      responses:
+        '200':
+          description: Domain-system work window execution succeeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainSystemWorkWindowResponse'
+            application/vnd.astraform.remote-domain.v1+json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainSystemWorkWindowResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+            application/vnd.astraform.remote-domain.v1+json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+        '422':
+          description: Domain rejected the supplied state or work-window context
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+            application/vnd.astraform.remote-domain.v1+json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+            application/vnd.astraform.remote-domain.v1+json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+  /api/remote-domain/v1/control-actions:execute:
+    post:
+      tags:
+        - RemoteDomainProtocol
+      summary: Execute a domain-owned operator control action during a simulation run
+      operationId: executeRemoteDomainControlAction
+      description: >
+        Executes a domain-owned intervention against the supplied agent state. The host
+        owns authorization, target selection, fan-out, audit, and evidence persistence.
+        The remote domain owns the available action catalog, validation, state effects,
+        evidence events, and business interpretation.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RemoteDomainControlActionRequest'
+          application/vnd.astraform.remote-domain.v1+json:
+            schema:
+              $ref: '#/components/schemas/RemoteDomainControlActionRequest'
+      responses:
+        '200':
+          description: Control action execution succeeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainControlActionResponse'
+            application/vnd.astraform.remote-domain.v1+json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainControlActionResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+            application/vnd.astraform.remote-domain.v1+json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+        '422':
+          description: Domain rejected the supplied control action
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+            application/vnd.astraform.remote-domain.v1+json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+            application/vnd.astraform.remote-domain.v1+json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+  /api/remote-domain/v1/status:
+    post:
+      tags:
+        - RemoteDomainProtocol
+      summary: Project a public runtime status fragment from opaque state
+      operationId: projectRemoteDomainStatus
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RemoteDomainStatusRequest'
+          application/vnd.astraform.remote-domain.v1+json:
+            schema:
+              $ref: '#/components/schemas/RemoteDomainStatusRequest'
+      responses:
+        '200':
+          description: Status projection succeeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainStatusResponse'
+            application/vnd.astraform.remote-domain.v1+json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainStatusResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+            application/vnd.astraform.remote-domain.v1+json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+            application/vnd.astraform.remote-domain.v1+json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+  /api/remote-domain/v1/inspection:
+    post:
+      tags:
+        - RemoteDomainProtocol
+      summary: Project a detailed inspection fragment from opaque state
+      operationId: projectRemoteDomainInspection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RemoteDomainInspectionRequest'
+          application/vnd.astraform.remote-domain.v1+json:
+            schema:
+              $ref: '#/components/schemas/RemoteDomainInspectionRequest'
+      responses:
+        '200':
+          description: Inspection projection succeeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainInspectionResponse'
+            application/vnd.astraform.remote-domain.v1+json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainInspectionResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+            application/vnd.astraform.remote-domain.v1+json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+            application/vnd.astraform.remote-domain.v1+json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+  /api/remote-domain/v1/shutdown:
+    post:
+      tags:
+        - RemoteDomainProtocol
+      summary: Best-effort advisory shutdown notification
+      operationId: shutdownRemoteDomainAgent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RemoteDomainShutdownRequest'
+          application/vnd.astraform.remote-domain.v1+json:
+            schema:
+              $ref: '#/components/schemas/RemoteDomainShutdownRequest'
+      responses:
+        '200':
+          description: Shutdown acknowledged
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainShutdownResponse'
+            application/vnd.astraform.remote-domain.v1+json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainShutdownResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+            application/vnd.astraform.remote-domain.v1+json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+            application/vnd.astraform.remote-domain.v1+json:
+              schema:
+                $ref: '#/components/schemas/RemoteDomainErrorEnvelope'
+components:
+  schemas:
+    RemoteDomainManifest:
+      type: object
+      required:
+        - protocolVersion
+        - domain
+        - transport
+        - operations
+        - capabilities
+      properties:
+        protocolVersion:
+          type: string
+          enum: [remote-domain.v1]
+        domain:
+          type: object
+          required:
+            - domainId
+            - displayName
+          properties:
+            domainId:
+              type: string
+              example: marketing-ops
+            displayName:
+              type: string
+              example: Marketing Operations
+            description:
+              type: string
+            schemaVersion:
+              type: string
+              example: marketing-ops.state.v1
+        transport:
+          type: object
+          required:
+            - mode
+            - contentType
+          properties:
+            mode:
+              type: string
+              enum: [SYNCHRONOUS_HTTP_JSON]
+            contentType:
+              type: string
+              example: application/vnd.astraform.remote-domain.v1+json
+        operations:
+          type: object
+          required:
+            - prepare
+            - executeWork
+            - status
+            - inspection
+          properties:
+            prepare:
+              $ref: '#/components/schemas/RemoteDomainOperationDescriptor'
+            executeWork:
+              $ref: '#/components/schemas/RemoteDomainOperationDescriptor'
+            status:
+              $ref: '#/components/schemas/RemoteDomainOperationDescriptor'
+            inspection:
+              $ref: '#/components/schemas/RemoteDomainOperationDescriptor'
+            shutdown:
+              $ref: '#/components/schemas/RemoteDomainOperationDescriptor'
+            domainSystemWorkWindow:
+              $ref: '#/components/schemas/RemoteDomainOperationDescriptor'
+            controlAction:
+              $ref: '#/components/schemas/RemoteDomainOperationDescriptor'
+        capabilities:
+          type: object
+          required:
+            - statusProjection
+            - inspectionProjection
+            - maxOpaqueStateBytes
+            - supportedAgentTypes
+            - supportedInteractionModes
+          properties:
+            statusProjection:
+              type: boolean
+              default: true
+            inspectionProjection:
+              type: boolean
+              default: true
+            shutdownNotification:
+              type: boolean
+              default: true
+            maxOpaqueStateBytes:
+              type: integer
+              format: int32
+              example: 262144
+            supportedAgentTypes:
+              type: array
+              items:
+                type: string
+              example: [Customer, Policy, Operator]
+            supportedInteractionModes:
+              type: array
+              items:
+                type: string
+              example: [SIMULATION, HYBRID]
+            remoteProviderLanguage:
+              type: string
+              description: >
+                Implementation language or runtime family published by the remote provider
+                for diagnostics and cross-SDK parity checks. Examples: `java`, `python`,
+                `typescript`.
+            supportsInitialAccounts:
+              type: boolean
+              default: false
+              description: >
+                Whether the host may pass shared `initialAccounts` persona input to this remote domain.
+                Domains should set this only when they intentionally support the platform account-seeding shape.
+            supportsScheduledWork:
+              type: boolean
+              default: false
+              description: >
+                Whether this remote domain declares generic scheduled-work kinds for the shared creator/runtime summary.
+            scheduledWorkKinds:
+              type: array
+              description: >
+                Optional scheduled-work subtype metadata consumed by the shared creator.
+                Field paths inside each work kind are relative to the work item's payload object.
+              items:
+                $ref: '#/components/schemas/RemoteDomainScheduledWorkKind'
+            supportsDomainSystemWorkWindow:
+              type: boolean
+              default: false
+              description: >
+                Whether this remote domain can evaluate and execute domain-owned business/system work
+                over a bounded simulated time window. This is for institution-side rules such as
+                interest accrual, statement close, fees, SLA expiry, or policy refresh. It is not a
+                customer-agent scheduled-work queue.
+            domainSystemWorkKinds:
+              type: array
+              description: >
+                Optional domain-owned business/system work metadata. These work kinds are evaluated
+                by the remote domain from a simulated time window rather than precomputed by the host
+                as customer/persona scheduled work.
+              items:
+                $ref: '#/components/schemas/RemoteDomainScheduledWorkKind'
+            supportsControlActions:
+              type: boolean
+              default: false
+              description: >
+                Whether this remote domain exposes operator-triggered control actions for live
+                simulation runs. The host must authorize and fan out these actions; the domain
+                validates and applies the supplied action to domain state.
+            controlActions:
+              type: array
+              description: >
+                Optional domain-owned control action descriptors. The dashboard renders these
+                with platform-owned schema-form controls and never loads domain-supplied JavaScript.
+              items:
+                $ref: '#/components/schemas/RemoteDomainControlActionDescriptor'
+            tools:
+              type: array
+              description: >
+                Optional persona-mountable tool declarations implemented by this remote domain.
+                The host exposes these as local callbacks and routes calls over execute-work.
+              items:
+                $ref: '#/components/schemas/RemoteDomainToolDescriptor'
+        uiProfile:
+          $ref: '#/components/schemas/RemoteDomainUiProfile'
+          description: >
+            Optional creator-only UI metadata. This lets the shared dashboard choose a
+            platform-owned renderer and write the result into domainConfig.
+            It does not permit remote domains to provide executable UI bundles.
+
+    RemoteDomainScheduledWorkKind:
+      type: object
+      required:
+        - kind
+        - label
+      properties:
+        kind:
+          type: string
+          example: task
+        label:
+          type: string
+          example: Recurring Marketing Task
+        description:
+          type: string
+        fields:
+          type: array
+          description: >
+            Optional subtype fields rendered inside the shared Scheduled Work composer.
+            Field paths are relative to the work item's payload object.
+          items:
+            $ref: '#/components/schemas/RemoteDomainUiField'
+
+    RemoteDomainToolDescriptor:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          example: get_product_list
+        description:
+          type: string
+        inputSchema:
+          $ref: '#/components/schemas/RemoteDomainGenericObject'
+
+    RemoteDomainControlActionDescriptor:
+      type: object
+      required:
+        - actionId
+        - label
+        - category
+        - inputSchema
+      properties:
+        actionId:
+          type: string
+          example: broadcast-message
+        label:
+          type: string
+          example: Broadcast Message
+        description:
+          type: string
+        category:
+          type: string
+          enum: [BROADCAST, POLICY_CHANGE, MARKET_EVENT, INCIDENT, CAPACITY, CUSTOM]
+        supportedModes:
+          type: array
+          description: Scenario Lab execution modes where this action may be shown.
+          items:
+            type: string
+          example: [CLOCK_DRIVEN_HYBRID]
+        targetScopes:
+          type: array
+          description: Target scopes the host may use when executing this action.
+          items:
+            type: string
+            enum: [AGENT, SEGMENT, COHORT, RUN, BROADCAST]
+          example: [BROADCAST, SEGMENT, AGENT]
+        inputSchema:
+          $ref: '#/components/schemas/RemoteDomainGenericObject'
+        uiSchema:
+          $ref: '#/components/schemas/RemoteDomainGenericObject'
+        requiredCapabilities:
+          type: array
+          items:
+            type: string
+        sideEffectLevel:
+          type: string
+          enum: [NONE, LOW, MEDIUM, HIGH]
+          default: LOW
+        evidenceRequirements:
+          type: array
+          items:
+            type: string
+        limitations:
+          type: array
+          items:
+            type: string
+
+    RemoteDomainUiProfile:
+      type: object
+      description: >
+        Creator-only UI metadata consumed by platform-owned dashboard renderers.
+        This contract does not support domain-supplied executable frontend code.
+      required:
+        - kind
+      properties:
+        kind:
+          type: string
+          enum: [shared-default, schema-form-v1]
+        schemaVersion:
+          type: string
+          example: domain-ui-profile.v1
+        title:
+          type: string
+        description:
+          type: string
+        creatorSections:
+          type: array
+          items:
+            $ref: '#/components/schemas/RemoteDomainUiCreatorSection'
+
+    RemoteDomainUiCreatorSection:
+      type: object
+      required:
+        - id
+        - title
+        - fields
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/RemoteDomainUiField'
+
+    RemoteDomainUiField:
+      type: object
+      required:
+        - id
+        - path
+        - label
+        - control
+      properties:
+        id:
+          type: string
+        path:
+          type: string
+          description: Dot-separated path relative to domainConfig.
+          example: campaignKey
+        label:
+          type: string
+        control:
+          type: string
+          enum: [text, textarea, number, boolean, select, stringList]
+        required:
+          type: boolean
+          default: false
+        helpText:
+          type: string
+        defaultValue:
+          $ref: '#/components/schemas/RemoteDomainUiFieldDefaultValue'
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/RemoteDomainUiOption'
+
+    RemoteDomainUiFieldDefaultValue:
+      type: object
+      required:
+        - kind
+      properties:
+        kind:
+          type: string
+          enum: [string, number, boolean, stringList]
+        stringValue:
+          type: string
+        numberValue:
+          type: number
+        booleanValue:
+          type: boolean
+        stringListValue:
+          type: array
+          items:
+            type: string
+
+    RemoteDomainUiOption:
+      type: object
+      required:
+        - value
+        - label
+      properties:
+        value:
+          type: string
+        label:
+          type: string
+
+    RemoteDomainOperationDescriptor:
+      type: object
+      required:
+        - method
+        - path
+      properties:
+        method:
+          type: string
+          enum: [GET, POST]
+        path:
+          type: string
+        timeoutMs:
+          type: integer
+          format: int32
+
+    RemoteDomainPrepareRequest:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/RemoteDomainMutatingEnvelope'
+        - type: object
+          required:
+            - payload
+          properties:
+            operation:
+              type: string
+              enum: [prepare]
+            payload:
+              type: object
+              required:
+                - personaConfiguration
+              properties:
+                personaConfiguration:
+                  $ref: '#/components/schemas/RemoteDomainGenericObject'
+                initialProjectionHints:
+                  $ref: '#/components/schemas/RemoteDomainGenericObject'
+
+    RemoteDomainPrepareResponse:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/RemoteDomainSuccessEnvelope'
+        - type: object
+          properties:
+            operation:
+              type: string
+              enum: [prepare]
+
+    RemoteDomainExecuteWorkRequest:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/RemoteDomainMutatingEnvelope'
+        - type: object
+          required:
+            - state
+            - payload
+          properties:
+            operation:
+              type: string
+              enum: [execute-work]
+            payload:
+              type: object
+              required:
+                - turnContext
+              properties:
+                turnContext:
+                  $ref: '#/components/schemas/RemoteDomainTurnContext'
+
+    RemoteDomainExecuteWorkResponse:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/RemoteDomainSuccessEnvelope'
+        - type: object
+          properties:
+            operation:
+              type: string
+              enum: [execute-work]
+
+    RemoteDomainSystemWorkWindowRequest:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/RemoteDomainMutatingEnvelope'
+        - type: object
+          required:
+            - payload
+          properties:
+            operation:
+              type: string
+              enum: [domain-system-work-window]
+            payload:
+              $ref: '#/components/schemas/RemoteDomainSystemWorkWindowPayload'
+
+    RemoteDomainSystemWorkWindowResponse:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/RemoteDomainSuccessEnvelope'
+        - type: object
+          properties:
+            operation:
+              type: string
+              enum: [domain-system-work-window]
+
+    RemoteDomainControlActionRequest:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/RemoteDomainMutatingEnvelope'
+        - type: object
+          required:
+            - state
+            - payload
+          properties:
+            operation:
+              type: string
+              enum: [control-action]
+            payload:
+              $ref: '#/components/schemas/RemoteDomainControlActionPayload'
+
+    RemoteDomainControlActionResponse:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/RemoteDomainSuccessEnvelope'
+        - type: object
+          properties:
+            operation:
+              type: string
+              enum: [control-action]
+
+    RemoteDomainStatusRequest:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/RemoteDomainProjectionEnvelope'
+        - type: object
+          properties:
+            operation:
+              type: string
+              enum: [status]
+
+    RemoteDomainInspectionRequest:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/RemoteDomainProjectionEnvelope'
+        - type: object
+          properties:
+            operation:
+              type: string
+              enum: [inspection]
+
+    RemoteDomainStatusResponse:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/RemoteDomainProjectionResponse'
+        - type: object
+          properties:
+            operation:
+              type: string
+              enum: [status]
+
+    RemoteDomainInspectionResponse:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/RemoteDomainProjectionResponse'
+        - type: object
+          properties:
+            operation:
+              type: string
+              enum: [inspection]
+
+    RemoteDomainShutdownRequest:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/RemoteDomainProjectionEnvelope'
+        - type: object
+          properties:
+            operation:
+              type: string
+              enum: [shutdown]
+
+    RemoteDomainShutdownResponse:
+      type: object
+      required:
+        - protocolVersion
+        - requestId
+        - operation
+        - acknowledged
+      properties:
+        protocolVersion:
+          type: string
+          enum: [remote-domain.v1]
+        requestId:
+          type: string
+          format: uuid
+        operation:
+          type: string
+          enum: [shutdown]
+        acknowledged:
+          type: boolean
+          default: true
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/RemoteDomainWarning'
+
+    RemoteDomainMutatingEnvelope:
+      type: object
+      required:
+        - protocolVersion
+        - requestId
+        - operation
+        - idempotencyKey
+        - sentAtEpochMs
+        - deadlineEpochMs
+        - host
+        - domain
+        - agent
+      properties:
+        protocolVersion:
+          type: string
+          enum: [remote-domain.v1]
+        requestId:
+          type: string
+          format: uuid
+        operation:
+          type: string
+        idempotencyKey:
+          type: string
+        sentAtEpochMs:
+          type: integer
+          format: int64
+        deadlineEpochMs:
+          type: integer
+          format: int64
+        host:
+          $ref: '#/components/schemas/RemoteDomainHostContext'
+        domain:
+          $ref: '#/components/schemas/RemoteDomainContext'
+        agent:
+          $ref: '#/components/schemas/RemoteDomainAgentContext'
+        replay:
+          $ref: '#/components/schemas/RemoteDomainReplayContext'
+        state:
+          $ref: '#/components/schemas/RemoteDomainOpaqueState'
+
+    RemoteDomainProjectionEnvelope:
+      type: object
+      required:
+        - protocolVersion
+        - requestId
+        - operation
+        - sentAtEpochMs
+        - deadlineEpochMs
+        - host
+        - domain
+        - agent
+        - state
+      properties:
+        protocolVersion:
+          type: string
+          enum: [remote-domain.v1]
+        requestId:
+          type: string
+          format: uuid
+        operation:
+          type: string
+        sentAtEpochMs:
+          type: integer
+          format: int64
+        deadlineEpochMs:
+          type: integer
+          format: int64
+        host:
+          $ref: '#/components/schemas/RemoteDomainHostContext'
+        domain:
+          $ref: '#/components/schemas/RemoteDomainContext'
+        agent:
+          $ref: '#/components/schemas/RemoteDomainAgentContext'
+        replay:
+          $ref: '#/components/schemas/RemoteDomainReplayContext'
+        state:
+          $ref: '#/components/schemas/RemoteDomainOpaqueState'
+
+    RemoteDomainSuccessEnvelope:
+      type: object
+      required:
+        - protocolVersion
+        - requestId
+        - operation
+        - result
+        - nextState
+        - warnings
+      properties:
+        protocolVersion:
+          type: string
+          enum: [remote-domain.v1]
+        requestId:
+          type: string
+          format: uuid
+        operation:
+          type: string
+        result:
+          $ref: '#/components/schemas/RemoteDomainResult'
+        nextState:
+          $ref: '#/components/schemas/RemoteDomainOpaqueState'
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/RemoteDomainWarning'
+
+    RemoteDomainProjectionResponse:
+      type: object
+      required:
+        - protocolVersion
+        - requestId
+        - operation
+        - result
+        - warnings
+      properties:
+        protocolVersion:
+          type: string
+          enum: [remote-domain.v1]
+        requestId:
+          type: string
+          format: uuid
+        operation:
+          type: string
+        result:
+          $ref: '#/components/schemas/RemoteDomainResult'
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/RemoteDomainWarning'
+
+    RemoteDomainResult:
+      type: object
+      required:
+        - projection
+      properties:
+        runtimeIdentity:
+          type: string
+        toolResult:
+          $ref: '#/components/schemas/RemoteDomainGenericObject'
+          description: >
+            Optional structured result returned when execute-work carries a remote tool call.
+        evidenceEvents:
+          type: array
+          description: >
+            Optional domain-owned evidence events. The host records these into the
+            simulation run ledger when a run id is active. Use this for provider-internal
+            external calls or domain events the host cannot observe directly.
+          items:
+            $ref: '#/components/schemas/RemoteDomainGenericObject'
+        domainSystemWork:
+          $ref: '#/components/schemas/RemoteDomainSystemWorkWindowResult'
+          description: >
+            Optional result metadata returned by domain-system work-window execution.
+            This is intentionally separate from customer/persona scheduled work.
+        controlAction:
+          $ref: '#/components/schemas/RemoteDomainGenericObject'
+          description: Optional result metadata returned by control-action execution.
+        projection:
+          $ref: '#/components/schemas/RemoteDomainProjection'
+
+    RemoteDomainProjection:
+      type: object
+      properties:
+        runtimeMetadata:
+          $ref: '#/components/schemas/RemoteDomainGenericObject'
+        lifecycleSchedule:
+          type: array
+          items:
+            $ref: '#/components/schemas/RemoteDomainScheduleItem'
+        inspectionSchedule:
+          type: array
+          items:
+            $ref: '#/components/schemas/RemoteDomainScheduleItem'
+        statusView:
+          $ref: '#/components/schemas/RemoteDomainGenericObject'
+        inspectionView:
+          $ref: '#/components/schemas/RemoteDomainGenericObject'
+
+    RemoteDomainScheduleItem:
+      type: object
+      properties:
+        description:
+          type: string
+        type:
+          type: string
+        frequency:
+          type: string
+        nextExecution:
+          type: string
+          format: date-time
+        amount:
+          nullable: true
+          oneOf:
+            - type: number
+            - type: 'null'
+
+    RemoteDomainHostContext:
+      type: object
+      required:
+        - service
+        - instanceId
+        - platformVersion
+      properties:
+        service:
+          type: string
+          example: agent-runtime
+        instanceId:
+          type: string
+        platformVersion:
+          type: string
+
+    RemoteDomainContext:
+      type: object
+      required:
+        - domainId
+      properties:
+        domainId:
+          type: string
+
+    RemoteDomainAgentContext:
+      type: object
+      required:
+        - agentId
+        - personaName
+      properties:
+        agentId:
+          type: string
+        conversationId:
+          type: string
+        runtimeIdentity:
+          type: string
+        personaName:
+          type: string
+        agentType:
+          type: string
+        personaDescription:
+          type: string
+        traits:
+          type: array
+          items:
+            type: string
+        interactionMode:
+          type: string
+
+    RemoteDomainReplayContext:
+      type: object
+      properties:
+        seed:
+          type: integer
+          format: int64
+        simulationStartEpochMs:
+          type: integer
+          format: int64
+        playback:
+          type: object
+          properties:
+            rate:
+              type: number
+              format: double
+            paused:
+              type: boolean
+        deterministic:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+            resetStateOnClockRewind:
+              type: boolean
+            strictClock:
+              type: boolean
+        contractVersion:
+          type: integer
+          format: int32
+        updatedAtEpochMs:
+          type: integer
+          format: int64
+
+    RemoteDomainOpaqueState:
+      type: object
+      required:
+        - schemaVersion
+        - data
+      properties:
+        schemaVersion:
+          type: string
+        data:
+          $ref: '#/components/schemas/RemoteDomainGenericObject'
+
+    RemoteDomainTurnContext:
+      type: object
+      required:
+        - timeWindow
+        - dueWork
+      properties:
+        timeWindow:
+          type: object
+          required:
+            - previousTimeEpochMs
+            - currentTimeEpochMs
+          properties:
+            previousTimeEpochMs:
+              type: integer
+              format: int64
+            currentTimeEpochMs:
+              type: integer
+              format: int64
+        dueWork:
+          type: array
+          items:
+            $ref: '#/components/schemas/RemoteDomainDueWorkItem'
+
+    RemoteDomainSystemWorkWindowPayload:
+      type: object
+      required:
+        - timeWindow
+      properties:
+        timeWindow:
+          $ref: '#/components/schemas/RemoteDomainTimeWindow'
+        workKinds:
+          type: array
+          description: Optional domain-system work kinds to evaluate. Empty means provider default.
+          items:
+            type: string
+        maxWorkItems:
+          type: integer
+          format: int32
+          default: 100
+          description: Maximum number of domain-owned work items the provider should execute in this call.
+        executionMode:
+          type: string
+          enum: [EVALUATE_AND_EXECUTE, EVALUATE_ONLY]
+          default: EVALUATE_AND_EXECUTE
+        context:
+          $ref: '#/components/schemas/RemoteDomainGenericObject'
+
+    RemoteDomainControlActionPayload:
+      type: object
+      required:
+        - actionId
+        - operationId
+        - target
+        - inputs
+      properties:
+        actionId:
+          type: string
+        operationId:
+          type: string
+          description: >
+            Host-generated id for this operator action. Reuse the same value only when retrying
+            the same action with the same target and inputs.
+        target:
+          $ref: '#/components/schemas/RemoteDomainControlActionTarget'
+        inputs:
+          $ref: '#/components/schemas/RemoteDomainGenericObject'
+        requestedBy:
+          type: string
+        reason:
+          type: string
+        simulationTimeEpochMs:
+          type: integer
+          format: int64
+        evidenceContext:
+          $ref: '#/components/schemas/RemoteDomainGenericObject'
+
+    RemoteDomainControlActionTarget:
+      type: object
+      required:
+        - scope
+      properties:
+        scope:
+          type: string
+          enum: [AGENT, SEGMENT, COHORT, RUN, BROADCAST]
+        agentIds:
+          type: array
+          items:
+            type: string
+        segmentIds:
+          type: array
+          items:
+            type: string
+        cohortId:
+          type: string
+        selector:
+          $ref: '#/components/schemas/RemoteDomainGenericObject'
+
+    RemoteDomainTimeWindow:
+      type: object
+      required:
+        - previousTimeEpochMs
+        - currentTimeEpochMs
+      properties:
+        previousTimeEpochMs:
+          type: integer
+          format: int64
+        currentTimeEpochMs:
+          type: integer
+          format: int64
+
+    RemoteDomainSystemWorkWindowResult:
+      type: object
+      required:
+        - windowStartEpochMs
+        - windowEndEpochMs
+        - evaluatedWorkCount
+        - executedWorkCount
+      properties:
+        windowStartEpochMs:
+          type: integer
+          format: int64
+        windowEndEpochMs:
+          type: integer
+          format: int64
+        evaluatedWorkCount:
+          type: integer
+          format: int32
+        executedWorkCount:
+          type: integer
+          format: int32
+        workResults:
+          type: array
+          items:
+            $ref: '#/components/schemas/RemoteDomainSystemWorkResult'
+        stateDeltas:
+          type: array
+          description: Optional domain-owned state deltas for evidence/reporting.
+          items:
+            $ref: '#/components/schemas/RemoteDomainGenericObject'
+        checkpointRefs:
+          type: array
+          description: Optional artifact/checkpoint references generated by the remote domain.
+          items:
+            $ref: '#/components/schemas/RemoteDomainGenericObject'
+        nextDueHints:
+          type: array
+          description: Optional provider hints for future domain-system work windows.
+          items:
+            $ref: '#/components/schemas/RemoteDomainGenericObject'
+
+    RemoteDomainSystemWorkResult:
+      type: object
+      required:
+        - workId
+        - kind
+        - outcome
+      properties:
+        workId:
+          type: string
+        kind:
+          type: string
+        occurrenceKey:
+          type: string
+        outcome:
+          type: string
+          enum: [APPLIED, REJECTED, SKIPPED, EVALUATED]
+        scheduledForEpochMs:
+          type: integer
+          format: int64
+        evidenceRef:
+          type: string
+        details:
+          $ref: '#/components/schemas/RemoteDomainGenericObject'
+
+    RemoteDomainDueWorkItem:
+      type: object
+      required:
+        - workId
+        - workType
+        - occurrenceKey
+        - scheduledForEpochMs
+        - attemptNumber
+      properties:
+        workId:
+          type: string
+        workType:
+          type: string
+          example: SCHEDULED_ACTION
+        occurrenceKey:
+          type: string
+        scheduledForEpochMs:
+          type: integer
+          format: int64
+        attemptNumber:
+          type: integer
+          format: int32
+        description:
+          type: string
+        payload:
+          $ref: '#/components/schemas/RemoteDomainGenericObject'
+
+    RemoteDomainWarning:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          $ref: '#/components/schemas/RemoteDomainGenericObject'
+
+    RemoteDomainErrorEnvelope:
+      type: object
+      required:
+        - protocolVersion
+        - requestId
+        - operation
+        - error
+      properties:
+        protocolVersion:
+          type: string
+          enum: [remote-domain.v1]
+        requestId:
+          type: string
+          format: uuid
+        operation:
+          type: string
+        error:
+          type: object
+          required:
+            - code
+            - category
+            - message
+            - retryable
+          properties:
+            code:
+              type: string
+            category:
+              type: string
+              enum:
+                - invalid_request
+                - unsupported_protocol_version
+                - domain_rejected
+                - deadline_exceeded
+                - transient_failure
+                - internal_error
+            message:
+              type: string
+            retryable:
+              type: boolean
+            details:
+              $ref: '#/components/schemas/RemoteDomainGenericObject'
+
+    RemoteDomainGenericObject:
+      type: object
+      additionalProperties: true

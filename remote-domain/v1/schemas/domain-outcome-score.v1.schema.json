@@ -1,0 +1,187 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://astraform.ai/schema/remote-domain/v1/domain-outcome-score.v1.schema.json",
+  "title": "Domain Outcome Score v1",
+  "description": "Deterministic score output produced from a domain outcome scorecard and replay-linked evidence.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "status"],
+  "properties": {
+    "schemaVersion": {
+      "const": "domain_outcome_score.v1"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["SCORED", "UNSCORED", "INVALID"]
+    },
+    "reason": {
+      "type": "string"
+    },
+    "recommendation": {
+      "type": "string",
+      "enum": ["LAUNCH", "WATCH", "BLOCK", "REVIEW"]
+    },
+    "scorecardId": {
+      "type": "string"
+    },
+    "label": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "supportLevel": {
+      "type": "string",
+      "enum": ["EVIDENCE_LINKED", "ARTIFACT_ONLY", "DOMAIN_ASSERTED"]
+    },
+    "selectedRule": {
+      "$ref": "#/$defs/selectedRule"
+    },
+    "metrics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/scoredMetric"
+      }
+    },
+    "gates": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/scoredGate"
+      }
+    },
+    "affectedSubjects": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/affectedSubject"
+      }
+    },
+    "headlineClaims": {
+      "type": "array",
+      "items": {}
+    },
+    "limitations": {
+      "type": "array",
+      "items": {}
+    },
+    "evidenceRefs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    }
+  },
+  "$defs": {
+    "selectedRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["recommendation", "expression", "evidenceRef"],
+      "properties": {
+        "recommendation": {
+          "type": "string",
+          "enum": ["LAUNCH", "WATCH", "BLOCK", "REVIEW"]
+        },
+        "label": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "expression": {
+          "type": "string"
+        },
+        "evidenceRef": {
+          "type": "string"
+        },
+        "supportLevel": {
+          "type": "string"
+        }
+      }
+    },
+    "scoredMetric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["metricId", "label", "value", "evidenceRef"],
+      "properties": {
+        "metricId": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "value": {},
+        "resultType": {
+          "type": "string",
+          "enum": ["boolean", "number", "string"]
+        },
+        "evidenceRef": {
+          "type": "string"
+        },
+        "supportLevel": {
+          "type": "string"
+        },
+        "expression": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "scoredGate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gateId", "label", "passed", "status", "evidenceRef"],
+      "properties": {
+        "gateId": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "passed": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["PASS", "FAIL", "WARNING"]
+        },
+        "evidenceRef": {
+          "type": "string"
+        },
+        "supportLevel": {
+          "type": "string"
+        },
+        "expression": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "affectedSubject": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["subjectId", "label", "evidenceRef"],
+      "properties": {
+        "subjectId": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "segmentId": {
+          "type": "string"
+        },
+        "score": {
+          "type": "number"
+        },
+        "evidenceRef": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

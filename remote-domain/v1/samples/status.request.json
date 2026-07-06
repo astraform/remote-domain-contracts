@@ -1,0 +1,34 @@
+{
+  "protocolVersion": "remote-domain.v1",
+  "requestId": "33333333-3333-4333-8333-333333333333",
+  "operation": "status",
+  "sentAtEpochMs": 1776175260000,
+  "deadlineEpochMs": 1776175262000,
+  "host": {
+    "service": "agent-runtime",
+    "instanceId": "agent-runtime-7f9c5",
+    "platformVersion": "0.1.1"
+  },
+  "domain": {
+    "domainId": "marketing-ops"
+  },
+  "agent": {
+    "agentId": "agent-42",
+    "conversationId": "conv-42",
+    "runtimeIdentity": "campaign-approver-42",
+    "personaName": "Campaign Approver"
+  },
+  "state": {
+    "schemaVersion": "marketing-ops.state.v1",
+    "data": {
+      "pendingApprovals": [],
+      "completedApprovals": [
+        {
+          "approvalId": "apr-100",
+          "campaignId": "cmp-901",
+          "decision": "approved"
+        }
+      ]
+    }
+  }
+}

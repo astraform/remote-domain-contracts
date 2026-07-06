@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "domain_outcome_scorecard.v1",
+  "scorecardId": "demo.customer-impact.v1",
+  "label": "Customer impact scorecard",
+  "description": "Scores whether the simulated decision created review-worthy customer impact.",
+  "version": "0.1.0",
+  "supportLevel": "EVIDENCE_LINKED",
+  "applicableExecutionModes": ["CLOCK_DRIVEN_HYBRID", "AGENTIC_CUSTOMER_SIMULATION"],
+  "metrics": [
+    {
+      "metricId": "affectedSubjects",
+      "label": "Affected subjects",
+      "resultType": "number",
+      "valueExpression": "subjects.affectedCount",
+      "evidenceRef": "events.jsonl",
+      "supportLevel": "EVIDENCE_LINKED"
+    }
+  ],
+  "gates": [
+    {
+      "gateId": "noBlockingEvidenceGap",
+      "label": "No blocking evidence gap",
+      "expression": "evidence.blockingGapCount == 0",
+      "evidenceRef": "manifest.json",
+      "supportLevel": "EVIDENCE_LINKED"
+    }
+  ],
+  "recommendationRules": [
+    {
+      "recommendation": "WATCH",
+      "expression": "subjects.affectedCount > 0",
+      "evidenceRef": "events.jsonl",
+      "reason": "Affected subjects exist and need human review before launch.",
+      "supportLevel": "EVIDENCE_LINKED"
+    },
+    {
+      "recommendation": "LAUNCH",
+      "expression": "subjects.affectedCount == 0",
+      "evidenceRef": "events.jsonl",
+      "reason": "No affected subjects were found under the supplied assumptions.",
+      "supportLevel": "EVIDENCE_LINKED"
+    }
+  ],
+  "limitations": [
+    "Score is stress-test evidence under simulated assumptions, not a production forecast."
+  ]
+}
