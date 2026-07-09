@@ -1367,6 +1367,79 @@ components:
           description: Optional provider hints for future domain-system work windows.
           items:
             $ref: '#/components/schemas/RemoteDomainGenericObject'
+        decisionTriggers:
+          type: array
+          description: Optional domain-fact triggers that can create customer decision opportunities. These are not prompts and must not contain prompt, provider output, or chain-of-thought fields at any nesting level.
+          items:
+            $ref: '#/components/schemas/RemoteDomainCustomerDecisionTrigger'
+
+    RemoteDomainCustomerDecisionTrigger:
+      type: object
+      additionalProperties: true
+      not:
+        anyOf:
+          - required: [prompt]
+          - required: [systemPrompt]
+          - required: [rawProviderText]
+          - required: [chainOfThought]
+      required:
+        - schemaVersion
+        - triggerId
+        - triggerType
+        - triggerRef
+        - scheduledForEpochMs
+        - priority
+        - reason
+        - payload
+      properties:
+        schemaVersion:
+          type: string
+          enum: [customer_decision_trigger.v1]
+        triggerId:
+          type: string
+          minLength: 1
+          description: Domain-stable id for this trigger fact.
+        triggerType:
+          type: string
+          minLength: 1
+          example: statement_close
+        triggerRef:
+          type: string
+          minLength: 1
+          description: Domain evidence/work reference used for idempotency and audit.
+        scheduledForEpochMs:
+          type: integer
+          format: int64
+        priority:
+          type: string
+          minLength: 1
+          example: NORMAL
+        reason:
+          type: string
+          minLength: 1
+        payload:
+          $ref: '#/components/schemas/RemoteDomainCustomerDecisionTriggerPayload'
+        agentId:
+          type: string
+          minLength: 1
+          description: Optional target runtime agent id. If absent, core resolves the current runtime agent.
+        evidenceRefs:
+          type: array
+          items:
+            type: string
+            minLength: 1
+
+    RemoteDomainCustomerDecisionTriggerPayload:
+      type: object
+      minProperties: 1
+      additionalProperties: true
+      description: Sanitized domain-fact payload only. Prompt-like fields such as prompt, systemPrompt, rawProviderText, and chainOfThought are not allowed at any nesting level.
+      not:
+        anyOf:
+          - required: [prompt]
+          - required: [systemPrompt]
+          - required: [rawProviderText]
+          - required: [chainOfThought]
 
     RemoteDomainSystemWorkResult:
       type: object

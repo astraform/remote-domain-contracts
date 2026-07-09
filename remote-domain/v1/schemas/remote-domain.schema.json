@@ -8,6 +8,23 @@
       "type": "object",
       "additionalProperties": true
     },
+    "noPromptLikeFields": {
+      "if": { "type": "object" },
+      "then": {
+        "propertyNames": {
+          "not": {
+            "enum": ["prompt", "systemPrompt", "rawProviderText", "chainOfThought"]
+          }
+        },
+        "additionalProperties": { "$ref": "#/$defs/noPromptLikeFields" }
+      },
+      "else": {
+        "if": { "type": "array" },
+        "then": {
+          "items": { "$ref": "#/$defs/noPromptLikeFields" }
+        }
+      }
+    },
     "warning": {
       "type": "object",
       "additionalProperties": false,
@@ -328,6 +345,84 @@
         }
       }
     },
+    "customerDecisionTriggerPayload": {
+      "description": "Sanitized domain-fact payload only. Prompt-like fields such as prompt, systemPrompt, rawProviderText, and chainOfThought are not allowed at any nesting level.",
+      "allOf": [
+        { "$ref": "#/$defs/noPromptLikeFields" },
+        {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": true
+        }
+      ]
+    },
+    "customerDecisionTrigger": {
+      "description": "Domain-fact trigger that can create a customer decision opportunity. This is not a prompt and must not contain prompt, provider output, or chain-of-thought fields at any nesting level.",
+      "allOf": [
+        { "$ref": "#/$defs/noPromptLikeFields" },
+        {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "schemaVersion",
+            "triggerId",
+            "triggerType",
+            "triggerRef",
+            "scheduledForEpochMs",
+            "priority",
+            "reason",
+            "payload"
+          ],
+          "properties": {
+            "schemaVersion": { "const": "customer_decision_trigger.v1" },
+            "triggerId": { "type": "string", "minLength": 1 },
+            "triggerType": { "type": "string", "minLength": 1 },
+            "triggerRef": { "type": "string", "minLength": 1 },
+            "scheduledForEpochMs": { "type": "integer" },
+            "priority": { "type": "string", "minLength": 1 },
+            "reason": { "type": "string", "minLength": 1 },
+            "payload": { "$ref": "#/$defs/customerDecisionTriggerPayload" },
+            "agentId": { "type": "string", "minLength": 1 },
+            "evidenceRefs": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      ]
+    },
+    "domainSystemWorkWindowResult": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["windowStartEpochMs", "windowEndEpochMs", "evaluatedWorkCount", "executedWorkCount"],
+      "properties": {
+        "windowStartEpochMs": { "type": "integer" },
+        "windowEndEpochMs": { "type": "integer" },
+        "evaluatedWorkCount": { "type": "integer" },
+        "executedWorkCount": { "type": "integer" },
+        "workResults": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/genericObject" }
+        },
+        "stateDeltas": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/genericObject" }
+        },
+        "checkpointRefs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/genericObject" }
+        },
+        "nextDueHints": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/genericObject" }
+        },
+        "decisionTriggers": {
+          "type": "array",
+          "description": "Optional domain-fact triggers that can create customer decision opportunities. These are not prompts and must not contain prompt, provider output, or chain-of-thought fields at any nesting level.",
+          "items": { "$ref": "#/$defs/customerDecisionTrigger" }
+        }
+      }
+    },
     "mutatingEnvelope": {
       "type": "object",
       "required": [
@@ -514,7 +609,13 @@
         {
           "type": "object",
           "properties": {
-            "operation": { "const": "domain-system-work-window" }
+            "operation": { "const": "domain-system-work-window" },
+            "result": {
+              "type": "object",
+              "properties": {
+                "domainSystemWork": { "$ref": "#/$defs/domainSystemWorkWindowResult" }
+              }
+            }
           }
         }
       ]

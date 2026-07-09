@@ -1,93 +1,96 @@
 {
-  "protocolVersion": "remote-domain.v1",
-  "requestId": "66666666-6666-4666-8666-666666666666",
-  "operation": "domain-system-work-window",
-  "result": {
-    "runtimeIdentity": "campaign-approver-42",
-    "domainSystemWork": {
-      "windowStartEpochMs": 1776171600000,
-      "windowEndEpochMs": 1776258000000,
-      "evaluatedWorkCount": 2,
-      "executedWorkCount": 1,
-      "workResults": [
-        {
-          "workId": "sla-expiry-cmp-901-2026-04-15",
-          "kind": "sla-expiry",
-          "occurrenceKey": "cmp-901|sla-expiry|2026-04-15",
-          "outcome": "APPLIED",
-          "scheduledForEpochMs": 1776254400000,
-          "evidenceRef": "domain-event:sla-expired:cmp-901",
-          "details": {
-            "campaignId": "cmp-901",
-            "previousStatus": "pending-review",
-            "nextStatus": "sla-expired"
-          }
+    "protocolVersion": "remote-domain.v1",
+    "requestId": "66666666-6666-4666-8666-666666666666",
+    "operation": "domain-system-work-window",
+    "result": {
+        "runtimeIdentity": "campaign-approver-42",
+        "domainSystemWork": {
+            "windowStartEpochMs": 1776171600000,
+            "windowEndEpochMs": 1776258000000,
+            "evaluatedWorkCount": 2,
+            "executedWorkCount": 1,
+            "workResults": [
+                {
+                    "workId": "sla-expiry-cmp-901-2026-04-15",
+                    "kind": "sla-expiry",
+                    "occurrenceKey": "cmp-901|sla-expiry|2026-04-15",
+                    "outcome": "APPLIED",
+                    "scheduledForEpochMs": 1776254400000,
+                    "evidenceRef": "domain-event:sla-expired:cmp-901",
+                    "details": {
+                        "campaignId": "cmp-901",
+                        "previousStatus": "pending-review",
+                        "nextStatus": "sla-expired"
+                    }
+                },
+                {
+                    "workId": "budget-refresh-2026-04-15",
+                    "kind": "budget-refresh",
+                    "occurrenceKey": "budget-refresh|2026-04-15",
+                    "outcome": "EVALUATED",
+                    "scheduledForEpochMs": 1776258000000,
+                    "evidenceRef": "domain-event:budget-refresh:2026-04-15"
+                }
+            ],
+            "stateDeltas": [
+                {
+                    "path": "openCampaigns[cmp-901].status",
+                    "before": "pending-review",
+                    "after": "sla-expired"
+                }
+            ],
+            "checkpointRefs": [
+                {
+                    "artifactRef": "output/domain/marketing-ops/checkpoints/campaign-approver-42-2026-04-15.json",
+                    "schemaVersion": "marketing-ops.state.v1"
+                }
+            ],
+            "nextDueHints": [
+                {
+                    "kind": "budget-refresh",
+                    "nextDueEpochMs": 1776344400000
+                }
+            ],
+            "decisionTriggers": []
         },
-        {
-          "workId": "budget-refresh-2026-04-15",
-          "kind": "budget-refresh",
-          "occurrenceKey": "budget-refresh|2026-04-15",
-          "outcome": "EVALUATED",
-          "scheduledForEpochMs": 1776258000000,
-          "evidenceRef": "domain-event:budget-refresh:2026-04-15"
+        "evidenceEvents": [
+            {
+                "eventType": "domain_sla_expired",
+                "severity": "warning",
+                "subjectId": "cmp-901",
+                "evidenceRef": "domain-event:sla-expired:cmp-901"
+            }
+        ],
+        "projection": {
+            "runtimeMetadata": {
+                "domainId": "marketing-ops",
+                "lastDomainSystemWindowEndEpochMs": 1776258000000
+            },
+            "lifecycleSchedule": [],
+            "inspectionSchedule": [],
+            "statusView": {
+                "queueDepth": 1,
+                "expiredSlaCount": 1
+            },
+            "inspectionView": {
+                "domainSystemWorkApplied": [
+                    "sla-expiry-cmp-901-2026-04-15"
+                ]
+            }
         }
-      ],
-      "stateDeltas": [
-        {
-          "path": "openCampaigns[cmp-901].status",
-          "before": "pending-review",
-          "after": "sla-expired"
-        }
-      ],
-      "checkpointRefs": [
-        {
-          "artifactRef": "output/domain/marketing-ops/checkpoints/campaign-approver-42-2026-04-15.json",
-          "schemaVersion": "marketing-ops.state.v1"
-        }
-      ],
-      "nextDueHints": [
-        {
-          "kind": "budget-refresh",
-          "nextDueEpochMs": 1776344400000
-        }
-      ]
     },
-    "evidenceEvents": [
-      {
-        "eventType": "domain_sla_expired",
-        "severity": "warning",
-        "subjectId": "cmp-901",
-        "evidenceRef": "domain-event:sla-expired:cmp-901"
-      }
-    ],
-    "projection": {
-      "runtimeMetadata": {
-        "domainId": "marketing-ops",
-        "lastDomainSystemWindowEndEpochMs": 1776258000000
-      },
-      "lifecycleSchedule": [],
-      "inspectionSchedule": [],
-      "statusView": {
-        "queueDepth": 1,
-        "expiredSlaCount": 1
-      },
-      "inspectionView": {
-        "domainSystemWorkApplied": ["sla-expiry-cmp-901-2026-04-15"]
-      }
-    }
-  },
-  "nextState": {
-    "schemaVersion": "marketing-ops.state.v1",
-    "data": {
-      "openCampaigns": [
-        {
-          "campaignId": "cmp-901",
-          "slaDeadlineEpochMs": 1776254400000,
-          "status": "sla-expired"
+    "nextState": {
+        "schemaVersion": "marketing-ops.state.v1",
+        "data": {
+            "openCampaigns": [
+                {
+                    "campaignId": "cmp-901",
+                    "slaDeadlineEpochMs": 1776254400000,
+                    "status": "sla-expired"
+                }
+            ],
+            "expiredSlaCount": 1
         }
-      ],
-      "expiredSlaCount": 1
-    }
-  },
-  "warnings": []
+    },
+    "warnings": []
 }

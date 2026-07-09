@@ -39,6 +39,18 @@ cd build/remote-domain-contract
 shasum -a 256 remote-domain.v1.zip
 ```
 
+To validate unreleased contract changes against local SDK snapshots before
+publishing a GitHub Release:
+
+```bash
+(cd ../remote-domain-sdk-java && ./scripts/sync-remote-domain-contract.sh --check --zip ../remote-domain-contracts/build/remote-domain-contract/remote-domain.v1.zip)
+(cd ../remote-domain-sdk-python && ./scripts/sync-remote-domain-contract.sh --check --zip ../remote-domain-contracts/build/remote-domain-contract/remote-domain.v1.zip)
+```
+
+Run the same commands without `--check` to sync the SDK snapshots from the local
+zip during pre-release development. Published SDK releases should still pin and
+verify the GitHub Release artifact through each SDK's lock file.
+
 ## Release Process
 
 1. Update `remote-domain/v1/`.
