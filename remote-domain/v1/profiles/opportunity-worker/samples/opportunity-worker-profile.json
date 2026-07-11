@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "remote_domain_opportunity_worker_conformance_profile.v1",
+  "toolEffects": {
+    "get_campaign_brief": "READ_ONLY"
+  },
+  "toolProbes": [
+    {
+      "toolName": "get_campaign_brief",
+      "arguments": {}
+    }
+  ],
+  "personaConfiguration": {}
+}

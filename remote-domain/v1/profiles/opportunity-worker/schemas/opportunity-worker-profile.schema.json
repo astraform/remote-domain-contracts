@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://astraform.ai/schema/remote-domain/profiles/opportunity-worker/profile.v1.json",
+  "title": "Remote Domain Opportunity Worker Conformance Profile v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "toolEffects", "toolProbes"],
+  "properties": {
+    "schemaVersion": {
+      "const": "remote_domain_opportunity_worker_conformance_profile.v1"
+    },
+    "toolEffects": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128,
+        "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$"
+      },
+      "additionalProperties": {
+        "enum": ["READ_ONLY", "MUTATING"]
+      }
+    },
+    "toolProbes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["toolName", "arguments"],
+        "properties": {
+          "toolName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$"
+          },
+          "arguments": { "type": "object" }
+        }
+      }
+    },
+    "personaConfiguration": {
+      "type": "object",
+      "default": {}
+    }
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://astraform.ai/schema/remote-domain/profiles/opportunity-worker/conformance-report.v1.json",
+  "title": "Remote Domain Opportunity Worker Conformance Report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "domainId",
+    "protocolVersion",
+    "profileDigest",
+    "manifestDigest",
+    "providerArtifactDigest",
+    "harnessName",
+    "harnessVersion",
+    "status",
+    "baselineChecks",
+    "crossAttemptReplay",
+    "toolProbeResults"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "remote_domain_opportunity_worker_conformance_report.v1"
+    },
+    "domainId": { "type": "string", "minLength": 1 },
+    "protocolVersion": { "const": "remote-domain.v1" },
+    "profileDigest": { "$ref": "#/$defs/sha256Digest" },
+    "manifestDigest": { "$ref": "#/$defs/sha256Digest" },
+    "providerArtifactDigest": { "$ref": "#/$defs/sha256Digest" },
+    "harnessName": {
+      "enum": [
+        "astraform-remote-domain-conformance-java",
+        "astraform-remote-domain-conformance-python"
+      ]
+    },
+    "harnessVersion": { "type": "string", "minLength": 1 },
+    "status": { "const": "PASSED" },
+    "baselineChecks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manifest",
+        "prepare",
+        "status",
+        "executeWork",
+        "populationCatalog",
+        "domainSystemWorkWindow",
+        "controlAction",
+        "inspection",
+        "shutdown"
+      ],
+      "properties": {
+        "manifest": { "const": "PASSED" },
+        "prepare": { "const": "PASSED" },
+        "status": { "const": "PASSED" },
+        "executeWork": { "const": "PASSED" },
+        "populationCatalog": { "$ref": "#/$defs/optionalCheckStatus" },
+        "domainSystemWorkWindow": { "$ref": "#/$defs/optionalCheckStatus" },
+        "controlAction": { "$ref": "#/$defs/optionalCheckStatus" },
+        "inspection": { "const": "PASSED" },
+        "shutdown": { "const": "PASSED" }
+      }
+    },
+    "crossAttemptReplay": { "const": "PASSED" },
+    "toolProbeResults": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "toolName",
+          "effectType",
+          "firstExecution",
+          "secondExecution",
+          "stateSemantics",
+          "replaySemantics"
+        ],
+        "properties": {
+          "toolName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$"
+          },
+          "effectType": { "enum": ["READ_ONLY", "MUTATING"] },
+          "firstExecution": { "const": "PASSED" },
+          "secondExecution": { "const": "PASSED" },
+          "stateSemantics": { "const": "PASSED" },
+          "replaySemantics": { "const": "PASSED" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256Digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "optionalCheckStatus": {
+      "enum": ["PASSED", "NOT_APPLICABLE"]
+    }
+  }
+}

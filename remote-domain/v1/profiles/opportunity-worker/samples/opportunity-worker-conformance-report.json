@@ -1,0 +1,33 @@
+{
+  "baselineChecks": {
+    "controlAction": "PASSED",
+    "domainSystemWorkWindow": "PASSED",
+    "executeWork": "PASSED",
+    "inspection": "PASSED",
+    "manifest": "PASSED",
+    "populationCatalog": "PASSED",
+    "prepare": "PASSED",
+    "shutdown": "PASSED",
+    "status": "PASSED"
+  },
+  "crossAttemptReplay": "PASSED",
+  "domainId": "marketing-ops",
+  "harnessName": "astraform-remote-domain-conformance-python",
+  "harnessVersion": "0.1.4",
+  "manifestDigest": "sha256:c144ca91dd074cb34f0aeeeb33f8540fb3fa06547d029b117181b350bbb339e5",
+  "profileDigest": "sha256:ea8b8ff9f5db59e149522f17dbeb4c13d27057d7bbdc0b1041f3a1308fbfe5d7",
+  "protocolVersion": "remote-domain.v1",
+  "providerArtifactDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "schemaVersion": "remote_domain_opportunity_worker_conformance_report.v1",
+  "status": "PASSED",
+  "toolProbeResults": [
+    {
+      "effectType": "READ_ONLY",
+      "firstExecution": "PASSED",
+      "replaySemantics": "PASSED",
+      "secondExecution": "PASSED",
+      "stateSemantics": "PASSED",
+      "toolName": "get_campaign_brief"
+    }
+  ]
+}

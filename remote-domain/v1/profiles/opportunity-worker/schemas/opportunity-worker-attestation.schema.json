@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://astraform.ai/schema/remote-domain/profiles/opportunity-worker/attestation.dsse.v1.json",
+  "title": "Remote Domain Opportunity Worker DSSE Attestation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["payloadType", "payload", "signatures"],
+  "properties": {
+    "payloadType": { "const": "application/vnd.in-toto+json" },
+    "payload": { "type": "string", "minLength": 1 },
+    "signatures": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["keyid", "sig"],
+        "properties": {
+          "keyid": { "type": "string", "minLength": 1 },
+          "sig": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

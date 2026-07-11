@@ -1,41 +1,33 @@
 {
   "protocolVersion": "remote-domain.v1",
-  "requestId": "22222222-2222-4222-8222-222222222222",
+  "requestId": "23232323-2323-4232-8232-232323232323",
   "operation": "execute-work",
   "result": {
     "runtimeIdentity": "campaign-approver-42",
     "toolResult": {
-      "toolName": "get_campaign_brief",
       "success": true,
-      "message": "Remote tool call completed."
+      "idempotentReplay": true,
+      "workId": "work-100"
     },
+    "evidenceEvents": [
+      {
+        "eventType": "remote_domain_tool_effect_replayed",
+        "outcome": "NOOP",
+        "workId": "work-100"
+      }
+    ],
     "projection": {
       "runtimeMetadata": {
-        "domainId": "marketing-ops",
         "lastWorkId": "work-100"
       },
       "lifecycleSchedule": [],
-      "inspectionSchedule": [
-        {
-          "description": "Campaign review reminder",
-          "type": "SCHEDULED_ACTION",
-          "frequency": "hourly",
-          "nextExecution": "2026-04-14T15:00:00Z",
-          "amount": null
-        }
-      ],
+      "inspectionSchedule": [],
       "statusView": {
-        "queueDepth": 0,
+        "pendingApprovals": 0,
         "lastDecision": "approved"
       },
       "inspectionView": {
-        "processedWork": ["work-100"],
-        "auditTrail": [
-          {
-            "approvalId": "apr-100",
-            "decision": "approved"
-          }
-        ]
+        "completedApprovalCount": 1
       }
     }
   },

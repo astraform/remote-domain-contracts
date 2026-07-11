@@ -954,6 +954,12 @@ components:
           type: string
         idempotencyKey:
           type: string
+          description: >
+            Transport identity for one immutable mutating request. Exact HTTP
+            retries reuse this key and the identical body. A worker retry that
+            changes requestId, attempt metadata, timestamps, state, or any
+            other body field must use a new key; stable business-effect replay
+            is fenced separately by dueWork.workId.
         sentAtEpochMs:
           type: integer
           format: int64
@@ -1450,6 +1456,10 @@ components:
       properties:
         workId:
           type: string
+          description: >
+            Stable business-command identity. Keep this value unchanged across
+            worker attempts for the same effect even though each changed
+            transport request uses a new idempotencyKey.
         kind:
           type: string
         occurrenceKey:
@@ -1476,6 +1486,10 @@ components:
       properties:
         workId:
           type: string
+          description: >
+            Stable business-command identity. Keep this value unchanged across
+            worker attempts for the same effect even though each changed
+            transport request uses a new idempotencyKey.
         workType:
           type: string
           example: SCHEDULED_ACTION
