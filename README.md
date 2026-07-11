@@ -28,10 +28,24 @@ remote-domain.v1.zip.sha256
 The zip contains a top-level `remote-domain.v1/` directory with the versioned
 contract, docs, schemas, and samples.
 
-Public SDKs should pin a release tag such as `remote-domain-v1.0.0` and verify
+Public SDKs should pin a release tag such as `remote-domain-v1.0.1` and verify
 the checksum before using the bundle for code generation or conformance tests.
 
 ## Local Packaging
+
+Run the public verifier from a clean checkout with one command:
+
+```bash
+scripts/verify-all.sh
+```
+
+The runner creates an isolated Python 3.12+ environment under `.venv/` and
+installs the complete dependency set pinned in `requirements-verify.txt`.
+It verifies contract metadata, schemas, signed profile samples, and all current
+wire fixtures against the published `remote-domain-v1.0.0` schema. The baseline
+tag must therefore be available in the local clone.
+
+Then package the verified contract:
 
 ```bash
 scripts/package-remote-domain-contract.sh
@@ -56,8 +70,9 @@ verify the GitHub Release artifact through each SDK's lock file.
 1. Update `remote-domain/v1/`.
 2. Verify `remote-domain/v1/VERSION` and `remote-domain/v1/manifest.json`
    agree.
-3. Run `scripts/package-remote-domain-contract.sh`.
-4. Trigger `.github/workflows/release.yml` with the matching version.
+3. Run `scripts/verify-all.sh`.
+4. Run `scripts/package-remote-domain-contract.sh`.
+5. Trigger `.github/workflows/release.yml` with the matching version.
 
 Use additive optional changes within `remote-domain.v1` only when old clients
 can safely ignore them. Breaking wire changes require a new protocol directory,

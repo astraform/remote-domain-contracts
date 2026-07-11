@@ -21,9 +21,15 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
-      - name: Verify remote-domain contract
-        run: scripts/verify-remote-domain-contract.sh
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify contract and v1.0.0 backward compatibility
+        run: scripts/verify-all.sh
 
       - name: Package remote-domain contract
         run: scripts/package-remote-domain-contract.sh
