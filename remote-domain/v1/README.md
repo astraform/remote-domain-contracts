@@ -11,7 +11,11 @@ It is intentionally about the wire contract, not the monorepo implementation.
   remote-domain documents such as scorecards, Wind Tunnel metadata, cohort
   bundles, population catalogs, and evidence exports.
 - `docs/remote-domain-protocol-v1.md`: rendered protocol guide and ownership boundary.
+- `docs/opportunity-worker-conformance-profile.md`: optional out-of-band worker
+  classification and replay guarantees; it does not extend the v1 wire schema.
 - `samples/`: canonical request and response payloads for every lifecycle operation.
+- `profiles/opportunity-worker/samples/`: worker-profile replay, report, and signed DSSE/in-toto examples.
+- `profiles/opportunity-worker/schemas/`: out-of-band profile, report, and attestation schemas.
 - `manifest.json`: bundle metadata, source provenance, and release artifact name.
 
 ## Code Generation Direction

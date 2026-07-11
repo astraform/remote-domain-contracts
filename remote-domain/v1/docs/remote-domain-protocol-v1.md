@@ -116,7 +116,10 @@ be explicit:
   such as interest accrual, statement close, fees, SLA expiry, or policy refresh
 - `tools`: the persona-mountable tools the remote domain actually implements.
   The host mounts these as local callbacks and routes calls through
-  `execute-work` as `TOOL_CALL` work items.
+  `execute-work` as `TOOL_CALL` work items. Tool effect classification is not a
+  `remote-domain.v1` manifest field. Hosts that execute tools asynchronously
+  must supply that classification through a separate platform registration and
+  conformance profile.
 
 Do not set these as aspirational flags. If the dashboard exposes a field because
 the manifest claims support, the remote service must actually accept and execute
@@ -186,7 +189,7 @@ Every operation uses the same top-level request envelope.
   "protocolVersion": "remote-domain.v1",
   "requestId": "1e2c2d27-8a25-4f74-b9ea-9c2f7d5bf8d1",
   "operation": "execute-work",
-  "idempotencyKey": "agent-42:execute-work:2026-04-14T14:00:00Z",
+  "idempotencyKey": "agent-42:execute-work:request:22222222-2222-4222-8222-222222222222",
   "sentAtEpochMs": 1776175200000,
   "deadlineEpochMs": 1776175204000,
   "host": {
@@ -461,6 +464,30 @@ Rules:
 - the remote domain must treat repeated delivery of the same mutating request as safe
 - the remote domain must not require its own durable idempotency store for correctness
 
+Opportunity-worker execution adds stronger transport/effect guarantees through
+an explicit out-of-band profile. Those guarantees do not change baseline v1
+conformance. See
+[Opportunity Worker Conformance Profile](./opportunity-worker-conformance-profile.md).
+
+For `execute-work`, a mutating due-work item carries a stable `workId`. The host
+keeps that `workId` stable across retries of the same business command, even
+when a later worker attempt uses a new request body and transport
+`idempotencyKey`. The remote domain must consult the supplied canonical state
+and return an idempotent replay result when that `workId` has already been
+applied. That replay must not append another business mutation or emit a second
+effect-applied evidence event.
+
+A conforming replay reports:
+
+- `result.toolResult.idempotentReplay: true`
+- one `result.evidenceEvents[]` item with
+  `eventType: remote_domain_tool_effect_replayed`, `outcome: NOOP`, and the
+  stable `workId`
+- `nextState` canonically equal to the replay request's supplied `state`
+
+A non-opportunity command uses a unique core-owned turn/command identity so two
+legitimate commands at the same simulated instant cannot collide.
+
 That last rule matters.
 
 Because canonical state is host-owned and supplied on every mutating request,
@@ -472,9 +499,15 @@ function over:
 - due work
 - replay/time context
 
-The host commits `nextState` only after a successful response. That keeps
-timeout and retry behavior sane without turning the remote domain into another
-database coordinator.
+The host commits `nextState` only after a successful response. If that commit is
+followed by a worker crash, the next attempt receives the committed canonical
+state and can suppress the stable `workId` without turning the remote domain
+into another database coordinator.
+
+Each business transition must be atomic inside the response. Validate and stage
+all legs before changing `nextState`; a rejected multi-leg command must not
+return partial mutation, and replaying that rejected `workId` must not compound
+an earlier partial effect.
 
 If a remote implementation chooses to cache responses by idempotency key for
 efficiency, fine. But correctness must not depend on that cache.
@@ -488,7 +521,9 @@ Rules:
 - every request carries `deadlineEpochMs`
 - the remote domain must stop work once the deadline is no longer satisfiable
 - the remote domain must not continue background mutation after the deadline
-- the host treats local transport timeout as an unknown outcome and may retry with the same `idempotencyKey`
+- the host treats local transport timeout as an unknown outcome and may retry
+  that same immutable request with the same body and `idempotencyKey`; a new
+  worker attempt builds a new request and transport key
 
 Recommended initial host budgets:
 

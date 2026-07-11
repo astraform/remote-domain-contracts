@@ -282,7 +282,10 @@
       "additionalProperties": false,
       "required": ["workId", "workType", "occurrenceKey", "scheduledForEpochMs", "attemptNumber"],
       "properties": {
-        "workId": { "type": "string" },
+        "workId": {
+          "type": "string",
+          "description": "Stable business-command identity across worker attempts for the same effect."
+        },
         "workType": { "type": "string" },
         "occurrenceKey": { "type": "string" },
         "scheduledForEpochMs": { "type": "integer" },
@@ -440,7 +443,10 @@
         "protocolVersion": { "const": "remote-domain.v1" },
         "requestId": { "type": "string", "format": "uuid" },
         "operation": { "type": "string" },
-        "idempotencyKey": { "type": "string" },
+        "idempotencyKey": {
+          "type": "string",
+          "description": "Transport identity for one immutable mutating request; changed request bodies use a new key."
+        },
         "sentAtEpochMs": { "type": "integer" },
         "deadlineEpochMs": { "type": "integer" },
         "host": { "$ref": "#/$defs/host" },

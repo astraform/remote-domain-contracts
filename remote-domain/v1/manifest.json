@@ -1,6 +1,6 @@
 {
   "bundleId": "remote-domain.v1",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "protocolVersion": "remote-domain.v1",
   "mediaType": "application/vnd.astraform.remote-domain.v1+json",
   "releaseArtifact": "remote-domain.v1.zip",
@@ -17,8 +17,11 @@
     "remote-domain/v1/openapi/remote-domain.yaml",
     "remote-domain/v1/schemas/remote-domain.schema.json",
     "remote-domain/v1/schemas/*.v1.schema.json",
-    "remote-domain/v1/docs/remote-domain-protocol-v1.md",
-    "remote-domain/v1/samples/*.json"
+    "remote-domain/v1/docs/*.md",
+    "remote-domain/v1/samples/*.json",
+    "remote-domain/v1/profiles/opportunity-worker/samples/*.json",
+    "remote-domain/v1/profiles/opportunity-worker/schemas/*.json",
+    "remote-domain/v1/profiles/opportunity-worker/keys/*.b64"
   ],
   "codeGeneration": {
     "java": "openapi-generator-maven-plugin",
