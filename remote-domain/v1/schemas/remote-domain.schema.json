@@ -68,7 +68,7 @@
           "required": ["mode", "contentType"],
           "properties": {
             "mode": { "const": "SYNCHRONOUS_HTTP_JSON" },
-            "contentType": { "type": "string" }
+            "contentType": { "type": "string", "minLength": 1 }
           }
         },
         "operations": {
@@ -382,7 +382,15 @@
             "triggerType": { "type": "string", "minLength": 1 },
             "triggerRef": { "type": "string", "minLength": 1 },
             "scheduledForEpochMs": { "type": "integer" },
-            "priority": { "type": "string", "minLength": 1 },
+            "priority": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Deprecated v1 priority hint retained for wire compatibility. It does not create domain-defined queue ranks. New providers should publish schedulingPriority and keep domain severity in payload."
+            },
+            "schedulingPriority": {
+              "enum": ["CRITICAL", "HIGH", "NORMAL", "LOW"],
+              "description": "Optional core-owned scheduling priority. Missing or unrecognized legacy priority hints resolve to NORMAL. The legacy priority value URGENT normalizes to CRITICAL, but is not valid in this field."
+            },
             "reason": { "type": "string", "minLength": 1 },
             "payload": { "$ref": "#/$defs/customerDecisionTriggerPayload" },
             "agentId": { "type": "string", "minLength": 1 },

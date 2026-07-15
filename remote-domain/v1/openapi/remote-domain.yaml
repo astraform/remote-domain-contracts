@@ -418,6 +418,7 @@ components:
               enum: [SYNCHRONOUS_HTTP_JSON]
             contentType:
               type: string
+              minLength: 1
               example: application/vnd.astraform.remote-domain.v1+json
         operations:
           type: object
@@ -1419,6 +1420,12 @@ components:
         priority:
           type: string
           minLength: 1
+          deprecated: true
+          description: Deprecated v1 priority hint retained for wire compatibility. It does not create domain-defined queue ranks. New providers should publish schedulingPriority and keep domain severity in payload.
+        schedulingPriority:
+          type: string
+          enum: [CRITICAL, HIGH, NORMAL, LOW]
+          description: Optional core-owned scheduling priority. Missing or unrecognized legacy priority hints resolve to NORMAL. The legacy priority value URGENT normalizes to CRITICAL, but is not valid in this field.
           example: NORMAL
         reason:
           type: string
@@ -1439,7 +1446,7 @@ components:
       type: object
       minProperties: 1
       additionalProperties: true
-      description: Sanitized domain-fact payload only. Prompt-like fields such as prompt, systemPrompt, rawProviderText, and chainOfThought are not allowed at any nesting level.
+      description: Sanitized domain-fact payload only. Prompt-like fields such as prompt, systemPrompt, rawProviderText, and chainOfThought are not allowed at any nesting level. Platform admission applies bounded persistence and execution limits without narrowing remote-domain.v1 wire validity.
       not:
         anyOf:
           - required: [prompt]

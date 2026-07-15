@@ -3,52 +3,50 @@
   "vectors": [
     {
       "name": "binary64-exponent",
-      "value": { "x": 0.000001 },
+      "json": "{\"x\":0.000001}",
       "outcome": "ACCEPT",
       "digest": "sha256:2d6412ab0155bb89d63b73dbf83334b26b39d03e8c832cc253c6a6caceba9733"
     },
     {
       "name": "maximum-safe-integer",
-      "value": { "x": 9007199254740991 },
+      "json": "{\"x\":9007199254740991}",
       "outcome": "ACCEPT",
       "digest": "sha256:e9b5e276a84ec2efb237123ad920232fb71e5e9c60f60aa2cd3f75b822db9628"
     },
     {
       "name": "minimum-safe-integer",
-      "value": { "x": -9007199254740991 },
+      "json": "{\"x\":-9007199254740991}",
       "outcome": "ACCEPT",
       "digest": "sha256:a9643339ca632beddc1c7b6d588f915fe9aa0cd1d6e0561b7f7550b50ecc8e5a"
     },
     {
-      "name": "positive-fraction-rounds-to-safe-even-integer",
-      "value": { "x": 9007199254740990.5 },
-      "outcome": "ACCEPT",
-      "digest": "sha256:5d27b0bb83aef0bfe3b941a162696a552291fc5785e6848c3f737e8611291391"
+      "name": "positive-fraction-loses-precision-inside-safe-range",
+      "json": "{\"x\":9007199254740990.5}",
+      "outcome": "REJECT"
     },
     {
-      "name": "negative-fraction-rounds-to-safe-even-integer",
-      "value": { "x": -9007199254740990.5 },
-      "outcome": "ACCEPT",
-      "digest": "sha256:29adef94db1307ce34012959a573467bee0899533e76f1f346c51b392c429948"
+      "name": "negative-fraction-loses-precision-inside-safe-range",
+      "json": "{\"x\":-9007199254740990.5}",
+      "outcome": "REJECT"
     },
     {
       "name": "positive-fraction-rounds-to-unsafe-integer",
-      "value": { "x": 9007199254740991.5 },
+      "json": "{\"x\":9007199254740991.5}",
       "outcome": "REJECT"
     },
     {
       "name": "negative-fraction-rounds-to-unsafe-integer",
-      "value": { "x": -9007199254740991.5 },
+      "json": "{\"x\":-9007199254740991.5}",
       "outcome": "REJECT"
     },
     {
       "name": "positive-unsafe-integer",
-      "value": { "x": 9007199254740992 },
+      "json": "{\"x\":9007199254740992}",
       "outcome": "REJECT"
     },
     {
       "name": "negative-unsafe-integer",
-      "value": { "x": -9007199254740992 },
+      "json": "{\"x\":-9007199254740992}",
       "outcome": "REJECT"
     }
   ]
