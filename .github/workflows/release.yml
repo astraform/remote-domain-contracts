@@ -10,30 +10,29 @@ on:
         description: "Contract version to publish, for example 1.0.0"
         required: true
         type: string
-      overwrite_existing_assets:
-        description: "Replace assets on an existing GitHub Release"
-        required: false
-        default: false
-        type: boolean
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: remote-domain-contract-release
   cancel-in-progress: false
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   publish-contract:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: contract-release
+    permissions:
+      contents: write
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
         with:
           fetch-depth: 0
+          fetch-tags: true
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
         with:
           python-version: "3.12"
 
@@ -44,7 +43,24 @@ jobs:
         run: |
           set -euo pipefail
 
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ] && [ "${GITHUB_REF_NAME}" != "main" ]; then
+            echo "Manual contract releases must run from main, not ${GITHUB_REF_NAME}." >&2
+            exit 1
+          fi
+
+          git fetch --no-tags origin main:refs/remotes/origin/main
+          release_commit="$(git rev-parse HEAD)"
+          if ! git merge-base --is-ancestor "${release_commit}" origin/main; then
+            echo "Release commit ${release_commit} is not present on origin/main." >&2
+            exit 1
+          fi
+
           version="$(tr -d '[:space:]' < remote-domain/v1/VERSION)"
+          if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Contract VERSION ${version} must be an exact semantic version." >&2
+            exit 1
+          fi
+
           if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
             requested_version="${REQUESTED_VERSION}"
             if [ "${requested_version}" != "${version}" ]; then
@@ -62,8 +78,21 @@ jobs:
             exit 1
           fi
 
+          if [ -n "$(git ls-remote --tags origin "refs/tags/${release_tag}" "refs/tags/${release_tag}^{}")" ]; then
+            git fetch origin "refs/tags/${release_tag}:refs/tags/${release_tag}"
+            tag_commit="$(git rev-parse "${release_tag}^{commit}")"
+            if [ "${tag_commit}" != "${release_commit}" ]; then
+              echo "Existing tag ${release_tag} points to ${tag_commit}, not release commit ${release_commit}." >&2
+              exit 1
+            fi
+          elif [ "${GITHUB_EVENT_NAME}" != "workflow_dispatch" ]; then
+            echo "Tag-triggered release ${release_tag} is missing its immutable tag." >&2
+            exit 1
+          fi
+
           echo "version=${version}" >> "${GITHUB_OUTPUT}"
           echo "tag=${release_tag}" >> "${GITHUB_OUTPUT}"
+          echo "commit=${release_commit}" >> "${GITHUB_OUTPUT}"
 
       - name: Verify contract and v1.0.0 backward compatibility
         run: scripts/verify-all.sh
@@ -73,15 +102,17 @@ jobs:
 
       - name: Generate checksum
         run: |
+          set -euo pipefail
           cd build/remote-domain-contract
           sha256sum remote-domain.v1.zip > remote-domain.v1.zip.sha256
+          sha256sum --check remote-domain.v1.zip.sha256
 
-      - name: Publish GitHub release asset
+      - name: Publish immutable GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ steps.release.outputs.tag }}
           RELEASE_TITLE: remote-domain.v1 ${{ steps.release.outputs.tag }}
-          OVERWRITE_EXISTING_ASSETS: ${{ inputs.overwrite_existing_assets || false }}
+          RELEASE_COMMIT: ${{ steps.release.outputs.commit }}
         run: |
           set -euo pipefail
 
@@ -89,15 +120,44 @@ jobs:
           checksum_path="build/remote-domain-contract/remote-domain.v1.zip.sha256"
 
           if gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
-            if [ "${OVERWRITE_EXISTING_ASSETS}" != "true" ]; then
-              echo "Release ${RELEASE_TAG} already exists. Re-run manually with overwrite_existing_assets=true to replace assets." >&2
-              exit 1
-            fi
-            gh release upload "${RELEASE_TAG}" "${zip_path}" "${checksum_path}" --clobber
-          else
-            gh release create "${RELEASE_TAG}" "${zip_path}" "${checksum_path}" \
-              --title "${RELEASE_TITLE}" \
-              --generate-notes \
-              --target "${GITHUB_SHA}" \
-              --latest=false
+            echo "Release ${RELEASE_TAG} already exists and is immutable." >&2
+            exit 1
           fi
+
+          verify_dir="$(mktemp -d)"
+          release_created=false
+          cleanup() {
+            status=$?
+            trap - EXIT
+            rm -rf "${verify_dir}"
+            if [ "${release_created}" = "true" ]; then
+              is_draft="$(gh release view "${RELEASE_TAG}" --json isDraft --jq '.isDraft' 2>/dev/null || true)"
+              if [ "${is_draft}" = "true" ]; then
+                gh release delete "${RELEASE_TAG}" --yes >/dev/null 2>&1 || true
+              fi
+            fi
+            exit "${status}"
+          }
+          trap cleanup EXIT
+
+          gh release create "${RELEASE_TAG}" "${zip_path}" "${checksum_path}" \
+            --draft \
+            --title "${RELEASE_TITLE}" \
+            --generate-notes \
+            --target "${RELEASE_COMMIT}" \
+            --latest=false
+          release_created=true
+
+          gh release download "${RELEASE_TAG}" \
+            --dir "${verify_dir}" \
+            --pattern "remote-domain.v1.zip" \
+            --pattern "remote-domain.v1.zip.sha256"
+          cmp "${zip_path}" "${verify_dir}/remote-domain.v1.zip"
+          cmp "${checksum_path}" "${verify_dir}/remote-domain.v1.zip.sha256"
+          (
+            cd "${verify_dir}"
+            sha256sum --check remote-domain.v1.zip.sha256
+          )
+
+          gh release edit "${RELEASE_TAG}" --draft=false --latest=false
+          release_created=false
