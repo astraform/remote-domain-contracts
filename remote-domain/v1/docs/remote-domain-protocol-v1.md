@@ -177,6 +177,47 @@ The host calls the remote domain through these lifecycle operations:
 and the service must accept the request shape published in the contract samples.
 If a domain does not own institution-side time progression, keep the flag false.
 
+### Customer decision triggers
+
+`domain-system-work-window.result.domainSystemWork.decisionTriggers` contains
+sanitized domain facts that may create customer decision opportunities. A
+trigger is never a prompt, model response, or chain-of-thought container. The
+field names `prompt`, `systemPrompt`, `rawProviderText`, and `chainOfThought`
+are prohibited recursively through every nested object and array.
+
+The platform owns scheduling priority through the additive
+`schedulingPriority` field: `CRITICAL`, `HIGH`, `NORMAL`, or `LOW`.
+Aliases and domain-defined values are invalid in this field. An invalid explicit
+`schedulingPriority` becomes rejected-trigger reconciliation debt. The required
+`priority` string from the originally published v1 trigger remains a deprecated
+compatibility hint: legacy `URGENT` normalizes to `CRITICAL`, other known values
+retain their meaning, and every unknown value maps to `NORMAL` rather than
+creating a domain-owned queue rank. Domain-specific severity belongs in the
+fact payload.
+
+For backwards compatibility, these limits do not narrow the published
+`remote-domain.v1` JSON language. Platform admission is deliberately bounded:
+at most 1,000 triggers per work window; identifiers up to 255 Unicode code
+points without U+0000; reason text up to 1,024 code points without U+0000; at
+most 64 evidence references of 512 code points each; scheduled times from
+`0001-01-01T00:00:00Z` through `9999-12-31T23:59:59.999Z`; and a non-empty
+payload no larger than 64 KiB encoded JSON, 12 levels, 4,096 nodes, 256 entries
+per object/array, 255-code-point property names, and 4,096-code-point strings.
+All admitted text must be a valid Unicode scalar sequence and must not contain
+U+0000; unpaired UTF-16 surrogates and PostgreSQL-unsafe null characters are
+rejected before normalization, hashing, or persistence. Numeric payload values
+must survive RFC 8785/ECMAScript binary64 canonicalization exactly, remain finite and
+non-underflowing, and must not become integers outside
+`-9007199254740991..9007199254740991`. Domain facts requiring greater decimal
+precision use a declared canonical string encoding, such as
+`canonical_decimal_string.v1`, rather than a JSON number.
+Provider responses must contain exactly one JSON value and unique property
+names at every object level. Duplicate properties and trailing JSON values are
+rejected before contract or admission validation.
+Input that is wire-valid but outside platform admission becomes durable
+rejected-trigger reconciliation debt. A malformed entry is rejected
+independently so one provider mistake does not roll back valid peers.
+
 The host may skip `shutdown` if the runtime crashes or the process is killed.
 Remote domains must not rely on it for correctness.
 

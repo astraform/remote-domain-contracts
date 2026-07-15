@@ -84,9 +84,12 @@ integers are limited to `-9007199254740991` through `9007199254740991`, and
 non-finite numbers are forbidden. The DSSE signature uses Ed25519 in v1 of
 this profile.
 
-I-JSON validation applies after conversion to the RFC 8785 binary64 value. A
-fractional spelling that rounds to an integral value outside the safe-integer
-range is rejected consistently across SDK languages.
+I-JSON validation preserves the provider's wire number until its exact RFC 8785
+binary64 representation is proven. A fractional spelling that changes value
+during binary64 conversion is rejected even when the rounded result is inside
+the safe-integer range. Precise decimals must be encoded as strings. A value
+that converts to an integral value outside the safe-integer range is also
+rejected consistently across SDK languages.
 
 The cross-language acceptance and rejection cases are pinned in
 `samples/rfc8785-ijson-number-vectors.json`. SDK conformance implementations

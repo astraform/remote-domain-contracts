@@ -26,6 +26,7 @@ import hashlib
 import base64
 import math
 import rfc8785
+from decimal import Decimal
 from cryptography.hazmat.primitives import serialization
 from jsonschema import Draft202012Validator
 import sys
@@ -163,8 +164,62 @@ if schema_path.is_file():
     )
     if "effectType" in tool_properties:
         failures.append("remote-domain.v1 tool descriptors must not expose effectType")
+    trigger_schema = {
+        "$ref": "#/$defs/customerDecisionTrigger",
+        "$defs": contract_schema.get("$defs", {}),
+    }
+    trigger_validator = Draft202012Validator(trigger_schema)
+    valid_trigger = {
+        "schemaVersion": "customer_decision_trigger.v1",
+        "triggerId": "statement-close-1",
+        "triggerType": "statement_close",
+        "triggerRef": "banking|statement|2026-04",
+        "scheduledForEpochMs": 1777000000000,
+        "priority": "NORMAL",
+        "schedulingPriority": "NORMAL",
+        "reason": "Credit card statement closed",
+        "payload": {"accountId": "acct-1"},
+        "evidenceRefs": ["banking|statement|2026-04"],
+    }
+    if list(trigger_validator.iter_errors(valid_trigger)):
+        failures.append("valid customer decision trigger must pass the public schema")
+    legacy_priority_trigger = {**valid_trigger, "priority": "DOMAIN_SEVERE"}
+    legacy_priority_trigger.pop("schedulingPriority", None)
+    if list(trigger_validator.iter_errors(legacy_priority_trigger)):
+        failures.append("legacy v1 domain priority must remain wire-compatible")
+    invalid_triggers = {
+        "nested prompt field": {
+            **valid_trigger,
+            "payload": {"facts": [[{"chainOfThought": "hidden"}]]},
+        },
+        "unknown scheduling priority": {**valid_trigger, "schedulingPriority": "DOMAIN_SEVERE"},
+    }
+    for label, invalid_trigger in invalid_triggers.items():
+        if not list(trigger_validator.iter_errors(invalid_trigger)):
+            failures.append(f"customer decision trigger schema must reject {label}")
+    legacy_wire_compatibility_triggers = {
+        "256-character trigger identifier": {**valid_trigger, "triggerId": "x" * 256},
+        "65 evidence references": {**valid_trigger, "evidenceRefs": ["ref"] * 65},
+        "257-value payload collection": {**valid_trigger, "payload": {"facts": list(range(257))}},
+        "65-character legacy priority": {**valid_trigger, "priority": "x" * 65},
+    }
+    for label, legacy_trigger in legacy_wire_compatibility_triggers.items():
+        legacy_trigger.pop("schedulingPriority", None)
+        if list(trigger_validator.iter_errors(legacy_trigger)):
+            failures.append(f"remote-domain.v1 wire compatibility must preserve {label}")
 if manifest_sample_path.is_file():
     manifest_sample = json.loads(manifest_sample_path.read_text(encoding="utf-8"))
+    if schema_path.is_file():
+        manifest_validator = Draft202012Validator({
+            "$ref": "#/$defs/manifest",
+            "$defs": contract_schema.get("$defs", {}),
+        })
+        if list(manifest_validator.iter_errors(manifest_sample)):
+            failures.append("manifest sample must pass the public schema")
+        blank_content_type_manifest = json.loads(json.dumps(manifest_sample))
+        blank_content_type_manifest["transport"]["contentType"] = ""
+        if not list(manifest_validator.iter_errors(blank_content_type_manifest)):
+            failures.append("manifest schema must reject a blank transport contentType")
     for index, tool in enumerate(manifest_sample.get("capabilities", {}).get("tools", [])):
         if not isinstance(tool, dict) or "effectType" in tool:
             failures.append(f"manifest sample tool[{index}] must remain remote-domain.v1 compatible")
@@ -216,6 +271,18 @@ def require_interoperable_numbers(value: object, path: str = "$") -> None:
         if abs(value) > MAX_IJSON_SAFE_INTEGER:
             raise ValueError(f"unsafe I-JSON integer at {path}")
         return
+    if isinstance(value, Decimal):
+        binary64 = float(value)
+        if not math.isfinite(binary64):
+            raise ValueError(f"non-finite I-JSON number at {path}")
+        if value != 0 and binary64 == 0.0:
+            raise ValueError(f"underflowing I-JSON number at {path}")
+        if binary64.is_integer() and abs(binary64) > MAX_IJSON_SAFE_INTEGER:
+            raise ValueError(f"unsafe I-JSON integer at {path}")
+        canonical_binary64 = Decimal(rfc8785.dumps(binary64).decode("utf-8"))
+        if value != canonical_binary64:
+            raise ValueError(f"inexact RFC 8785 binary64 number at {path}")
+        return
     if isinstance(value, float):
         if not math.isfinite(value):
             raise ValueError(f"non-finite I-JSON number at {path}")
@@ -232,14 +299,35 @@ def require_interoperable_numbers(value: object, path: str = "$") -> None:
 
 def canonical_digest(value: object) -> str:
     require_interoperable_numbers(value)
-    canonical = rfc8785.dumps(value)
+    canonical = rfc8785.dumps(normalize_interoperable_numbers(value))
     return "sha256:" + hashlib.sha256(canonical).hexdigest()
+
+def normalize_interoperable_numbers(value: object) -> object:
+    if isinstance(value, Decimal):
+        return float(value)
+    if isinstance(value, dict):
+        return {key: normalize_interoperable_numbers(nested) for key, nested in value.items()}
+    if isinstance(value, list):
+        return [normalize_interoperable_numbers(nested) for nested in value]
+    return value
+
+def reject_non_json_number(value: str) -> object:
+    raise ValueError(f"non-JSON numeric token {value}")
 
 if number_vectors_path.is_file():
     number_vectors = json.loads(number_vectors_path.read_text(encoding="utf-8"))
     for vector in number_vectors.get("vectors", []):
         try:
-            digest = canonical_digest(vector.get("value"))
+            wire_json = vector.get("json")
+            if not isinstance(wire_json, str):
+                raise ValueError("number vector json must be a string")
+            value = json.loads(
+                wire_json,
+                parse_float=Decimal,
+                parse_int=int,
+                parse_constant=reject_non_json_number,
+            )
+            digest = canonical_digest(value)
             if vector.get("outcome") != "ACCEPT":
                 failures.append(f"number vector {vector.get('name')} should be rejected")
             elif digest != vector.get("digest"):

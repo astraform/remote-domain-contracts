@@ -28,7 +28,7 @@ remote-domain.v1.zip.sha256
 The zip contains a top-level `remote-domain.v1/` directory with the versioned
 contract, docs, schemas, and samples.
 
-Public SDKs should pin a release tag such as `remote-domain-v1.0.1` and verify
+Public SDKs should pin a release tag such as `remote-domain-v1.0.2` and verify
 the checksum before using the bundle for code generation or conformance tests.
 
 ## Local Packaging
@@ -77,3 +77,24 @@ verify the GitHub Release artifact through each SDK's lock file.
 Use additive optional changes within `remote-domain.v1` only when old clients
 can safely ignore them. Breaking wire changes require a new protocol directory,
 for example `remote-domain/v2/`.
+
+## Cross-Repository Release Train
+
+Contract, SDK, provider, and runtime releases are separate immutable artifacts.
+Publish them in dependency order; a green local snapshot is not a substitute for
+a published upstream release.
+
+1. Publish `remote-domain.v1` bundle `1.0.2` and verify its release checksum.
+2. Run each SDK's remote `sync-remote-domain-contract.sh --check`, then publish
+   Java and Python SDK `0.1.5` from the snapshots pinned to that checksum.
+3. Verify the SDK packages from Maven Central and PyPI before changing provider
+   dependencies or generating new signed conformance attestations.
+4. Upgrade sample/provider builds to SDK `0.1.5`, rerun the opportunity-worker
+   profile, and deploy the resulting provider artifact plus attestation together.
+5. Keep runtime trust explicitly allowlisted for both `0.1.4` and `0.1.5`
+   during the rollout. Remove `0.1.4` only after every authorized provider has
+   been rebuilt and its new attestation is live.
+
+SDK release workflows deliberately use the remote `--check` path. They must
+fail before step 1 exists; bypassing that failure would publish SDK metadata for
+an unavailable contract artifact.
