@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "scenario_lab_provider_finalization_profile.v2",
+  "capability": "PLATFORM_OWNED_V2",
+  "finalizationAction": "FINALIZE",
+  "operationIdDerivation": "scenario-lab-finalize:hex(sha256(utf8(runId + providerRevision)))",
+  "receiptSchemaVersion": "scenario_lab_provider_finalization_receipt.v2",
+  "artifactDigestAlgorithm": "SHA-256",
+  "newClockDrivenLaunchesRequireV2": true,
+  "legacyV1RecoveryOnly": true,
+  "durableSharedStoreCapabilityGateRequired": true,
+  "executedDurableStorageProbeRequired": true,
+  "successfulRestartProbeRequired": true,
+  "independentOsProcessRestartRequired": true,
+  "originalProcessTerminationProofRequired": true,
+  "distinctRestartedProcessIdentityRequired": true,
+  "providerTargetIdentityBindingRequired": true,
+  "terminalPrecedenceProbeRequired": true,
+  "terminalPrecedenceOsProcessRestartRequired": true,
+  "preparedArtifactVerificationRequired": true,
+  "exactVectorOutcomeValidationRequired": true,
+  "providerExecutedAdversarialVectorsRequired": true,
+  "notificationFailureRetryWithoutFinalizeProbeRequired": true
+}

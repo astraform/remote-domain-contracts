@@ -1,0 +1,66 @@
+{
+  "schemaVersion": "scenario_lab_provider_finalization_conformance_vectors.v2",
+  "runId": "scenario-v2-run-001",
+  "providerRevision": "oci-sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "operationId": "scenario-lab-finalize:cdcb4433b11072dbf6d38059200901f1bdd3c032c662fc9bd6695cee322b940f",
+  "finalizeRequest": {
+    "action": "FINALIZE",
+    "operationId": "scenario-lab-finalize:cdcb4433b11072dbf6d38059200901f1bdd3c032c662fc9bd6695cee322b940f"
+  },
+  "inputDigest": "6e91ed4cb7afa70b735a68450692bbb3c5d0faa25a9a2f872739b1c171397c74",
+  "contradictoryFinalizeRequest": {
+    "action": "FINALIZE",
+    "operationId": "scenario-lab-finalize:cdcb4433b11072dbf6d38059200901f1bdd3c032c662fc9bd6695cee322b940f",
+    "force": true
+  },
+  "contradictoryInputDigest": "ae5aca84d2d89d2f8e14990da243c878a55232825f85eaacd337bc3cd825e35e",
+  "legacyV1Recovery": {
+    "finalizationMode": "PLATFORM_OWNED_V1",
+    "requestWithoutV2Fields": {
+      "action": "FINALIZE"
+    },
+    "requestWithV2OperationId": {
+      "action": "FINALIZE",
+      "operationId": "scenario-lab-finalize:cdcb4433b11072dbf6d38059200901f1bdd3c032c662fc9bd6695cee322b940f"
+    }
+  },
+  "executionRequirements": {
+    "durableStorageCapabilityProbe": {
+      "mustExecuteBeforePassed": true,
+      "crossProcessLockExclusionAndVisibilityRequired": true,
+      "atomicDurablePublicationRequired": true,
+      "multiReplicaStorageSemantics": "SHARED_RWX_OR_CAS"
+    },
+    "terminalPrecedenceProbe": {
+      "case": "prepared_then_cancelled",
+      "originalProcessTerminationRequired": true,
+      "distinctRestartedOsProcessRequired": true
+    },
+    "notificationRetryProbe": {
+      "case": "notification_retry",
+      "failedDeliveryAcknowledgementRequired": true,
+      "providerInitiatedRetryRequired": true,
+      "retryWithoutAdditionalFinalizeRequired": true
+    }
+  },
+  "artifact": {
+    "path": "profiles/scenario-lab-finalization-v2/samples/finalized-summary.json",
+    "sha256": "312c7cbf69d09a5ef0f92de624a79c70e685df8860c245acb5155d7bc639e3fb",
+    "byteLength": 53
+  },
+  "expectations": [
+    {"case": "exact_replay", "outcome": "RETURN_EXISTING"},
+    {"case": "contradictory_input", "outcome": "REJECT"},
+    {"case": "missing_receipt", "outcome": "REJECT"},
+    {"case": "receipt_missing_state", "outcome": "REJECT"},
+    {"case": "missing_artifact", "outcome": "REJECT"},
+    {"case": "altered_artifact", "outcome": "REJECT"},
+    {"case": "prepared_then_cancelled", "outcome": "PRESERVE_TERMINAL"},
+    {"case": "notification_retry", "outcome": "RETRY_IDENTICAL_NOTIFICATION"},
+    {"case": "prepared_with_terminal_status", "outcome": "REJECT"},
+    {"case": "published_with_running_status", "outcome": "REJECT"},
+    {"case": "artifact_path_escape", "outcome": "REJECT"},
+    {"case": "ambiguous_receipt_json", "outcome": "REJECT"},
+    {"case": "legacy_v1_v2_operation_id", "outcome": "REJECT"}
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.astraform.ai/remote-domain/v1/profiles/scenario-lab-finalization-v2/schemas/scenario-lab-finalization-profile.schema.json",
+  "title": "Scenario Lab finalization V2 profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "capability",
+    "finalizationAction",
+    "operationIdDerivation",
+    "receiptSchemaVersion",
+    "artifactDigestAlgorithm",
+    "newClockDrivenLaunchesRequireV2",
+    "legacyV1RecoveryOnly",
+    "durableSharedStoreCapabilityGateRequired",
+    "executedDurableStorageProbeRequired",
+    "successfulRestartProbeRequired",
+    "independentOsProcessRestartRequired",
+    "originalProcessTerminationProofRequired",
+    "distinctRestartedProcessIdentityRequired",
+    "providerTargetIdentityBindingRequired",
+    "terminalPrecedenceProbeRequired",
+    "terminalPrecedenceOsProcessRestartRequired",
+    "preparedArtifactVerificationRequired",
+    "exactVectorOutcomeValidationRequired",
+    "providerExecutedAdversarialVectorsRequired",
+    "notificationFailureRetryWithoutFinalizeProbeRequired"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "scenario_lab_provider_finalization_profile.v2"
+    },
+    "capability": {
+      "const": "PLATFORM_OWNED_V2"
+    },
+    "finalizationAction": {
+      "const": "FINALIZE"
+    },
+    "operationIdDerivation": {
+      "const": "scenario-lab-finalize:hex(sha256(utf8(runId + providerRevision)))"
+    },
+    "receiptSchemaVersion": {
+      "const": "scenario_lab_provider_finalization_receipt.v2"
+    },
+    "artifactDigestAlgorithm": {
+      "const": "SHA-256"
+    },
+    "newClockDrivenLaunchesRequireV2": {
+      "const": true
+    },
+    "legacyV1RecoveryOnly": {
+      "const": true
+    },
+    "durableSharedStoreCapabilityGateRequired": {
+      "description": "PLATFORM_OWNED_V2 may be advertised only after the configured durable shared receipt/artifact root proves cross-process lock visibility and atomic durable publication. Multi-replica deployments require storage with shared RWX or equivalent compare-and-swap semantics across every replica.",
+      "const": true
+    },
+    "executedDurableStorageProbeRequired": {
+      "description": "A PASSED result requires executing the published durable-storage probe against the configured receipt/artifact root; configuration inspection or a provider capability assertion is insufficient.",
+      "const": true
+    },
+    "successfulRestartProbeRequired": {
+      "description": "Conformance must crash after PREPARED, restart in an independent operating-system provider process, and reach COMPLETED.",
+      "const": true
+    },
+    "independentOsProcessRestartRequired": {
+      "description": "The successful restart probe must launch a new operating-system provider process; rebuilding an endpoint, application, controller, or service object in the original process is insufficient.",
+      "const": true
+    },
+    "originalProcessTerminationProofRequired": {
+      "description": "The initial provider PID or process handle must be distinct from the conformance harness process. Before restart, conformance must prove that the initial provider process terminated and its endpoint became unreachable.",
+      "const": true
+    },
+    "distinctRestartedProcessIdentityRequired": {
+      "description": "The restarted provider must expose a PID or process handle distinct from the terminated original process.",
+      "const": true
+    },
+    "providerTargetIdentityBindingRequired": {
+      "description": "The initial and restarted provider processes must expose a canonical /pack response whose complete digest, packId, domainId, and providerRevision all match the provider target under conformance. Substituting another compliant process is forbidden.",
+      "const": true
+    },
+    "terminalPrecedenceProbeRequired": {
+      "description": "Conformance must use a separate run to prove that FAILED or CANCELLED wins after PREPARED.",
+      "const": true
+    },
+    "terminalPrecedenceOsProcessRestartRequired": {
+      "description": "After PREPARED, the terminal-precedence probe must terminate the original provider process and recover the terminal run through a distinct restarted operating-system provider process.",
+      "const": true
+    },
+    "preparedArtifactVerificationRequired": {
+      "description": "Conformance must fetch and verify every PREPARED artifact before restarting the provider.",
+      "const": true
+    },
+    "exactVectorOutcomeValidationRequired": {
+      "description": "Conformance must schema-validate and execute every published vector with its exact outcome.",
+      "const": true
+    },
+    "providerExecutedAdversarialVectorsRequired": {
+      "description": "Every published adversarial vector must execute against the provider through an injected durable fault; local schema or parser mutation does not satisfy the vector.",
+      "const": true
+    },
+    "notificationFailureRetryWithoutFinalizeProbeRequired": {
+      "description": "The notification_retry probe must inject a failed delivery acknowledgement and prove that the provider independently retries the identical notification without receiving another FINALIZE request.",
+      "const": true
+    }
+  }
+}

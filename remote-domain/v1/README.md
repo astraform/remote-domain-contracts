@@ -13,9 +13,14 @@ It is intentionally about the wire contract, not the monorepo implementation.
 - `docs/remote-domain-protocol-v1.md`: rendered protocol guide and ownership boundary.
 - `docs/opportunity-worker-conformance-profile.md`: optional out-of-band worker
   classification and replay guarantees; it does not extend the v1 wire schema.
+- `docs/scenario-lab-finalization-v2-profile.md`: optional out-of-band Scenario
+  Lab finalization receipt, artifact-integrity, and retry guarantees. New
+  event-driven launches require this profile; pinned legacy recovery remains v1.
 - `samples/`: canonical request and response payloads for every lifecycle operation.
 - `profiles/opportunity-worker/samples/`: worker-profile replay, report, and signed DSSE/in-toto examples.
 - `profiles/opportunity-worker/schemas/`: out-of-band profile, report, and attestation schemas.
+- `profiles/scenario-lab-finalization-v2/`: language-neutral profile, receipt,
+  and adversarial conformance vectors for crash-safe finalization.
 - `manifest.json`: bundle metadata, source provenance, and release artifact name.
 
 ## Code Generation Direction

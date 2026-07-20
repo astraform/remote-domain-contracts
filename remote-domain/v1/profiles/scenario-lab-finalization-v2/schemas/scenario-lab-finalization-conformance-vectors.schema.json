@@ -1,0 +1,298 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.astraform.ai/remote-domain/v1/profiles/scenario-lab-finalization-v2/schemas/scenario-lab-finalization-conformance-vectors.schema.json",
+  "title": "Scenario Lab finalization V2 conformance vectors",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "runId",
+    "providerRevision",
+    "operationId",
+    "finalizeRequest",
+    "inputDigest",
+    "contradictoryFinalizeRequest",
+    "contradictoryInputDigest",
+    "legacyV1Recovery",
+    "executionRequirements",
+    "artifact",
+    "expectations"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "scenario_lab_provider_finalization_conformance_vectors.v2"
+    },
+    "runId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "providerRevision": {
+      "type": "string",
+      "pattern": "^(build|oci)-sha256:[0-9a-f]{64}$"
+    },
+    "operationId": {
+      "type": "string",
+      "pattern": "^scenario-lab-finalize:[0-9a-f]{64}$"
+    },
+    "finalizeRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action", "operationId"],
+      "properties": {
+        "action": {"const": "FINALIZE"},
+        "operationId": {"type": "string", "pattern": "^scenario-lab-finalize:[0-9a-f]{64}$"}
+      }
+    },
+    "inputDigest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "contradictoryFinalizeRequest": {
+      "type": "object",
+      "required": ["action", "operationId"],
+      "properties": {
+        "action": {"const": "FINALIZE"},
+        "operationId": {"type": "string", "pattern": "^scenario-lab-finalize:[0-9a-f]{64}$"}
+      }
+    },
+    "contradictoryInputDigest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "legacyV1Recovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "finalizationMode",
+        "requestWithoutV2Fields",
+        "requestWithV2OperationId"
+      ],
+      "properties": {
+        "finalizationMode": {
+          "const": "PLATFORM_OWNED_V1"
+        },
+        "requestWithoutV2Fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["action"],
+          "properties": {
+            "action": {"const": "FINALIZE"}
+          }
+        },
+        "requestWithV2OperationId": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["action", "operationId"],
+          "properties": {
+            "action": {"const": "FINALIZE"},
+            "operationId": {
+              "type": "string",
+              "pattern": "^scenario-lab-finalize:[0-9a-f]{64}$"
+            }
+          }
+        }
+      }
+    },
+    "executionRequirements": {
+      "description": "Provider-executed probes required in addition to the exact adversarial case/outcome matrix.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "durableStorageCapabilityProbe",
+        "terminalPrecedenceProbe",
+        "notificationRetryProbe"
+      ],
+      "properties": {
+        "durableStorageCapabilityProbe": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mustExecuteBeforePassed",
+            "crossProcessLockExclusionAndVisibilityRequired",
+            "atomicDurablePublicationRequired",
+            "multiReplicaStorageSemantics"
+          ],
+          "properties": {
+            "mustExecuteBeforePassed": {"const": true},
+            "crossProcessLockExclusionAndVisibilityRequired": {"const": true},
+            "atomicDurablePublicationRequired": {"const": true},
+            "multiReplicaStorageSemantics": {"const": "SHARED_RWX_OR_CAS"}
+          }
+        },
+        "terminalPrecedenceProbe": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "case",
+            "originalProcessTerminationRequired",
+            "distinctRestartedOsProcessRequired"
+          ],
+          "properties": {
+            "case": {"const": "prepared_then_cancelled"},
+            "originalProcessTerminationRequired": {"const": true},
+            "distinctRestartedOsProcessRequired": {"const": true}
+          }
+        },
+        "notificationRetryProbe": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "case",
+            "failedDeliveryAcknowledgementRequired",
+            "providerInitiatedRetryRequired",
+            "retryWithoutAdditionalFinalizeRequired"
+          ],
+          "properties": {
+            "case": {"const": "notification_retry"},
+            "failedDeliveryAcknowledgementRequired": {"const": true},
+            "providerInitiatedRetryRequired": {"const": true},
+            "retryWithoutAdditionalFinalizeRequired": {"const": true}
+          }
+        }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "byteLength"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "byteLength": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "expectations": {
+      "description": "The exact provider-executed case/outcome matrix. Every entry must run against the provider through an injected durable fault; labels, local schema mutation, and local parser mutation are not conformance evidence.",
+      "type": "array",
+      "minItems": 13,
+      "maxItems": 13,
+      "uniqueItems": true,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["case", "outcome"],
+            "properties": {
+              "case": {"const": "exact_replay"},
+              "outcome": {"const": "RETURN_EXISTING"}
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["case", "outcome"],
+            "properties": {
+              "case": {"const": "contradictory_input"},
+              "outcome": {"const": "REJECT"}
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["case", "outcome"],
+            "properties": {
+              "case": {"const": "missing_receipt"},
+              "outcome": {"const": "REJECT"}
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["case", "outcome"],
+            "properties": {
+              "case": {"const": "receipt_missing_state"},
+              "outcome": {"const": "REJECT"}
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["case", "outcome"],
+            "properties": {
+              "case": {"const": "missing_artifact"},
+              "outcome": {"const": "REJECT"}
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["case", "outcome"],
+            "properties": {
+              "case": {"const": "altered_artifact"},
+              "outcome": {"const": "REJECT"}
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["case", "outcome"],
+            "properties": {
+              "case": {"const": "prepared_then_cancelled"},
+              "outcome": {"const": "PRESERVE_TERMINAL"}
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["case", "outcome"],
+            "properties": {
+              "case": {"const": "notification_retry"},
+              "outcome": {"const": "RETRY_IDENTICAL_NOTIFICATION"}
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["case", "outcome"],
+            "properties": {
+              "case": {"const": "prepared_with_terminal_status"},
+              "outcome": {"const": "REJECT"}
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["case", "outcome"],
+            "properties": {
+              "case": {"const": "published_with_running_status"},
+              "outcome": {"const": "REJECT"}
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["case", "outcome"],
+            "properties": {
+              "case": {"const": "artifact_path_escape"},
+              "outcome": {"const": "REJECT"}
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["case", "outcome"],
+            "properties": {
+              "case": {"const": "ambiguous_receipt_json"},
+              "outcome": {"const": "REJECT"}
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["case", "outcome"],
+            "properties": {
+              "case": {"const": "legacy_v1_v2_operation_id"},
+              "outcome": {"const": "REJECT"}
+            }
+          }
+        ]
+      }
+    }
+  }
+}

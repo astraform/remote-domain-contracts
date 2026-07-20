@@ -1,0 +1,241 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.astraform.ai/remote-domain/v1/profiles/scenario-lab-finalization-v2/schemas/scenario-lab-finalization-receipt.schema.json",
+  "title": "Scenario Lab provider finalization receipt V2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "runId",
+    "finalizationMode",
+    "providerRevision",
+    "operationId",
+    "inputDigest",
+    "state",
+    "completionNotificationState",
+    "completionNotificationPayload",
+    "runSnapshot",
+    "artifactManifest",
+    "updatedAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "scenario_lab_provider_finalization_receipt.v2"
+    },
+    "runId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[\\x20-\\x7E]+$"
+    },
+    "finalizationMode": {
+      "const": "PLATFORM_OWNED_V2"
+    },
+    "providerRevision": {
+      "type": "string",
+      "pattern": "^(build|oci)-sha256:[0-9a-f]{64}$"
+    },
+    "operationId": {
+      "type": "string",
+      "pattern": "^scenario-lab-finalize:[0-9a-f]{64}$"
+    },
+    "inputDigest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "state": {
+      "enum": ["PREPARED", "PUBLISHED"]
+    },
+    "completionNotificationState": {
+      "enum": ["PENDING", "CONFIRMED", "NOT_REQUIRED"]
+    },
+    "completionNotificationPayload": {
+      "description": "For a completed PUBLISHED receipt, ownership fields must match the receipt and summaryPath, bundlePath, completedAtEpochMs, and metadata must exactly equal runSnapshot. This cross-object equality is enforced semantically by conformance implementations.",
+      "type": "object"
+    },
+    "runSnapshot": {
+      "$ref": "#/$defs/runSnapshot"
+    },
+    "artifactManifest": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "$ref": "#/$defs/artifact"
+      }
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactRef", "contentType", "sha256", "byteLength"],
+      "properties": {
+        "artifactRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "pattern": "^[\\x20-\\x7E]+$",
+          "allOf": [
+            {"not": {"pattern": "^/"}},
+            {"not": {"pattern": "(^|/)\\.\\.(/|$)"}},
+            {"not": {"pattern": "\\\\"}}
+          ]
+        },
+        "contentType": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "byteLength": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "runSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "startedAtEpochMs", "metadata"],
+      "properties": {
+        "status": {
+          "enum": ["RUNNING", "COMPLETED", "FAILED", "CANCELLED"]
+        },
+        "summaryPath": {
+          "type": ["string", "null"]
+        },
+        "bundlePath": {
+          "type": ["string", "null"]
+        },
+        "startedAtEpochMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "completedAtEpochMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "metadata": {
+          "type": "object"
+        }
+      }
+    },
+    "completionNotification": {
+      "description": "The completed notification is an exact projection of its owning receipt and terminal runSnapshot, not an independent assertion.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runId",
+        "status",
+        "source",
+        "operationId",
+        "inputDigest",
+        "providerRevision",
+        "summaryPath",
+        "bundlePath",
+        "completedAtEpochMs",
+        "metadata"
+      ],
+      "properties": {
+        "runId": {"type": "string", "minLength": 1},
+        "status": {"const": "COMPLETED"},
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[\\x20-\\x7E]+$"
+        },
+        "operationId": {"type": "string", "pattern": "^scenario-lab-finalize:[0-9a-f]{64}$"},
+        "inputDigest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "providerRevision": {"type": "string", "pattern": "^(build|oci)-sha256:[0-9a-f]{64}$"},
+        "summaryPath": {"type": "string", "minLength": 1},
+        "bundlePath": {"type": "string", "minLength": 1},
+        "completedAtEpochMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "metadata": {"type": "object", "minProperties": 1}
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"state": {"const": "PREPARED"}}
+      },
+      "then": {
+        "properties": {
+          "completionNotificationState": {"const": "PENDING"},
+          "completionNotificationPayload": {"maxProperties": 0},
+          "runSnapshot": {
+            "properties": {"status": {"const": "RUNNING"}},
+            "not": {"required": ["completedAtEpochMs"]}
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {"state": {"const": "PUBLISHED"}},
+        "required": ["state"]
+      },
+      "then": {
+        "properties": {
+          "runSnapshot": {
+            "required": ["completedAtEpochMs"],
+            "properties": {
+              "status": {"enum": ["COMPLETED", "FAILED", "CANCELLED"]}
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "state": {"const": "PUBLISHED"},
+          "runSnapshot": {
+            "properties": {"status": {"const": "COMPLETED"}}
+          }
+        },
+        "required": ["state", "runSnapshot"]
+      },
+      "then": {
+        "properties": {
+          "completionNotificationState": {"enum": ["PENDING", "CONFIRMED"]},
+          "completionNotificationPayload": {
+            "$ref": "#/$defs/completionNotification"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "state": {"const": "PUBLISHED"},
+          "runSnapshot": {
+            "properties": {"status": {"enum": ["FAILED", "CANCELLED"]}}
+          }
+        },
+        "required": ["state", "runSnapshot"]
+      },
+      "then": {
+        "properties": {
+          "completionNotificationState": {"const": "NOT_REQUIRED"},
+          "completionNotificationPayload": {"maxProperties": 0}
+        }
+      }
+    }
+  ]
+}

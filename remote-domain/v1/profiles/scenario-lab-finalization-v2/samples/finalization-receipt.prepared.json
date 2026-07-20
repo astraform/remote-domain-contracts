@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "scenario_lab_provider_finalization_receipt.v2",
+  "runId": "scenario-v2-run-001",
+  "finalizationMode": "PLATFORM_OWNED_V2",
+  "providerRevision": "oci-sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "operationId": "scenario-lab-finalize:cdcb4433b11072dbf6d38059200901f1bdd3c032c662fc9bd6695cee322b940f",
+  "inputDigest": "6e91ed4cb7afa70b735a68450692bbb3c5d0faa25a9a2f872739b1c171397c74",
+  "state": "PREPARED",
+  "completionNotificationState": "PENDING",
+  "completionNotificationPayload": {},
+  "runSnapshot": {
+    "status": "RUNNING",
+    "summaryPath": null,
+    "bundlePath": null,
+    "startedAtEpochMs": 1784500000000,
+    "metadata": {
+      "phase": "FINALIZING_REPORT"
+    }
+  },
+  "artifactManifest": {
+    "summary": {
+      "artifactRef": "profiles/scenario-lab-finalization-v2/samples/finalized-summary.json",
+      "contentType": "application/json",
+      "sha256": "312c7cbf69d09a5ef0f92de624a79c70e685df8860c245acb5155d7bc639e3fb",
+      "byteLength": 53
+    }
+  },
+  "updatedAt": "2026-07-20T00:00:00Z"
+}

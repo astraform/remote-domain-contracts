@@ -28,8 +28,10 @@ remote-domain.v1.zip.sha256
 The zip contains a top-level `remote-domain.v1/` directory with the versioned
 contract, docs, schemas, and samples.
 
-Public SDKs should pin a release tag such as `remote-domain-v1.0.2` and verify
-the checksum before using the bundle for code generation or conformance tests.
+The next intended contract release is `remote-domain-v1.0.3`. It is not a
+published dependency until the matching GitHub Release and checksum exist.
+After publication, public SDKs should pin that tag and verify its checksum
+before using the bundle for code generation or conformance tests.
 
 ## Local Packaging
 
@@ -84,16 +86,21 @@ Contract, SDK, provider, and runtime releases are separate immutable artifacts.
 Publish them in dependency order; a green local snapshot is not a substitute for
 a published upstream release.
 
-1. Publish `remote-domain.v1` bundle `1.0.2` and verify its release checksum.
-2. Run each SDK's remote `sync-remote-domain-contract.sh --check`, then publish
-   Java and Python SDK `0.1.5` from the snapshots pinned to that checksum.
+The intended, currently unpublished release train is contract `1.0.3` followed
+by Java and Python SDK `0.1.6`. Naming those versions in this repository does
+not assert that either release already exists.
+
+1. Publish `remote-domain.v1` bundle `1.0.3` and verify its release checksum.
+2. After that release exists, run each SDK's remote
+   `sync-remote-domain-contract.sh --check`, then publish Java and Python SDK
+   `0.1.6` from snapshots pinned to that checksum.
 3. Verify the SDK packages from Maven Central and PyPI before changing provider
    dependencies or generating new signed conformance attestations.
-4. Upgrade sample/provider builds to SDK `0.1.5`, rerun the opportunity-worker
+4. Upgrade sample/provider builds to SDK `0.1.6`, rerun the opportunity-worker
    profile, and deploy the resulting provider artifact plus attestation together.
-5. Keep runtime trust explicitly allowlisted for both `0.1.4` and `0.1.5`
-   during the rollout. Remove `0.1.4` only after every authorized provider has
-   been rebuilt and its new attestation is live.
+5. Keep runtime trust explicitly allowlisted for the currently trusted SDK and
+   `0.1.6` during the rollout. Remove the previous SDK only after every
+   authorized provider has been rebuilt and its new attestation is live.
 
 SDK release workflows deliberately use the remote `--check` path. They must
 fail before step 1 exists; bypassing that failure would publish SDK metadata for
