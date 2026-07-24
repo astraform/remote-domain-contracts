@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://astraform.ai/schema/remote-domain/v1/domain-outcome-scorecard-roles.v1.schema.json",
+  "title": "Domain Outcome Scorecard Roles v1",
+  "description": "Classifies every Policy Wind Tunnel outcome scorecard as business-outcome evidence or a proof gate.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "roles"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "domain_outcome_scorecard_roles.v1"
+    },
+    "roles": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/roleDeclaration"
+      }
+    }
+  },
+  "$defs": {
+    "scorecardId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,254}$"
+    },
+    "roleDeclaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scorecardId",
+        "role"
+      ],
+      "properties": {
+        "scorecardId": {
+          "$ref": "#/$defs/scorecardId"
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "BUSINESS_OUTCOME",
+            "PROOF_GATE"
+          ]
+        }
+      }
+    }
+  }
+}

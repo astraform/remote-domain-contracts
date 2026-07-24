@@ -13,7 +13,7 @@ fi
 if [ "${REMOTE_DOMAIN_VERIFY_BOOTSTRAPPED:-false}" != "true" ]; then
   exec "$ROOT_DIR/scripts/verify-all.sh" --contract-only
 fi
-if ! "$PYTHON_BIN" -c 'import cryptography, jsonschema, rfc8785' >/dev/null 2>&1; then
+if ! "$PYTHON_BIN" -c 'import cryptography, jsonschema, referencing, rfc8785' >/dev/null 2>&1; then
   echo "Verifier dependencies are unavailable in $PYTHON_BIN" >&2
   exit 1
 fi
@@ -24,11 +24,14 @@ from __future__ import annotations
 import json
 import hashlib
 import base64
+import copy
 import math
+import re
 import rfc8785
 from decimal import Decimal
 from cryptography.hazmat.primitives import serialization
 from jsonschema import Draft202012Validator
+from referencing import Registry, Resource
 import sys
 from pathlib import Path
 
@@ -99,7 +102,10 @@ required_paths = [
     "manifest.json",
     "openapi/remote-domain.yaml",
     "schemas/remote-domain.schema.json",
+    "schemas/domain-outcome-scorecard-roles.v1.schema.json",
+    "schemas/policy-wind-tunnel-pack.v1.schema.json",
     "docs/remote-domain-protocol-v1.md",
+    "samples/policy-wind-tunnel-pack.sample.json",
     "docs/opportunity-worker-conformance-profile.md",
     "profiles/opportunity-worker/samples/execute-work.replay.request.json",
     "profiles/opportunity-worker/samples/execute-work.replay.response.json",
@@ -221,6 +227,8 @@ finalization_receipt_schema_path = contract_dir / "profiles/scenario-lab-finaliz
 finalization_vectors_schema_path = contract_dir / "profiles/scenario-lab-finalization-v2/schemas/scenario-lab-finalization-conformance-vectors.schema.json"
 manifest_sample_path = contract_dir / "samples/manifest.response.json"
 schema_path = contract_dir / "schemas/remote-domain.schema.json"
+policy_wind_tunnel_pack_path = contract_dir / "samples/policy-wind-tunnel-pack.sample.json"
+policy_wind_tunnel_pack_schema_path = contract_dir / "schemas/policy-wind-tunnel-pack.v1.schema.json"
 if schema_path.is_file():
     contract_schema = strict_json_loads(schema_path.read_bytes(), schema_path.name)
     tool_properties = (
@@ -411,6 +419,366 @@ def validate_sample(path: Path, schema_path: Path) -> None:
     for error in Draft202012Validator(schema).iter_errors(value):
         location = "/".join(map(str, error.absolute_path))
         failures.append(f"{path.relative_to(contract_dir)} fails its schema at /{location}: {error.message}")
+
+SCORECARD_ID_PATTERN = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:-]{0,254}", re.ASCII)
+
+def canonically_equal_json(left: object, right: object) -> bool:
+    try:
+        require_interoperable_numbers(left)
+        require_interoperable_numbers(right)
+        return (
+            rfc8785.dumps(normalize_interoperable_numbers(left))
+            == rfc8785.dumps(normalize_interoperable_numbers(right))
+        )
+    except Exception:
+        return False
+
+def policy_pack_semantic_errors(pack: object) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(pack, dict):
+        return errors
+
+    catalog = pack.get("outcomeScorecards")
+    scorecard_ids: list[str] = []
+    if isinstance(catalog, list):
+        for index, scorecard in enumerate(catalog):
+            if not isinstance(scorecard, dict):
+                continue
+            scorecard_id = scorecard.get("scorecardId")
+            if not isinstance(scorecard_id, str) or SCORECARD_ID_PATTERN.fullmatch(scorecard_id) is None:
+                errors.append(f"outcomeScorecards[{index}].scorecardId is not canonical")
+                continue
+            scorecard_ids.append(scorecard_id)
+        duplicate_scorecard_ids = sorted({
+            scorecard_id
+            for scorecard_id in scorecard_ids
+            if scorecard_ids.count(scorecard_id) > 1
+        })
+        if duplicate_scorecard_ids:
+            errors.append(
+                "outcomeScorecards contains duplicate scorecardId value(s): "
+                + ", ".join(duplicate_scorecard_ids)
+            )
+
+    if "outcomeScorecard" in pack:
+        primary = pack.get("outcomeScorecard")
+        if not isinstance(catalog, list) or not any(
+            canonically_equal_json(primary, member)
+            for member in catalog
+        ):
+            errors.append("outcomeScorecard must exactly equal one outcomeScorecards member")
+
+    capabilities = pack.get("capabilities")
+    role_catalog = (
+        capabilities.get("domainOutcomeScorecardRoles")
+        if isinstance(capabilities, dict)
+        else None
+    )
+    if role_catalog is None:
+        return errors
+    if not isinstance(role_catalog, dict):
+        return errors
+
+    roles = role_catalog.get("roles")
+    if not isinstance(roles, list):
+        return errors
+
+    declared_ids: list[str] = []
+    for index, declaration in enumerate(roles):
+        if not isinstance(declaration, dict):
+            continue
+        scorecard_id = declaration.get("scorecardId")
+        if not isinstance(scorecard_id, str) or SCORECARD_ID_PATTERN.fullmatch(scorecard_id) is None:
+            errors.append(f"domainOutcomeScorecardRoles.roles[{index}].scorecardId is not canonical")
+            continue
+        declared_ids.append(scorecard_id)
+
+    duplicate_declared_ids = sorted({
+        scorecard_id
+        for scorecard_id in declared_ids
+        if declared_ids.count(scorecard_id) > 1
+    })
+    if duplicate_declared_ids:
+        errors.append(
+            "domainOutcomeScorecardRoles contains duplicate scorecardId value(s): "
+            + ", ".join(duplicate_declared_ids)
+        )
+
+    scorecard_id_set = set(scorecard_ids)
+    declared_id_set = set(declared_ids)
+    if scorecard_id_set != declared_id_set:
+        missing = sorted(scorecard_id_set - declared_id_set)
+        extra = sorted(declared_id_set - scorecard_id_set)
+        if missing:
+            errors.append(
+                "domainOutcomeScorecardRoles is missing scorecardId value(s): "
+                + ", ".join(missing)
+            )
+        if extra:
+            errors.append(
+                "domainOutcomeScorecardRoles contains extra scorecardId value(s): "
+                + ", ".join(extra)
+            )
+    return errors
+
+def positive_business_scorecard_ids(pack: object) -> set[str]:
+    if not isinstance(pack, dict):
+        return set()
+    capabilities = pack.get("capabilities")
+    if not isinstance(capabilities, dict):
+        return set()
+    role_catalog = capabilities.get("domainOutcomeScorecardRoles")
+    if not isinstance(role_catalog, dict):
+        return set()
+    roles = role_catalog.get("roles")
+    if not isinstance(roles, list):
+        return set()
+    return {
+        declaration["scorecardId"]
+        for declaration in roles
+        if isinstance(declaration, dict)
+        and declaration.get("role") == "BUSINESS_OUTCOME"
+        and isinstance(declaration.get("scorecardId"), str)
+    }
+
+def build_local_schema_registry() -> Registry:
+    registry = Registry()
+    for local_schema_path in sorted((contract_dir / "schemas").glob("*.schema.json")):
+        local_schema = strict_json_loads(
+            local_schema_path.read_bytes(),
+            local_schema_path.relative_to(contract_dir).as_posix(),
+        )
+        try:
+            Draft202012Validator.check_schema(local_schema)
+        except Exception as error:
+            failures.append(
+                f"{local_schema_path.relative_to(contract_dir)} is not a valid Draft 2020-12 schema: {error}"
+            )
+            continue
+        schema_id = local_schema.get("$id") if isinstance(local_schema, dict) else None
+        if not isinstance(schema_id, str) or not schema_id:
+            failures.append(f"{local_schema_path.relative_to(contract_dir)} must declare a nonblank $id")
+            continue
+        try:
+            registry = registry.with_resource(schema_id, Resource.from_contents(local_schema))
+        except Exception as error:
+            failures.append(
+                f"{local_schema_path.relative_to(contract_dir)} cannot enter the local schema registry: {error}"
+            )
+    return registry
+
+if policy_wind_tunnel_pack_path.is_file() and policy_wind_tunnel_pack_schema_path.is_file():
+    policy_pack = strict_json_loads(
+        policy_wind_tunnel_pack_path.read_bytes(),
+        policy_wind_tunnel_pack_path.name,
+    )
+    policy_pack_schema = strict_json_loads(
+        policy_wind_tunnel_pack_schema_path.read_bytes(),
+        policy_wind_tunnel_pack_schema_path.name,
+    )
+    policy_pack_validator = Draft202012Validator(
+        policy_pack_schema,
+        registry=build_local_schema_registry(),
+    )
+
+    def policy_pack_errors(candidate: object) -> list[str]:
+        candidate_errors: list[str] = []
+        try:
+            candidate_errors.extend(
+                f"{'/'.join(map(str, error.absolute_path)) or '$'}: {error.message}"
+                for error in policy_pack_validator.iter_errors(candidate)
+            )
+        except Exception as error:
+            candidate_errors.append(f"schema resolution failed: {error}")
+        candidate_errors.extend(policy_pack_semantic_errors(candidate))
+        return candidate_errors
+
+    def expect_policy_pack_valid(label: str, candidate: object) -> None:
+        candidate_errors = policy_pack_errors(candidate)
+        if candidate_errors:
+            failures.append(
+                f"Policy Wind Tunnel pack must accept {label}: "
+                + "; ".join(candidate_errors)
+            )
+
+    def expect_policy_pack_invalid(label: str, candidate: object) -> None:
+        if not policy_pack_errors(candidate):
+            failures.append(f"Policy Wind Tunnel pack must reject {label}")
+
+    expect_policy_pack_valid("the canonical role-bound sample", policy_pack)
+    if positive_business_scorecard_ids(policy_pack) != {"demo.customer-impact.v1"}:
+        failures.append("canonical Policy Wind Tunnel sample must grant positive authority to its business scorecard")
+
+    legacy_pack = copy.deepcopy(policy_pack)
+    legacy_pack["capabilities"].pop("domainOutcomeScorecardRoles")
+    expect_policy_pack_valid("a legacy pack without scorecard-role capability", legacy_pack)
+    if positive_business_scorecard_ids(legacy_pack):
+        failures.append("a missing scorecard-role capability must grant no positive business authority")
+
+    proof_only_pack = copy.deepcopy(policy_pack)
+    proof_only_pack["capabilities"]["domainOutcomeScorecardRoles"]["roles"][0]["role"] = "PROOF_GATE"
+    expect_policy_pack_valid("a proof-only scorecard catalog", proof_only_pack)
+    if positive_business_scorecard_ids(proof_only_pack):
+        failures.append("a proof-only scorecard catalog must grant no positive business authority")
+
+    multiple_scorecards_pack = copy.deepcopy(policy_pack)
+    second_scorecard = copy.deepcopy(multiple_scorecards_pack["outcomeScorecards"][0])
+    second_scorecard["scorecardId"] = "demo.evidence-readiness.v1"
+    second_scorecard["label"] = "Evidence readiness scorecard"
+    multiple_scorecards_pack["outcomeScorecards"].append(second_scorecard)
+    multiple_scorecards_pack["capabilities"]["domainOutcomeScorecardRoles"]["roles"] = [
+        {
+            "scorecardId": "demo.evidence-readiness.v1",
+            "role": "PROOF_GATE",
+        },
+        {
+            "scorecardId": "demo.customer-impact.v1",
+            "role": "BUSINESS_OUTCOME",
+        },
+    ]
+    expect_policy_pack_valid("multiple scorecards in independent role-array order", multiple_scorecards_pack)
+
+    primary_pack = copy.deepcopy(multiple_scorecards_pack)
+    primary_pack["outcomeScorecard"] = copy.deepcopy(primary_pack["outcomeScorecards"][0])
+    expect_policy_pack_valid("an exact singular scorecard catalog pointer", primary_pack)
+
+    equivalent_number_primary_pack = copy.deepcopy(policy_pack)
+    equivalent_number_primary_pack["outcomeScorecards"][0]["numericProbe"] = 1
+    equivalent_number_primary_pack["outcomeScorecard"] = copy.deepcopy(
+        equivalent_number_primary_pack["outcomeScorecards"][0]
+    )
+    equivalent_number_primary_pack["outcomeScorecard"]["numericProbe"] = Decimal("1.0")
+    expect_policy_pack_valid(
+        "an RFC 8785-equivalent singular numeric value",
+        equivalent_number_primary_pack,
+    )
+
+    invalid_role_catalogs: dict[str, object] = {}
+    missing_role_schema_version = copy.deepcopy(policy_pack)
+    missing_role_schema_version["capabilities"]["domainOutcomeScorecardRoles"].pop("schemaVersion")
+    invalid_role_catalogs["a missing role schema version"] = missing_role_schema_version
+
+    wrong_role_schema_version = copy.deepcopy(policy_pack)
+    wrong_role_schema_version["capabilities"]["domainOutcomeScorecardRoles"]["schemaVersion"] = "domain_outcome_scorecard_roles.v2"
+    invalid_role_catalogs["a wrong role schema version"] = wrong_role_schema_version
+
+    empty_roles = copy.deepcopy(policy_pack)
+    empty_roles["capabilities"]["domainOutcomeScorecardRoles"]["roles"] = []
+    invalid_role_catalogs["an empty roles array"] = empty_roles
+
+    non_array_roles = copy.deepcopy(policy_pack)
+    non_array_roles["capabilities"]["domainOutcomeScorecardRoles"]["roles"] = {}
+    invalid_role_catalogs["a non-array roles value"] = non_array_roles
+
+    for label, role in {
+        "an unknown role": "APPROVAL",
+        "a lowercase role": "business_outcome",
+        "a padded role": " BUSINESS_OUTCOME",
+        "a blank role": "",
+    }.items():
+        candidate = copy.deepcopy(policy_pack)
+        candidate["capabilities"]["domainOutcomeScorecardRoles"]["roles"][0]["role"] = role
+        invalid_role_catalogs[label] = candidate
+
+    for label, scorecard_id in {
+        "a blank role scorecard ID": "",
+        "a padded role scorecard ID": " demo.customer-impact.v1",
+        "a malformed role scorecard ID": "demo/customer-impact",
+        "an overlong role scorecard ID": "a" * 256,
+    }.items():
+        candidate = copy.deepcopy(policy_pack)
+        candidate["capabilities"]["domainOutcomeScorecardRoles"]["roles"][0]["scorecardId"] = scorecard_id
+        invalid_role_catalogs[label] = candidate
+
+    for label, scorecard_id in {
+        "a blank outcome scorecard ID": "",
+        "a padded outcome scorecard ID": "demo.customer-impact.v1 ",
+        "a malformed outcome scorecard ID": "demo/customer-impact",
+        "an overlong outcome scorecard ID": "a" * 256,
+    }.items():
+        candidate = copy.deepcopy(policy_pack)
+        candidate["outcomeScorecards"][0]["scorecardId"] = scorecard_id
+        candidate["capabilities"]["domainOutcomeScorecardRoles"]["roles"][0]["scorecardId"] = scorecard_id
+        invalid_role_catalogs[label] = candidate
+
+    extra_role_catalog_field = copy.deepcopy(policy_pack)
+    extra_role_catalog_field["capabilities"]["domainOutcomeScorecardRoles"]["authority"] = "provider"
+    invalid_role_catalogs["an extra role-catalog field"] = extra_role_catalog_field
+
+    extra_role_entry_field = copy.deepcopy(policy_pack)
+    extra_role_entry_field["capabilities"]["domainOutcomeScorecardRoles"]["roles"][0]["label"] = "Business"
+    invalid_role_catalogs["an extra role-entry field"] = extra_role_entry_field
+
+    duplicate_role = copy.deepcopy(policy_pack)
+    duplicate_role["capabilities"]["domainOutcomeScorecardRoles"]["roles"].append(
+        copy.deepcopy(duplicate_role["capabilities"]["domainOutcomeScorecardRoles"]["roles"][0])
+    )
+    invalid_role_catalogs["a duplicate scorecard ID with the same role"] = duplicate_role
+
+    conflicting_role = copy.deepcopy(policy_pack)
+    conflicting_declaration = copy.deepcopy(
+        conflicting_role["capabilities"]["domainOutcomeScorecardRoles"]["roles"][0]
+    )
+    conflicting_declaration["role"] = "PROOF_GATE"
+    conflicting_role["capabilities"]["domainOutcomeScorecardRoles"]["roles"].append(
+        conflicting_declaration
+    )
+    invalid_role_catalogs["a duplicate scorecard ID with a different role"] = conflicting_role
+
+    missing_role_declaration = copy.deepcopy(multiple_scorecards_pack)
+    missing_role_declaration["capabilities"]["domainOutcomeScorecardRoles"]["roles"].pop(0)
+    invalid_role_catalogs["a missing role declaration"] = missing_role_declaration
+
+    extra_role_declaration = copy.deepcopy(policy_pack)
+    extra_role_declaration["capabilities"]["domainOutcomeScorecardRoles"]["roles"].append({
+        "scorecardId": "demo.unpublished.v1",
+        "role": "PROOF_GATE",
+    })
+    invalid_role_catalogs["an extra role declaration"] = extra_role_declaration
+
+    duplicate_scorecard = copy.deepcopy(policy_pack)
+    duplicate_scorecard["outcomeScorecards"].append(
+        copy.deepcopy(duplicate_scorecard["outcomeScorecards"][0])
+    )
+    invalid_role_catalogs["a duplicate outcome scorecard"] = duplicate_scorecard
+
+    conflicting_duplicate_scorecard = copy.deepcopy(policy_pack)
+    conflicting_scorecard = copy.deepcopy(conflicting_duplicate_scorecard["outcomeScorecards"][0])
+    conflicting_scorecard["label"] = "Conflicting customer impact scorecard"
+    conflicting_duplicate_scorecard["outcomeScorecards"].append(conflicting_scorecard)
+    invalid_role_catalogs["a duplicate outcome scorecard ID with different content"] = conflicting_duplicate_scorecard
+
+    singular_only_pack = copy.deepcopy(policy_pack)
+    singular_only_pack["capabilities"].pop("domainOutcomeScorecardRoles")
+    singular_only_pack["outcomeScorecard"] = singular_only_pack["outcomeScorecards"][0]
+    singular_only_pack.pop("outcomeScorecards")
+    invalid_role_catalogs["a singular-only scorecard catalog"] = singular_only_pack
+
+    mismatched_primary_pack = copy.deepcopy(policy_pack)
+    mismatched_primary_pack["outcomeScorecard"] = copy.deepcopy(
+        mismatched_primary_pack["outcomeScorecards"][0]
+    )
+    mismatched_primary_pack["outcomeScorecard"]["label"] = "Different primary scorecard"
+    invalid_role_catalogs["a singular scorecard differing from its plural member"] = mismatched_primary_pack
+
+    true_number_primary_pack = copy.deepcopy(policy_pack)
+    true_number_primary_pack["outcomeScorecards"][0]["typeProbe"] = 1
+    true_number_primary_pack["outcomeScorecard"] = copy.deepcopy(
+        true_number_primary_pack["outcomeScorecards"][0]
+    )
+    true_number_primary_pack["outcomeScorecard"]["typeProbe"] = True
+    invalid_role_catalogs["a singular true differing from plural 1"] = true_number_primary_pack
+
+    false_number_primary_pack = copy.deepcopy(policy_pack)
+    false_number_primary_pack["outcomeScorecards"][0]["typeProbe"] = 0
+    false_number_primary_pack["outcomeScorecard"] = copy.deepcopy(
+        false_number_primary_pack["outcomeScorecards"][0]
+    )
+    false_number_primary_pack["outcomeScorecard"]["typeProbe"] = False
+    invalid_role_catalogs["a singular false differing from plural 0"] = false_number_primary_pack
+
+    for label, invalid_role_catalog in invalid_role_catalogs.items():
+        expect_policy_pack_invalid(label, invalid_role_catalog)
 
 for sample_path, sample_schema_path in [
     (worker_profile_path, worker_profile_schema_path),

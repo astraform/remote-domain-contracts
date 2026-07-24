@@ -1,7 +1,16 @@
 {
   "capabilities": {
     "remoteProviderReady": true,
-    "scorecards": true
+    "scorecards": true,
+    "domainOutcomeScorecardRoles": {
+      "schemaVersion": "domain_outcome_scorecard_roles.v1",
+      "roles": [
+        {
+          "scorecardId": "demo.customer-impact.v1",
+          "role": "BUSINESS_OUTCOME"
+        }
+      ]
+    }
   },
   "controlSchema": {
     "type": "object",

@@ -36,6 +36,27 @@ source in this bundle is the cross-language source of truth.
 - Contract generation must not generate domain business behavior, CEL execution,
   scorecard execution, Spring/FastAPI adapters, or private platform internals.
 
+## Policy Wind Tunnel Scorecard Roles
+
+`capabilities.domainOutcomeScorecardRoles` is optional for compatibility with
+existing `remote-domain.v1` providers. When it is absent, the pack declares no
+scorecard with authority to originate a positive business verdict.
+
+When present, it uses
+`schemas/domain-outcome-scorecard-roles.v1.schema.json`. Its role declarations
+must cover the complete `outcomeScorecards` catalog exactly once:
+
+- `BUSINESS_OUTCOME` scorecards may originate a recognized positive business
+  recommendation when all proof gates pass.
+- `PROOF_GATE` scorecards are downgrade/block-only and cannot originate a
+  positive business recommendation.
+- A proof-only catalog is valid, but it has no positive business authority.
+- Scorecard IDs are exact, untrimmed identifiers. Duplicate IDs, missing or
+  extra role declarations, and conflicting role assignments are invalid.
+- `outcomeScorecard`, when supplied as the primary scorecard pointer, must be
+  exactly JSON-equivalent to one member of the plural catalog. A
+  singular-only catalog is invalid.
+
 ## Build The Handoff Artifact
 
 From the repository root:
