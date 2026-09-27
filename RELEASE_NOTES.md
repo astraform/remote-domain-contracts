@@ -1,12 +1,9 @@
-# Remote Domain Contract — Upcoming Release
+# Remote Domain Contract 1.1.0
 
-Status: Draft
-
-These notes describe changes since published bundle 1.0.4. The next bundle
-version is not assigned yet: `remote-domain/v1/VERSION` and `manifest.json` still
-contain 1.0.4. No new contract release is claimed. Assign a new version and update
-this heading, the changelog and release status before publishing. The existing
-1.0.4 release is immutable.
+Contract bundle 1.1.0 adds optional native simulation profiles to
+`remote-domain.v1`. These notes describe changes since bundle 1.0.4. The bundle
+version is a release identifier; protocol and native profile identifiers remain
+unchanged.
 
 ## What changes
 
@@ -39,8 +36,9 @@ checkpoint. The reference-state profile defines causally guarded reads through
 partner-owned services, including the context, accepted resource version and
 logical time carried outside model-selected arguments.
 
-Contract packaging excludes `.DS_Store` files. CI verifies and packages pushes to
-any branch, and retains pull-request/manual triggers. Release publication retains
+Bundle `VERSION`, manifest version and OpenAPI `info.version` are aligned to
+1.1.0. Contract packaging excludes `.DS_Store` files. CI verifies and packages
+pushes to any branch, and retains pull-request/manual triggers. Release publication retains
 its main-branch ancestry, immutable-tag and downloaded-asset checksum checks and
 uses this file as its GitHub release body.
 
@@ -54,9 +52,9 @@ The OpenAPI tool descriptor now explicitly closes extra properties, consistent
 with the existing JSON Schema restriction; custom undocumented fields are not
 portable contract extensions.
 
-After the new contract is published:
+After `remote-domain-v1.1.0` is published:
 
-1. Pin its immutable release tag and verified ZIP checksum in each SDK's contract
+1. Pin that immutable release tag and verified ZIP checksum in each SDK's contract
    lock, then resync/regenerate SDK sources and packaged schemas.
 2. Run each SDK's published-contract check and build validation before publishing
    its own new package version. Java SDK 0.3.0 is being prepared; this contract
@@ -82,10 +80,15 @@ boundary; there is no general exactly-once guarantee across external systems.
 Publishing these schemas does not certify complete banking/marketing workflows
 or capacity for 1,000+ customers.
 
-## Before publication
+## Release artifacts
 
-Choose a new bundle version and align `VERSION` with `manifest.json`. Finalize
-these notes, date/version the changelog entry, and remove `Status: Draft` after
-verification. Run `scripts/verify-all.sh` and package the bundle from the final
-revision. Publish through the existing workflow from an eligible `main` commit,
-then verify the immutable ZIP and checksum before updating SDK locks.
+Release tag: `remote-domain-v1.1.0`.
+
+- `remote-domain.v1.zip`: the versioned contract, schemas, profile documentation
+  and examples under the `remote-domain.v1/` directory.
+- `remote-domain.v1.zip.sha256`: checksum for verifying the exact published ZIP.
+
+The release workflow verifies and packages the final eligible `main` revision,
+then checks the downloaded release assets before making the release public.
+Preparing these source files does not itself publish those artifacts. Verify the
+published ZIP and checksum before updating SDK locks.

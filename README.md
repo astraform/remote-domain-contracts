@@ -28,11 +28,12 @@ remote-domain.v1.zip.sha256
 The zip contains a top-level `remote-domain.v1/` directory with the versioned
 contract, docs, schemas, and samples.
 
-See the [changelog](CHANGELOG.md) and [upcoming release notes](RELEASE_NOTES.md).
-The latest published bundle is `remote-domain-v1.0.4`. Native profile additions
-are committed development changes and are not part of that published artifact.
-The next bundle version has not been assigned; the version metadata still reads
-1.0.4 and must be advanced before publication.
+See the [changelog](CHANGELOG.md) and [1.1.0 release notes](RELEASE_NOTES.md).
+This checkout targets contract bundle `1.1.0`, with release tag
+`remote-domain-v1.1.0`. The bundle metadata and OpenAPI document version agree.
+Version preparation does not publish a release: verify that the matching GitHub
+Release and checksum exist before pinning it as an SDK dependency. Native profile
+additions are new since the published 1.0.4 baseline.
 
 CI verifies and packages changes pushed to any branch, plus pull requests and
 manual runs. Release publication remains separate: it runs on a
@@ -78,8 +79,9 @@ verify the GitHub Release artifact through each SDK's lock file.
 
 ## Release Process
 
-1. Update `remote-domain/v1/` and assign a new, unused bundle version in both
-   `remote-domain/v1/VERSION` and `remote-domain/v1/manifest.json`.
+1. Update `remote-domain/v1/` and assign a new, unused bundle version in
+   `remote-domain/v1/VERSION`, `remote-domain/v1/manifest.json` and OpenAPI
+   `info.version`. Protocol and profile identifiers retain their own versions.
 2. Finalize `RELEASE_NOTES.md` for that version, remove its `Status: Draft` marker,
    and date/version the entry in `CHANGELOG.md`. The workflow rejects missing,
    empty or draft notes and uses this file for the GitHub release body.
@@ -103,7 +105,7 @@ Contract, SDK, provider, and runtime releases are separate immutable artifacts.
 Publish them in dependency order; a green local snapshot is not a substitute for
 a published upstream release.
 
-The next contract version is pending preparation. Java SDK 0.3.0 is being
+The next release train starts with contract `1.1.0`. Java SDK `0.3.0` is being
 prepared separately; SDK package versions do not need to equal the contract
 bundle version.
 

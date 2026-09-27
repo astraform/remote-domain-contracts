@@ -5,7 +5,9 @@ release versions are separate from the `remote-domain.v1` protocol, native profi
 identifiers and Java/Python SDK versions. Unreleased changes are not a published
 contract dependency.
 
-## Unreleased
+## 1.1.0 — Unreleased
+
+Prepared on 2026-09-27; package publication remains a separate step.
 
 ### Added
 
@@ -22,6 +24,8 @@ contract dependency.
 
 ### Changed
 
+- Bundle metadata and OpenAPI `info.version` are aligned to 1.1.0. Protocol and
+  native profile identifiers remain unchanged.
 - Contract packaging excludes `.DS_Store` workstation metadata.
 - CI verifies and packages changes pushed to any branch; GitHub Actions are
   pinned to full commit SHAs. Pull-request and manual CI triggers remain enabled.
@@ -36,10 +40,10 @@ and validators; older closed manifest schemas can reject the new fields.
 The new OpenAPI tool descriptor closes extra properties to match the existing
 JSON Schema restriction.
 
-The latest published bundle is 1.0.4. The next version has not been assigned;
-`remote-domain/v1/VERSION` and `manifest.json` still contain 1.0.4. These additions
-must be published under a new immutable version. See
-[the draft release notes](RELEASE_NOTES.md) for scope and upgrade instructions.
+This entry describes the prepared 1.1.0 bundle; it does not claim that the
+GitHub release has been published. Publish it under the new immutable tag
+`remote-domain-v1.1.0`, preserving the existing 1.0.4 release. See
+[the 1.1.0 release notes](RELEASE_NOTES.md) for scope and upgrade instructions.
 
 ## 1.0.4 — 2026-07-24
 

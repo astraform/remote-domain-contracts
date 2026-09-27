@@ -71,7 +71,8 @@ The script writes `build/remote-domain-contract/remote-domain.v1/` and
 ## Versioning Rules
 
 - `remote-domain.v1` is the protocol identifier and compatibility boundary.
-- `VERSION` is the bundle release version for partner handoff.
+- `VERSION` is the bundle release version for partner handoff; `manifest.json`
+  and OpenAPI `info.version` carry the same version (1.1.0 in this bundle).
 - Breaking protocol changes require `remote-domain.v2`.
 - Additive optional fields may stay in `remote-domain.v1` when old clients can ignore them safely.
 
@@ -81,6 +82,13 @@ Give partner engineering teams the generated `remote-domain.v1.zip`. They should
 not need to browse this repository to understand the protocol, validate payloads,
 or implement the lifecycle endpoints.
 
-- [Native pure state transformation profile](profiles/native-state-transform/README.md): unreleased opt-in preparation, bounded domain windows and authoritative timing over existing opaque-state operations. Domain rules remain in the provider; the host persists the complete business checkpoint supplied to each operation.
+- [Native pure state transformation profile](profiles/native-state-transform/README.md):
+  introduced in bundle 1.1.0 for opt-in preparation, bounded domain windows and
+  authoritative timing over existing opaque-state operations. Domain rules remain
+  in the provider; the host persists the complete business checkpoint supplied to
+  each operation.
 
-- [Native reference-state profile](profiles/native-reference-state/README.md): unreleased opt-in provider-owned database evolution, reference-only checkpoints and transactional operation replay. Use this profile when authoritative business state lives in the partner's backend.
+- [Native reference-state profile](profiles/native-reference-state/README.md):
+  introduced in bundle 1.1.0 for opt-in provider-owned database evolution,
+  reference-only checkpoints and transactional operation replay. Use this profile
+  when authoritative business state lives in the partner's backend.

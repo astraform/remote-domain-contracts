@@ -1,7 +1,7 @@
 # Native transactional reference-state profile v1
 
-This unreleased opt-in profile reuses `remote-domain.v1` manifest, prepare and
-domain-system-work-window operations. It adds no clock, polling loop or receipt
+This opt-in profile, introduced in contract bundle 1.1.0, reuses the
+`remote-domain.v1` manifest, prepare and domain-system-work-window operations. It adds no clock, polling loop or receipt
 endpoint. The manifest advertises `profile: remote-domain.native-reference-state.v1`,
 `mutationMode: TRANSACTIONAL_REFERENCE_STATE`, `stateScope: AGENT` and
 `initialBoundaryMode: ATTACH_PREPOPULATED_STATE`. The existing pure-state profile

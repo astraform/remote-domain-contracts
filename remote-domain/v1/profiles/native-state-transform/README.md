@@ -1,6 +1,10 @@
 # Native pure opaque-state transformation profile v1
 
-This unreleased opt-in profile reuses `remote-domain.v1` manifest, prepare, domain-system-work-window and read-only execute-work operations. It does not add a loop, global clock, provider context service or receipt endpoint. Providers advertise `capabilities.nativeSimulation`; exact metadata is in [the profile schema](schemas/native-state-transform.schema.json).
+This opt-in profile, introduced in contract bundle 1.1.0, reuses the
+`remote-domain.v1` manifest, prepare, domain-system-work-window and read-only
+execute-work operations. It does not add a loop, global clock, provider context
+service or receipt endpoint. Providers advertise `capabilities.nativeSimulation`;
+exact metadata is in [the profile schema](schemas/native-state-transform.schema.json).
 
 ## Ownership and replay
 

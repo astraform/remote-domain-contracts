@@ -1,6 +1,6 @@
 {
   "bundleId": "remote-domain.v1",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "protocolVersion": "remote-domain.v1",
   "mediaType": "application/vnd.astraform.remote-domain.v1+json",
   "releaseArtifact": "remote-domain.v1.zip",

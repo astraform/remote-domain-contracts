@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Remote Domain Protocol API
-  version: 0.1.1
+  version: 1.1.0
   description: >
     Versioned HTTP/JSON contract for synchronous out-of-process domain services.
     This spec publishes the v1 wire contract for remote domains owned by issue #231.
