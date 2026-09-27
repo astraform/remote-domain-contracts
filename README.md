@@ -28,10 +28,18 @@ remote-domain.v1.zip.sha256
 The zip contains a top-level `remote-domain.v1/` directory with the versioned
 contract, docs, schemas, and samples.
 
-The next intended contract release is `remote-domain-v1.0.3`. It is not a
-published dependency until the matching GitHub Release and checksum exist.
-After publication, public SDKs should pin that tag and verify its checksum
-before using the bundle for code generation or conformance tests.
+See the [changelog](CHANGELOG.md) and [upcoming release notes](RELEASE_NOTES.md).
+The latest published bundle is `remote-domain-v1.0.4`. Native profile additions
+are committed development changes and are not part of that published artifact.
+The next bundle version has not been assigned; the version metadata still reads
+1.0.4 and must be advanced before publication.
+
+CI verifies and packages changes pushed to any branch, plus pull requests and
+manual runs. Release publication remains separate: it runs on a
+`remote-domain-v*` tag or a manual dispatch and requires a commit on `main`.
+
+After publication, public SDKs should pin the new release tag and verify its
+checksum before using the bundle for code generation or conformance tests.
 
 ## Local Packaging
 
@@ -44,8 +52,9 @@ scripts/verify-all.sh
 The runner creates an isolated Python 3.12+ environment under `.venv/` and
 installs the complete dependency set pinned in `requirements-verify.txt`.
 It verifies contract metadata, schemas, signed profile samples, and all current
-wire fixtures against the published `remote-domain-v1.0.0` schema. The baseline
-tag must therefore be available in the local clone.
+wire fixtures against the published `remote-domain-v1.0.0` and
+`remote-domain-v1.0.1` schemas. Both baseline tags must be available in the local
+clone.
 
 Then package the verified contract:
 
@@ -69,12 +78,20 @@ verify the GitHub Release artifact through each SDK's lock file.
 
 ## Release Process
 
-1. Update `remote-domain/v1/`.
-2. Verify `remote-domain/v1/VERSION` and `remote-domain/v1/manifest.json`
-   agree.
-3. Run `scripts/verify-all.sh`.
-4. Run `scripts/package-remote-domain-contract.sh`.
-5. Trigger `.github/workflows/release.yml` with the matching version.
+1. Update `remote-domain/v1/` and assign a new, unused bundle version in both
+   `remote-domain/v1/VERSION` and `remote-domain/v1/manifest.json`.
+2. Finalize `RELEASE_NOTES.md` for that version, remove its `Status: Draft` marker,
+   and date/version the entry in `CHANGELOG.md`. The workflow rejects missing,
+   empty or draft notes and uses this file for the GitHub release body.
+3. Run `scripts/verify-all.sh` and `scripts/package-remote-domain-contract.sh`
+   against the final revision.
+4. Merge the reviewed changes to `main`, then trigger
+   `.github/workflows/release.yml` from `main` with the matching version, or push
+   its matching release tag pointing at a commit already on `main`.
+5. Verify the published ZIP and checksum before updating downstream SDK locks.
+
+`RELEASE_NOTES.md` holds the current release's detailed notes. GitHub Releases
+retain the published copies; `CHANGELOG.md` retains the version history.
 
 Use additive optional changes within `remote-domain.v1` only when old clients
 can safely ignore them. Breaking wire changes require a new protocol directory,
@@ -86,21 +103,22 @@ Contract, SDK, provider, and runtime releases are separate immutable artifacts.
 Publish them in dependency order; a green local snapshot is not a substitute for
 a published upstream release.
 
-The intended, currently unpublished release train is contract `1.0.3` followed
-by Java and Python SDK `0.1.6`. Naming those versions in this repository does
-not assert that either release already exists.
+The next contract version is pending preparation. Java SDK 0.3.0 is being
+prepared separately; SDK package versions do not need to equal the contract
+bundle version.
 
-1. Publish `remote-domain.v1` bundle `1.0.3` and verify its release checksum.
-2. After that release exists, run each SDK's remote
-   `sync-remote-domain-contract.sh --check`, then publish Java and Python SDK
-   `0.1.6` from snapshots pinned to that checksum.
+1. Publish the updated `remote-domain.v1` bundle and verify its release checksum.
+2. Update both SDK release locks to that tag/checksum and resync their contract
+   snapshots. Run each SDK's remote `sync-remote-domain-contract.sh --check` and
+   package validation, then publish its new Java or Python package version.
 3. Verify the SDK packages from Maven Central and PyPI before changing provider
    dependencies or generating new signed conformance attestations.
-4. Upgrade sample/provider builds to SDK `0.1.6`, rerun the opportunity-worker
-   profile, and deploy the resulting provider artifact plus attestation together.
-5. Keep runtime trust explicitly allowlisted for the currently trusted SDK and
-   `0.1.6` during the rollout. Remove the previous SDK only after every
-   authorized provider has been rebuilt and its new attestation is live.
+4. Upgrade sample/provider builds, run the relevant provider conformance and
+   native behavior checks, and deploy the resulting artifacts and any required
+   attestations together.
+5. Where runtime trust uses an SDK allowlist, explicitly permit the validated new
+   version during rollout. Retire the previous entry only after every authorized
+   provider has been rebuilt and its new attestation is live.
 
 SDK release workflows deliberately use the remote `--check` path. They must
 fail before step 1 exists; bypassing that failure would publish SDK metadata for

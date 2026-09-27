@@ -36,6 +36,18 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Validate release notes
+        run: |
+          set -euo pipefail
+          if [ ! -s RELEASE_NOTES.md ]; then
+            echo "Missing or empty RELEASE_NOTES.md; write the release notes before publishing." >&2
+            exit 1
+          fi
+          if grep -q '^Status: Draft' RELEASE_NOTES.md; then
+            echo "Finalize RELEASE_NOTES.md before publishing." >&2
+            exit 1
+          fi
+
       - name: Resolve release metadata
         id: release
         env:
@@ -143,7 +155,7 @@ jobs:
           gh release create "${RELEASE_TAG}" "${zip_path}" "${checksum_path}" \
             --draft \
             --title "${RELEASE_TITLE}" \
-            --generate-notes \
+            --notes-file RELEASE_NOTES.md \
             --target "${RELEASE_COMMIT}" \
             --latest=false
           release_created=true
