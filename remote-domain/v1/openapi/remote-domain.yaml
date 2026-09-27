@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Remote Domain Protocol API
-  version: 0.1.1
+  version: 1.1.0
   description: >
     Versioned HTTP/JSON contract for synchronous out-of-process domain services.
     This spec publishes the v1 wire contract for remote domains owned by issue #231.
@@ -474,6 +474,15 @@ components:
               items:
                 type: string
               example: [SIMULATION, HYBRID]
+            nativeSimulation:
+              oneOf:
+                - $ref: '#/components/schemas/RemoteDomainNativeSimulationProfile'
+                - $ref: '#/components/schemas/RemoteDomainNativeReferenceSimulationProfile'
+              discriminator:
+                propertyName: profile
+                mapping:
+                  remote-domain.native-state-transform.v1: '#/components/schemas/RemoteDomainNativeSimulationProfile'
+                  remote-domain.native-reference-state.v1: '#/components/schemas/RemoteDomainNativeReferenceSimulationProfile'
             remoteProviderLanguage:
               type: string
               description: >
@@ -566,6 +575,12 @@ components:
 
     RemoteDomainToolDescriptor:
       type: object
+      additionalProperties: false
+      description: >
+        Legacy descriptors require only name. A model-selectable native READ_ONLY tool
+        requires description, inputSchema, outputSchema, revision, effectClass and scope
+        as well. Its schemas are closed inline JSON Schemas; the native profile defines
+        the complete descriptor and unchanged-checkpoint execute-work semantics.
       required:
         - name
       properties:
@@ -576,6 +591,18 @@ components:
           type: string
         inputSchema:
           $ref: '#/components/schemas/RemoteDomainGenericObject'
+        outputSchema:
+          $ref: '#/components/schemas/RemoteDomainGenericObject'
+        revision:
+          type: string
+          minLength: 1
+          maxLength: 128
+        effectClass:
+          type: string
+          enum: [READ_ONLY]
+        scope:
+          type: string
+          enum: [CUSTOMER_CONTEXT]
 
     RemoteDomainControlActionDescriptor:
       type: object
@@ -1571,3 +1598,83 @@ components:
     RemoteDomainGenericObject:
       type: object
       additionalProperties: true
+
+    RemoteDomainNativeSimulationProfile:
+      type: object
+      additionalProperties: false
+      description: >
+        Opt-in pure opaque-state transformation profile. The provider owns business rules;
+        the host persists frozen requests and accepted receipts/checkpoints. This capability
+        does not promise exactly-once external effects or a provider receipt lookup endpoint.
+        Exact request and result metadata are defined in profiles/native-state-transform.
+      required: [profile, providerRevision, mutationMode, stateScope, workKinds, maxWindowWorkItems, initialBoundaryMode]
+      properties:
+        profile:
+          type: string
+          pattern: '^remote-domain\.native-state-transform\.v1$'
+          minLength: 39
+          maxLength: 39
+          example: remote-domain.native-state-transform.v1
+        providerRevision:
+          type: string
+          minLength: 1
+          maxLength: 128
+        mutationMode:
+          type: string
+          enum: [PURE_STATE_TRANSFORM]
+        stateScope:
+          type: string
+          enum: [AGENT]
+        workKinds:
+          type: array
+          minItems: 1
+          maxItems: 32
+          uniqueItems: true
+          items: {type: string, minLength: 1, maxLength: 128}
+        maxWindowWorkItems:
+          type: integer
+          minimum: 1
+          maximum: 1024
+        initialBoundaryMode:
+          type: string
+          enum: [PREPARE_INCLUDES_START]
+
+    RemoteDomainNativeReferenceSimulationProfile:
+      type: object
+      additionalProperties: false
+      description: >
+        Opt-in partner-owned transactional state profile. Preparation attaches to prepopulated
+        state at the inclusive start. Checkpoints contain reference metadata only. The provider
+        atomically persists effects, context/resource versions and exact replayable responses.
+        Exact request/result metadata and replay rules are in profiles/native-reference-state.
+      required: [profile, providerRevision, mutationMode, stateScope, workKinds, maxWindowWorkItems, initialBoundaryMode]
+      properties:
+        profile:
+          type: string
+          pattern: '^remote-domain\.native-reference-state\.v1$'
+          minLength: 39
+          maxLength: 39
+          example: remote-domain.native-reference-state.v1
+        providerRevision:
+          type: string
+          minLength: 1
+          maxLength: 128
+        mutationMode:
+          type: string
+          enum: [TRANSACTIONAL_REFERENCE_STATE]
+        stateScope:
+          type: string
+          enum: [AGENT]
+        workKinds:
+          type: array
+          minItems: 1
+          maxItems: 32
+          uniqueItems: true
+          items: {type: string, minLength: 1, maxLength: 128}
+        maxWindowWorkItems:
+          type: integer
+          minimum: 1
+          maximum: 1024
+        initialBoundaryMode:
+          type: string
+          enum: [ATTACH_PREPOPULATED_STATE]

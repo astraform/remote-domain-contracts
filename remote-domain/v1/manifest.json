@@ -1,6 +1,6 @@
 {
   "bundleId": "remote-domain.v1",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "protocolVersion": "remote-domain.v1",
   "mediaType": "application/vnd.astraform.remote-domain.v1+json",
   "releaseArtifact": "remote-domain.v1.zip",
@@ -8,7 +8,9 @@
     "remote-domain/v1/openapi/remote-domain.yaml",
     "remote-domain/v1/schemas/remote-domain.schema.json",
     "remote-domain/v1/schemas/*.v1.schema.json",
-    "remote-domain/v1/docs/remote-domain-protocol-v1.md"
+    "remote-domain/v1/docs/remote-domain-protocol-v1.md",
+    "remote-domain/v1/profiles/native-state-transform/schemas/*.json",
+    "remote-domain/v1/profiles/native-reference-state/schemas/*.json"
   ],
   "partnerContents": [
     "remote-domain/v1/README.md",
@@ -23,7 +25,11 @@
     "remote-domain/v1/profiles/opportunity-worker/schemas/*.json",
     "remote-domain/v1/profiles/opportunity-worker/keys/*.b64",
     "remote-domain/v1/profiles/scenario-lab-finalization-v2/samples/*.json",
-    "remote-domain/v1/profiles/scenario-lab-finalization-v2/schemas/*.json"
+    "remote-domain/v1/profiles/scenario-lab-finalization-v2/schemas/*.json",
+    "remote-domain/v1/profiles/native-state-transform/README.md",
+    "remote-domain/v1/profiles/native-state-transform/schemas/*.json",
+    "remote-domain/v1/profiles/native-reference-state/README.md",
+    "remote-domain/v1/profiles/native-reference-state/schemas/*.json"
   ],
   "codeGeneration": {
     "java": "openapi-generator-maven-plugin",

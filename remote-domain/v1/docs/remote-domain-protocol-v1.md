@@ -495,6 +495,14 @@ protocol into a hidden persistence backplane. That is the wrong architecture.
 
 ## Idempotency
 
+The opt-in [native reference-state profile](../profiles/native-reference-state/README.md)
+is the explicit exception to the baseline host-canonical business-state and
+optional provider receipt-store rules below. It keeps authoritative business state in the partner
+database, returns reference-only checkpoints and requires transactional effects
+with durable exact-response replay. Its profile schema also defines guarded
+customer reads. Providers must advertise that profile; mutable backend work must
+never be advertised as `PURE_STATE_TRANSFORM`.
+
 The protocol is idempotent by contract, not by hope.
 
 Rules:
@@ -554,6 +562,12 @@ If a remote implementation chooses to cache responses by idempotency key for
 efficiency, fine. But correctness must not depend on that cache.
 
 ## Timeout And Deadline Semantics
+
+For the native reference-state profile, a previously committed exact operation
+receipt remains retrievable by replaying its original request after the deadline.
+The provider checks that receipt before expiration/version rejection; an expired
+request without a matching receipt must not initiate a new mutation. The native
+pure-state profile retains its documented deterministic historical replay rule.
 
 The host is the authority on request deadlines.
 

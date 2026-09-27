@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Contract version to publish, for example 1.0.0"
+        description: "Contract version to publish, for example 1.1.0"
         required: true
         type: string
 
@@ -94,7 +94,7 @@ jobs:
           echo "tag=${release_tag}" >> "${GITHUB_OUTPUT}"
           echo "commit=${release_commit}" >> "${GITHUB_OUTPUT}"
 
-      - name: Verify contract and v1.0.0 backward compatibility
+      - name: Verify contract and legacy v1 compatibility
         run: scripts/verify-all.sh
 
       - name: Package remote-domain contract
@@ -143,7 +143,7 @@ jobs:
           gh release create "${RELEASE_TAG}" "${zip_path}" "${checksum_path}" \
             --draft \
             --title "${RELEASE_TITLE}" \
-            --generate-notes \
+            --notes-file RELEASE_NOTES.md \
             --target "${RELEASE_COMMIT}" \
             --latest=false
           release_created=true

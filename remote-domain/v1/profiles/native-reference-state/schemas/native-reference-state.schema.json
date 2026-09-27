@@ -1,0 +1,356 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://astraform.ai/contracts/remote-domain/v1/profiles/native-reference-state/schemas/native-reference-state.schema.json",
+  "title": "Native partner-owned transactional reference-state profile metadata",
+  "$defs": {
+    "manifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "providerRevision",
+        "mutationMode",
+        "stateScope",
+        "workKinds",
+        "maxWindowWorkItems",
+        "initialBoundaryMode"
+      ],
+      "properties": {
+        "profile": {
+          "const": "remote-domain.native-reference-state.v1"
+        },
+        "providerRevision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "mutationMode": {
+          "const": "TRANSACTIONAL_REFERENCE_STATE"
+        },
+        "stateScope": {
+          "const": "AGENT"
+        },
+        "workKinds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "maxItems": 32
+        },
+        "maxWindowWorkItems": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "initialBoundaryMode": {
+          "const": "ATTACH_PREPOPULATED_STATE"
+        }
+      }
+    },
+    "prepareHints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "contextId",
+        "expectedStateVersion",
+        "logicalHorizonEpochMs",
+        "logicalTimeEpochMs",
+        "customerContext"
+      ],
+      "properties": {
+        "profile": {
+          "const": "remote-domain.native-reference-state.v1"
+        },
+        "contextId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "expectedStateVersion": {
+          "const": 0
+        },
+        "logicalHorizonEpochMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "logicalTimeEpochMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "customerContext": {
+          "$ref": "#/$defs/customerContext"
+        }
+      }
+    },
+    "windowContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "contextId",
+        "expectedStateVersion",
+        "logicalHorizonEpochMs",
+        "customerContext",
+        "resourceVersion"
+      ],
+      "properties": {
+        "profile": {
+          "const": "remote-domain.native-reference-state.v1"
+        },
+        "contextId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "expectedStateVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740990
+        },
+        "logicalHorizonEpochMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "customerContext": {
+          "$ref": "#/$defs/customerContext"
+        },
+        "resourceVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "stateMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "contextId",
+        "stateVersion",
+        "processedThroughEpochMs",
+        "logicalHorizonEpochMs",
+        "customerContext",
+        "resourceVersion"
+      ],
+      "properties": {
+        "profile": {
+          "const": "remote-domain.native-reference-state.v1"
+        },
+        "contextId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "stateVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "processedThroughEpochMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "logicalHorizonEpochMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nextDueEpochMs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "noWorkBeforeEpochMs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "customerContext": {
+          "$ref": "#/$defs/customerContext"
+        },
+        "resourceVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "nextDueEpochMs"
+          ],
+          "not": {
+            "required": [
+              "noWorkBeforeEpochMs"
+            ]
+          }
+        },
+        {
+          "required": [
+            "noWorkBeforeEpochMs"
+          ],
+          "not": {
+            "required": [
+              "nextDueEpochMs"
+            ]
+          }
+        }
+      ]
+    },
+    "resultMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "contextId",
+        "stateVersion",
+        "processedThroughEpochMs",
+        "logicalHorizonEpochMs",
+        "observation",
+        "customerContext",
+        "resourceVersion"
+      ],
+      "properties": {
+        "profile": {
+          "const": "remote-domain.native-reference-state.v1"
+        },
+        "contextId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "stateVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "processedThroughEpochMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "logicalHorizonEpochMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nextDueEpochMs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "noWorkBeforeEpochMs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "observation": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "customerContext": {
+          "$ref": "#/$defs/customerContext"
+        },
+        "resourceVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "nextDueEpochMs"
+          ],
+          "not": {
+            "required": [
+              "noWorkBeforeEpochMs"
+            ]
+          }
+        },
+        {
+          "required": [
+            "noWorkBeforeEpochMs"
+          ],
+          "not": {
+            "required": [
+              "nextDueEpochMs"
+            ]
+          }
+        }
+      ]
+    },
+    "customerContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contextRef",
+        "subjectRef"
+      ],
+      "properties": {
+        "contextRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "subjectRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    },
+    "readContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contextId",
+        "resourceVersion",
+        "logicalTimeEpochMs"
+      ],
+      "properties": {
+        "contextId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "resourceVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "logicalTimeEpochMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 253402300799998
+        }
+      }
+    },
+    "checkpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "data"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "nativeSimulation"
+          ],
+          "properties": {
+            "nativeSimulation": {
+              "$ref": "#/$defs/stateMetadata"
+            }
+          }
+        }
+      }
+    }
+  }
+}
