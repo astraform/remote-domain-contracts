@@ -35,7 +35,8 @@ fixed_timestamp = (1980, 1, 1, 0, 0, 0)
 
 with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
     for path in sorted(bundle_dir.rglob("*")):
-        if not path.is_file():
+        # Workstation metadata is not part of the portable contract.
+        if not path.is_file() or path.name == ".DS_Store":
             continue
         relative_path = path.relative_to(bundle_dir).as_posix()
         info = zipfile.ZipInfo(f"{root_name}/{relative_path}", fixed_timestamp)

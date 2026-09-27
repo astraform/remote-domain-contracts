@@ -1,0 +1,385 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://astraform.ai/contracts/remote-domain/v1/profiles/native-state-transform/schemas/native-state-transform.schema.json",
+  "title": "Native pure opaque-state profile metadata",
+  "$defs": {
+    "manifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "providerRevision",
+        "mutationMode",
+        "stateScope",
+        "workKinds",
+        "maxWindowWorkItems",
+        "initialBoundaryMode"
+      ],
+      "properties": {
+        "profile": {
+          "const": "remote-domain.native-state-transform.v1"
+        },
+        "providerRevision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "mutationMode": {
+          "const": "PURE_STATE_TRANSFORM"
+        },
+        "stateScope": {
+          "const": "AGENT"
+        },
+        "workKinds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "maxItems": 32
+        },
+        "maxWindowWorkItems": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "initialBoundaryMode": {
+          "const": "PREPARE_INCLUDES_START"
+        }
+      }
+    },
+    "prepareHints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "contextId",
+        "expectedStateVersion",
+        "logicalHorizonEpochMs",
+        "logicalTimeEpochMs"
+      ],
+      "properties": {
+        "profile": {
+          "const": "remote-domain.native-state-transform.v1"
+        },
+        "contextId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "expectedStateVersion": {
+          "const": 0
+        },
+        "logicalHorizonEpochMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "logicalTimeEpochMs": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "windowContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "contextId",
+        "expectedStateVersion",
+        "logicalHorizonEpochMs"
+      ],
+      "properties": {
+        "profile": {
+          "const": "remote-domain.native-state-transform.v1"
+        },
+        "contextId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "expectedStateVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740990
+        },
+        "logicalHorizonEpochMs": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "stateMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "contextId",
+        "stateVersion",
+        "processedThroughEpochMs",
+        "logicalHorizonEpochMs"
+      ],
+      "properties": {
+        "profile": {
+          "const": "remote-domain.native-state-transform.v1"
+        },
+        "contextId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "stateVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "processedThroughEpochMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "logicalHorizonEpochMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nextDueEpochMs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "noWorkBeforeEpochMs": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "nextDueEpochMs"
+          ],
+          "not": {
+            "required": [
+              "noWorkBeforeEpochMs"
+            ]
+          }
+        },
+        {
+          "required": [
+            "noWorkBeforeEpochMs"
+          ],
+          "not": {
+            "required": [
+              "nextDueEpochMs"
+            ]
+          }
+        }
+      ]
+    },
+    "resultMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "contextId",
+        "stateVersion",
+        "processedThroughEpochMs",
+        "logicalHorizonEpochMs",
+        "observation"
+      ],
+      "properties": {
+        "profile": {
+          "const": "remote-domain.native-state-transform.v1"
+        },
+        "contextId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "stateVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "processedThroughEpochMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "logicalHorizonEpochMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nextDueEpochMs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "noWorkBeforeEpochMs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "observation": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "nextDueEpochMs"
+          ],
+          "not": {
+            "required": [
+              "noWorkBeforeEpochMs"
+            ]
+          }
+        },
+        {
+          "required": [
+            "noWorkBeforeEpochMs"
+          ],
+          "not": {
+            "required": [
+              "nextDueEpochMs"
+            ]
+          }
+        }
+      ]
+    },
+    "readOnlyToolDescriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "description",
+        "inputSchema",
+        "outputSchema",
+        "revision",
+        "effectClass",
+        "scope"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "inputSchema": {
+          "type": "object"
+        },
+        "outputSchema": {
+          "type": "object"
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "effectClass": {
+          "const": "READ_ONLY"
+        },
+        "scope": {
+          "const": "CUSTOMER_CONTEXT"
+        }
+      }
+    },
+    "readOnlyToolPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "turnContext"
+      ],
+      "properties": {
+        "turnContext": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "timeWindow",
+            "dueWork"
+          ],
+          "properties": {
+            "timeWindow": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "previousTimeEpochMs",
+                "currentTimeEpochMs"
+              ],
+              "properties": {
+                "previousTimeEpochMs": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "currentTimeEpochMs": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "description": "Both boundaries equal the accepted checkpoint processedThroughEpochMs; the read does not advance time."
+            },
+            "dueWork": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "workId",
+                  "workType",
+                  "occurrenceKey",
+                  "scheduledForEpochMs",
+                  "attemptNumber",
+                  "payload"
+                ],
+                "properties": {
+                  "workId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "workType": {
+                    "const": "TOOL_CALL"
+                  },
+                  "occurrenceKey": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "scheduledForEpochMs": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "attemptNumber": {
+                    "const": 1
+                  },
+                  "payload": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "kind",
+                      "toolName",
+                      "arguments"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "const": "tool-call"
+                      },
+                      "toolName": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "arguments": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

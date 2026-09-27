@@ -80,3 +80,7 @@ The script writes `build/remote-domain-contract/remote-domain.v1/` and
 Give partner engineering teams the generated `remote-domain.v1.zip`. They should
 not need to browse this repository to understand the protocol, validate payloads,
 or implement the lifecycle endpoints.
+
+- [Native pure state transformation profile](profiles/native-state-transform/README.md): unreleased opt-in preparation, bounded domain windows and authoritative timing over existing opaque-state operations. Domain rules remain in the provider; the host persists the complete business checkpoint supplied to each operation.
+
+- [Native reference-state profile](profiles/native-reference-state/README.md): unreleased opt-in provider-owned database evolution, reference-only checkpoints and transactional operation replay. Use this profile when authoritative business state lives in the partner's backend.
