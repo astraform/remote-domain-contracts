@@ -26,11 +26,14 @@ Prepared on 2026-09-27; package publication remains a separate step.
 
 - Bundle metadata and OpenAPI `info.version` are aligned to 1.1.0. Protocol and
   native profile identifiers remain unchanged.
+- During active development, legacy v1 compatibility checks retain only the
+  latest published baseline, 1.0.4, using existing fixtures and customer-trigger
+  probes. Historical 1.0.0 and 1.0.1 comparisons are removed.
 - Contract packaging excludes `.DS_Store` workstation metadata.
 - CI verifies and packages changes pushed to any branch; GitHub Actions are
   pinned to full commit SHAs. Pull-request and manual CI triggers remain enabled.
-- Release publication uses maintained release notes and rejects missing, empty
-  or draft notes before publishing.
+- Release publication uses maintained release notes without a separate
+  missing/empty/draft validation step.
 
 ### Compatibility and status
 

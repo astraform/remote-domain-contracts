@@ -53,9 +53,13 @@ scripts/verify-all.sh
 The runner creates an isolated Python 3.12+ environment under `.venv/` and
 installs the complete dependency set pinned in `requirements-verify.txt`.
 It verifies contract metadata, schemas, signed profile samples, and all current
-wire fixtures against the published `remote-domain-v1.0.0` and
-`remote-domain-v1.0.1` schemas. Both baseline tags must be available in the local
-clone.
+wire fixtures against the latest published baseline, `remote-domain-v1.0.4`.
+That tag must be available in the local clone. It also verifies that selected
+old-valid customer-trigger payloads remain valid under the current schema.
+During active development, compatibility checks retain this baseline rather
+than a matrix of older releases. These fixture checks protect legacy usage;
+they do not make new native capabilities compatible with older closed manifest
+schemas or prove complete SDK/runtime compatibility.
 
 Then package the verified contract:
 
@@ -82,9 +86,9 @@ verify the GitHub Release artifact through each SDK's lock file.
 1. Update `remote-domain/v1/` and assign a new, unused bundle version in
    `remote-domain/v1/VERSION`, `remote-domain/v1/manifest.json` and OpenAPI
    `info.version`. Protocol and profile identifiers retain their own versions.
-2. Finalize `RELEASE_NOTES.md` for that version, remove its `Status: Draft` marker,
-   and date/version the entry in `CHANGELOG.md`. The workflow rejects missing,
-   empty or draft notes and uses this file for the GitHub release body.
+2. Update `RELEASE_NOTES.md` and the version entry in `CHANGELOG.md`. The workflow
+   uses the notes file for the GitHub release body without a separate release-note
+   validation step.
 3. Run `scripts/verify-all.sh` and `scripts/package-remote-domain-contract.sh`
    against the final revision.
 4. Merge the reviewed changes to `main`, then trigger

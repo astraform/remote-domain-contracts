@@ -28,7 +28,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Verify contract and v1.0.0 backward compatibility
+      - name: Verify contract and legacy v1 compatibility
         run: scripts/verify-all.sh
 
       - name: Package remote-domain contract

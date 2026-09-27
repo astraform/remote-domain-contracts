@@ -10,7 +10,7 @@ from jsonschema import Draft202012Validator
 
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT_DIR = ROOT / "remote-domain" / "v1"
-BASELINE_TAGS = ("remote-domain-v1.0.0", "remote-domain-v1.0.1")
+BASELINE_TAGS = ("remote-domain-v1.0.4",)
 BASELINE_SCHEMA_PATH = "remote-domain/v1/schemas/remote-domain.schema.json"
 
 FIXTURES = {

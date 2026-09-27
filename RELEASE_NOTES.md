@@ -38,9 +38,12 @@ logical time carried outside model-selected arguments.
 
 Bundle `VERSION`, manifest version and OpenAPI `info.version` are aligned to
 1.1.0. Contract packaging excludes `.DS_Store` files. CI verifies and packages
-pushes to any branch, and retains pull-request/manual triggers. Release publication retains
-its main-branch ancestry, immutable-tag and downloaded-asset checksum checks and
-uses this file as its GitHub release body.
+pushes to any branch, and retains pull-request/manual triggers. Legacy fixture
+compatibility checks retain only the latest published baseline, 1.0.4, with
+selected old-valid customer-trigger checks against the current schema. Release
+publication retains its main-branch ancestry, immutable-tag and downloaded-asset
+checksum checks and uses this file as its GitHub release body, without a separate
+release-note validation step.
 
 ## Compatibility and upgrade
 
