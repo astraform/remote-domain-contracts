@@ -1,0 +1,3663 @@
+openapi: 3.0.3
+info:
+  title: Experiment Registry API
+  version: 0.1.1
+  description: Registry and evidence APIs for experiment definitions, runs, artifacts, source snapshots, and calibration.
+servers:
+  - url: http://localhost:7457
+tags:
+  - name: Experiments
+    description: Generic experiment registry, run tracking, artifacts, and calibration APIs.
+  - name: Scenario Lab
+    description: Primary Scenario Lab pack APIs.
+  - name: Simulation Runs
+    description: Durable simulation run evidence ledger and export APIs.
+  - name: Agent Journeys
+    description: Launches the runtime-backed isolated Agent Journey product flow.
+  - name: Agent Catalog
+    description: Authors versioned agent definitions and publishes immutable revisions.
+paths:
+  /api/experiments:
+    get:
+      tags:
+        - Experiments
+      summary: List registered experiments
+      operationId: listExperiments
+      responses:
+        '200':
+          description: Registered experiments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExperimentRecord'
+    post:
+      tags:
+        - Experiments
+      summary: Create or upsert an experiment
+      operationId: createExperiment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExperimentCreateRequest'
+      responses:
+        '200':
+          description: Experiment created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentRecord'
+  /api/experiments/{experimentId}:
+    get:
+      tags:
+        - Experiments
+      summary: Get an experiment by id
+      operationId: getExperiment
+      parameters:
+        - in: path
+          name: experimentId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Experiment detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentRecord'
+        '404':
+          description: Experiment not found
+  /api/experiments/{experimentId}/latest-run:
+    get:
+      tags:
+        - Experiments
+      summary: Get the most recent run for an experiment
+      operationId: getLatestExperimentRun
+      parameters:
+        - in: path
+          name: experimentId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Latest experiment run
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentRunRecord'
+        '404':
+          description: No run found for experiment
+  /api/scenario-lab/packs:
+    get:
+      tags:
+        - Scenario Lab
+      summary: List available Scenario Lab packs
+      operationId: listScenarioLabPacks
+      responses:
+        '200':
+          description: Scenario Lab pack catalog
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScenarioLabPackCatalog'
+  /api/scenario-lab/packs/{packId}:
+    get:
+      tags:
+        - Scenario Lab
+      summary: Get Scenario Lab pack details
+      operationId: getScenarioLabPack
+      parameters:
+        - in: path
+          name: packId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Scenario Lab pack detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScenarioLabPack'
+        '404':
+          description: Scenario Lab pack not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScenarioLabApiError'
+  /api/scenario-lab/packs/{packId}/presets:
+    get:
+      tags:
+        - Scenario Lab
+      summary: Load a Scenario Lab pack preset catalog
+      operationId: getScenarioLabPackPresets
+      parameters:
+        - in: path
+          name: packId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Scenario Lab pack preset catalog
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScenarioLabPresetCatalog'
+        '404':
+          description: Scenario Lab pack not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScenarioLabApiError'
+  /api/scenario-lab/packs/{packId}/runs:
+    post:
+      tags:
+        - Scenario Lab
+      summary: Start an async Scenario Lab run
+      operationId: startScenarioLabPackRun
+      parameters:
+        - in: path
+          name: packId
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: X-Astraform-Execution-Role
+          required: false
+          schema:
+            type: string
+          description: Optional execution role used for Team Operator vs Platform Admin validation.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScenarioLabRunStartRequest'
+      responses:
+        '202':
+          description: Async Scenario Lab run accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScenarioLabRunStatus'
+        '400':
+          description: Invalid Scenario Lab request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScenarioLabApiError'
+        '404':
+          description: Scenario Lab pack not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScenarioLabApiError'
+        '500':
+          description: Failed to start the Scenario Lab run
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScenarioLabApiError'
+  /api/scenario-lab/packs/{packId}/runs/{runId}:
+    get:
+      tags:
+        - Scenario Lab
+      summary: Get async Scenario Lab run status
+      operationId: getScenarioLabPackRunStatus
+      parameters:
+        - in: path
+          name: packId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: runId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Scenario Lab run status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScenarioLabRunStatus'
+        '400':
+          description: Invalid Scenario Lab run id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScenarioLabApiError'
+        '404':
+          description: Scenario Lab run or pack not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScenarioLabApiError'
+        '500':
+          description: Failed to read Scenario Lab run status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScenarioLabApiError'
+  /api/scenario-lab/packs/{packId}/runs/{runId}/lifecycle:
+    post:
+      tags:
+        - Scenario Lab
+      summary: Control a Scenario Lab run lifecycle
+      operationId: controlScenarioLabPackRun
+      parameters:
+        - in: path
+          name: packId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: runId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScenarioLabRunControlRequest'
+      responses:
+        '200':
+          description: Scenario Lab lifecycle control accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScenarioLabRunStatus'
+        '400':
+          description: Invalid lifecycle control request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScenarioLabApiError'
+        '404':
+          description: Scenario Lab run or pack not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScenarioLabApiError'
+        '409':
+          description: Lifecycle action is not supported for this run
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScenarioLabApiError'
+        '500':
+          description: Failed to control the Scenario Lab run
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScenarioLabApiError'
+  /api/experiment-runs:
+    post:
+      tags:
+        - Experiments
+      summary: Create an experiment run
+      operationId: createExperimentRun
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExperimentRunCreateRequest'
+      responses:
+        '200':
+          description: Experiment run created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentRunRecord'
+  /api/experiment-runs/{runId}:
+    get:
+      tags:
+        - Experiments
+      summary: Get an experiment run
+      operationId: getExperimentRun
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Experiment run detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentRunRecord'
+        '404':
+          description: Run not found
+    patch:
+      tags:
+        - Experiments
+      summary: Update an experiment run
+      operationId: updateExperimentRun
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExperimentRunUpdateRequest'
+      responses:
+        '200':
+          description: Experiment run updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentRunRecord'
+        '404':
+          description: Run not found
+  /api/simulation-events:
+    post:
+      tags: [Simulation Events]
+      operationId: submitPublicSimulationEvent
+      summary: Launch a durable customer MODEL or partner A2A event
+      description: >
+        Deployment-bound runtime gateway for scripted simulations. Does not create
+        Agent Journey jobs or project events into the Experiment Evidence Ledger.
+        MODEL represents the simulated customer; an A2A target represents the partner system under test.
+        Model endpoints, target URLs, and credentials are configured by the deployment, never this request.
+        Catalog provenance is optional but requires all four fields when supplied. The gateway verifies
+        owner, revision, definition digest, display name, model binding, compiled instruction, and instruction
+        digest against the immutable published revision; mismatches return 409 before Runtime submission.
+        Publication remains verifiable after archival; raw MODEL definitions without Catalog provenance are supported.
+        Tool-bearing Catalog revisions require the tracked /api/agent-journeys domain preflight;
+        this raw route returns SIMULATION_EVENT_DOMAIN_TOOLS_REQUIRE_JOURNEY rather than dropping their grants.
+      requestBody:
+        required: true
+        description: Strict JSON object limited to 262144 UTF-8 wire bytes.
+        content:
+          application/json:
+            schema:
+              $ref: '../../core/common.yaml#/components/schemas/SimulationEventLaunchRequest'
+      responses:
+        '202':
+          description: Event durably accepted or identical command replayed.
+          content:
+            application/json:
+              schema:
+                $ref: '../../core/common.yaml#/components/schemas/SimulationEventLaunchResponse'
+        '400':
+          description: Invalid command or binding configuration.
+        '409':
+          description: Idempotency, durable agent-state, or Catalog publication provenance conflict.
+        '413':
+          description: Request exceeds 262144 wire bytes.
+        '503':
+          description: Delivery cannot be confirmed. Retry with identical body and idempotency key.
+    get:
+      tags: [Simulation Events]
+      operationId: listPublicSimulationEvents
+      summary: Read a durable agent cursor and ordered event page
+      parameters:
+        - {name: runId, in: query, required: true, schema: {type: string, maxLength: 512}}
+        - {name: agentId, in: query, required: true, schema: {type: string, maxLength: 512}}
+        - {name: afterEventSequence, in: query, schema: {type: integer, format: int64, minimum: 0, default: 0}}
+        - {name: limit, in: query, schema: {type: integer, minimum: 1, maximum: 100, default: 25}}
+      responses:
+        '200':
+          description: Runtime cursor and event page; not an Experiment Evidence Ledger page.
+          content:
+            application/json:
+              schema:
+                $ref: '../../core/common.yaml#/components/schemas/SimulationAgentJourney'
+        '400':
+          description: Invalid owner or pagination.
+        '404':
+          description: Runtime agent not found.
+        '503':
+          description: Runtime unavailable.
+  /api/simulation-events/mcp-capabilities:
+    get:
+      tags: [Simulation Events]
+      operationId: inspectPublicCustomerMcpCapabilities
+      summary: Discover deployment-bound MCP tools for customer grants
+      description: >
+        Uses official MCP tools/list to resolve the configured binding and explicit allowlist.
+        Returns pinned descriptor/schema identities without endpoint or credentials.
+        The dashboard proxy exposes /api/dashboard/simulation-events/mcp-capabilities.
+      parameters:
+        - name: bindingKey
+          in: query
+          required: true
+          schema: {type: string, maxLength: 128, pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'}
+      responses:
+        '200':
+          description: Pinned allowed MCP tools.
+          content:
+            application/json:
+              schema:
+                $ref: '../../core/common.yaml#/components/schemas/CustomerMcpCapabilities'
+        '400': {description: Invalid binding or unsupported tool policy.}
+        '409': {description: 'Binding or tool descriptor is unavailable, changed or unsupported.'}
+        '503': {description: Runtime or MCP server is unavailable.}
+  /api/simulation-events/domain-capabilities:
+    get:
+      tags: [Simulation Events]
+      operationId: inspectPublicNativeDomainCapabilities
+      summary: Discover pinned domain descriptors for customer tool grants
+      description: >
+        Reads the deployment-selected provider without preparing a customer or executing work.
+        Returns Runtime's exact capability identities and supported read-only tool descriptors.
+        Copy the selected binding/provider/descriptor/schema identities into a Catalog tool grant;
+        publication freezes that permission and launch checks the pins again. This response contains
+        no provider URL or credentials. Dashboard exposes the same response at
+        /api/dashboard/simulation-events/domain-capabilities.
+      parameters:
+        - name: domainBindingKey
+          in: query
+          required: true
+          schema:
+            type: string
+            maxLength: 128
+            pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'
+      responses:
+        '200':
+          description: Deployment-bound native domain and tool descriptors.
+          content:
+            application/json:
+              schema:
+                $ref: '../../core/common.yaml#/components/schemas/NativeDomainCapabilities'
+        '400':
+          description: Invalid registry key or unsupported provider profile.
+        '404':
+          description: Domain binding not configured.
+        '503':
+          description: Runtime or provider unavailable.
+  /api/simulation-events/{eventId}:
+    get:
+      tags: [Simulation Events]
+      operationId: getPublicSimulationEvent
+      summary: Read durable event status and its current agent cursor
+      parameters:
+        - {name: eventId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Event status.
+          content:
+            application/json:
+              schema:
+                $ref: '../../core/common.yaml#/components/schemas/SimulationEventStatusResponse'
+        '404':
+          description: Event not found.
+        '503':
+          description: Runtime unavailable.
+  /api/simulation-events/{eventId}/inputs:
+    post:
+      tags: [Simulation Events]
+      operationId: submitPublicSimulationInput
+      summary: Append external input to a completed event's existing agent
+      description: >
+        Continues the frozen agent definition and durable state with optimistic state-version
+        checking. Input command retries require the same idempotency key and body.
+        Remote A2A side effects are not guaranteed exactly once.
+      parameters:
+        - {name: eventId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        description: Strict JSON object limited to 262144 UTF-8 wire bytes.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicSimulationInputRequest'
+      responses:
+        '202':
+          description: Input durably accepted or identical input replayed.
+          content:
+            application/json:
+              schema:
+                $ref: '../../core/common.yaml#/components/schemas/SimulationEventLaunchResponse'
+        '400':
+          description: Invalid input fields or logical time.
+        '404':
+          description: Preceding event not found.
+        '409':
+          description: Stale state version, active work, or idempotency conflict.
+        '413':
+          description: Request exceeds 262144 wire bytes.
+        '503':
+          description: Delivery cannot be confirmed. Retry identical input.
+  /api/agent-journeys:
+    post:
+      tags:
+        - Agent Journeys
+      summary: Launch a durable customer journey with optional autonomous event progression
+      description: >
+        One accepted launch owns subsequent customer, partner and optional domain progression.
+        Domain preflight validates the deployment binding and supported capabilities before
+        model execution or provider mutation. A 202 response confirms durable acceptance,
+        not successful provider preparation; preparation and later failures are recorded in
+        run status and evidence. Due provider logical boundaries are applied before their
+        observations are delivered to the customer.
+      operationId: launchAgentJourney
+      requestBody:
+        required: true
+        description: The UTF-8 JSON request body is limited to 262144 wire bytes before deserialization.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentJourneyLaunchRequest'
+      responses:
+        '202':
+          description: The launch intent was durably queued or an exact prior request was replayed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentJourneyLaunchResponse'
+        '400':
+          description: The request is missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentJourneyApiError'
+        '404':
+          description: The requested Agent Catalog definition or revision does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentJourneyApiError'
+        '409':
+          description: The request conflicts with an immutable replay or the requested Catalog revision is not launchable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentJourneyApiError'
+        '413':
+          description: The UTF-8 JSON request body exceeds the 262144-byte transport limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentJourneyApiError'
+        '415':
+          description: The request body is not application/json.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentJourneyApiError'
+        '503':
+          description: Runtime preflight is temporarily unavailable; retry the same request identity and body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentJourneyApiError'
+  /api/agent-definitions:
+    get:
+      tags:
+        - Agent Catalog
+      summary: List Agent Catalog definitions
+      operationId: listAgentDefinitions
+      responses:
+        '200':
+          description: Agent definitions ordered by display name and identity.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AgentDefinitionView'
+    post:
+      tags:
+        - Agent Catalog
+      summary: Create an Agent Catalog definition idempotently
+      operationId: createAgentDefinition
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentDefinitionCreateRequest'
+      responses:
+        '201':
+          description: A new draft definition was created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentDefinitionCreateResult'
+        '200':
+          description: The exact prior create request was replayed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentDefinitionCreateResult'
+        '400':
+          description: The request is invalid or contains unsupported fields.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCatalogApiError'
+        '409':
+          description: The request identity or agent key conflicts with durable state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCatalogApiError'
+        '413':
+          description: The request body exceeds the 512 KiB Agent Catalog wire limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCatalogApiError'
+        '415':
+          description: The request body is not JSON or a structured-syntax JSON media type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCatalogApiError'
+  /api/agent-definitions/{catalogAgentId}:
+    get:
+      tags:
+        - Agent Catalog
+      summary: Get an Agent Catalog definition
+      operationId: getAgentDefinition
+      parameters:
+        - $ref: '#/components/parameters/CatalogAgentId'
+      responses:
+        '200':
+          description: Agent definition.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentDefinitionView'
+        '400':
+          description: catalogAgentId is not a canonical lowercase UUID.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCatalogApiError'
+        '404':
+          description: Agent definition not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCatalogApiError'
+  /api/agent-definitions/{catalogAgentId}/draft:
+    put:
+      tags:
+        - Agent Catalog
+      summary: Replace an Agent Catalog draft using optimistic concurrency
+      operationId: updateAgentDefinitionDraft
+      parameters:
+        - $ref: '#/components/parameters/CatalogAgentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentDefinitionDraftUpdateRequest'
+      responses:
+        '200':
+          description: Updated draft definition.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentDefinitionView'
+        '400':
+          description: The request is invalid or contains unsupported fields.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCatalogApiError'
+        '404':
+          description: Agent definition not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCatalogApiError'
+        '409':
+          description: The expected draft version is stale or the definition is archived.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCatalogApiError'
+        '413':
+          description: The request body exceeds the 512 KiB Agent Catalog wire limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCatalogApiError'
+        '415':
+          description: The request body is not JSON or a structured-syntax JSON media type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCatalogApiError'
+  /api/agent-definitions/{catalogAgentId}/publish:
+    post:
+      tags:
+        - Agent Catalog
+      summary: Publish the current draft as an immutable revision
+      operationId: publishAgentDefinition
+      parameters:
+        - $ref: '#/components/parameters/CatalogAgentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentDefinitionPublishRequest'
+      responses:
+        '201':
+          description: An immutable revision was published and made default.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentDefinitionPublishResult'
+        '200':
+          description: The current draft version was already published.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentDefinitionPublishResult'
+        '400':
+          description: The request is invalid, incomplete, or contains unsupported fields.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCatalogApiError'
+        '404':
+          description: Agent definition not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCatalogApiError'
+        '409':
+          description: The Agent Catalog definition is archived.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCatalogApiError'
+        '412':
+          description: The saved draft version or digest no longer matches the publish request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCatalogApiError'
+        '413':
+          description: The request body exceeds the 512 KiB Agent Catalog wire limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCatalogApiError'
+        '415':
+          description: The request body is not JSON or a structured-syntax JSON media type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCatalogApiError'
+  /api/agent-definitions/{catalogAgentId}/default-revision:
+    put:
+      tags:
+        - Agent Catalog
+      summary: Select the default immutable revision
+      operationId: setDefaultAgentDefinitionRevision
+      parameters:
+        - $ref: '#/components/parameters/CatalogAgentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentDefinitionDefaultRevisionRequest'
+      responses:
+        '200':
+          description: Agent definition with its selected default revision.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentDefinitionView'
+        '400':
+          description: The request or path identity is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCatalogApiError'
+        '404':
+          description: Agent definition or revision not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCatalogApiError'
+        '409':
+          description: The revision belongs to another definition or the definition is archived.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCatalogApiError'
+        '413':
+          description: The request body exceeds the 512 KiB Agent Catalog wire limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCatalogApiError'
+        '415':
+          description: The request body is not JSON or a structured-syntax JSON media type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCatalogApiError'
+  /api/agent-definitions/{catalogAgentId}/archive:
+    post:
+      tags:
+        - Agent Catalog
+      summary: Archive an Agent Catalog definition without deleting history
+      operationId: archiveAgentDefinition
+      parameters:
+        - $ref: '#/components/parameters/CatalogAgentId'
+      responses:
+        '200':
+          description: Archived definition; repeated requests are idempotent.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentDefinitionView'
+        '400':
+          description: catalogAgentId is not a canonical lowercase UUID or a body was supplied.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCatalogApiError'
+        '404':
+          description: Agent definition not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCatalogApiError'
+        '413':
+          description: A supplied request body exceeds the 512 KiB Agent Catalog wire limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCatalogApiError'
+  /api/agent-definitions/{catalogAgentId}/revisions:
+    get:
+      tags:
+        - Agent Catalog
+      summary: List immutable revisions for one Agent Catalog definition
+      operationId: listAgentDefinitionRevisions
+      parameters:
+        - $ref: '#/components/parameters/CatalogAgentId'
+      responses:
+        '200':
+          description: Immutable revisions ordered newest first.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AgentDefinitionRevisionView'
+        '400':
+          description: catalogAgentId is not a canonical lowercase UUID.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCatalogApiError'
+        '404':
+          description: Agent definition not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCatalogApiError'
+  /api/agent-definition-revisions/{catalogRevisionId}:
+    get:
+      tags:
+        - Agent Catalog
+      summary: Get one immutable Agent Catalog revision
+      operationId: getAgentDefinitionRevision
+      parameters:
+        - in: path
+          name: catalogRevisionId
+          required: true
+          schema:
+            type: string
+            format: uuid
+            minLength: 36
+            maxLength: 36
+            pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+      responses:
+        '200':
+          description: Immutable revision.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentDefinitionRevisionView'
+        '400':
+          description: catalogRevisionId is not a canonical lowercase UUID.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCatalogApiError'
+        '404':
+          description: Agent definition revision not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentCatalogApiError'
+  /api/simulation-runs:
+    get:
+      tags:
+        - Simulation Runs
+      summary: List durable simulation runs
+      operationId: listSimulationRuns
+      parameters:
+        - in: query
+          name: experimentId
+          required: false
+          schema:
+            type: string
+          description: Defaults to the customer outcome simulation experiment.
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Durable simulation run history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimulationRunListResponse'
+    post:
+      tags:
+        - Simulation Runs
+      summary: Create a durable simulation run
+      operationId: createSimulationRun
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimulationRunCreateRequest'
+      responses:
+        '200':
+          description: Simulation run created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimulationRunRecord'
+  /api/simulation-runs/{runId}:
+    get:
+      tags:
+        - Simulation Runs
+      summary: Get durable simulation run evidence summary
+      operationId: getSimulationRun
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Simulation run detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimulationRunRecord'
+        '404':
+          description: Simulation run not found
+    patch:
+      tags:
+        - Simulation Runs
+      summary: Update durable simulation run lifecycle metadata
+      operationId: updateSimulationRun
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimulationRunUpdateRequest'
+      responses:
+        '200':
+          description: Simulation run updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimulationRunRecord'
+        '404':
+          description: Simulation run not found
+  /api/simulation-runs/{runId}/agents:batch:
+    post:
+      tags:
+        - Simulation Runs
+      summary: Register activated agents for a simulation run
+      operationId: registerSimulationRunAgents
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimulationRunAgentBatchRequest'
+      responses:
+        '200':
+          description: Agents accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimulationRunBatchResponse'
+        '404':
+          description: Simulation run not found
+  /api/simulation-runs/{runId}/ledger:
+    get:
+      tags:
+        - Simulation Runs
+      summary: Inspect recent durable simulation run ledger rows
+      operationId: inspectSimulationRunLedger
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 25
+      responses:
+        '200':
+          description: Simulation run ledger preview
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimulationRunLedgerResponse'
+        '404':
+          description: Simulation run not found
+  /api/simulation-runs/{runId}/events:batch:
+    post:
+      tags:
+        - Simulation Runs
+      summary: Register run-scoped simulation evidence events
+      operationId: registerSimulationRunEvents
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimulationRunEventBatchRequest'
+      responses:
+        '200':
+          description: Events accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimulationRunBatchResponse'
+        '404':
+          description: Simulation run not found
+  /api/simulation-runs/{runId}/checkpoints:batch:
+    post:
+      tags:
+        - Simulation Runs
+      summary: Register run-scoped state checkpoints
+      operationId: registerSimulationRunCheckpoints
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimulationRunCheckpointBatchRequest'
+      responses:
+        '200':
+          description: Checkpoints accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimulationRunBatchResponse'
+        '404':
+          description: Simulation run not found
+  /api/simulation-runs/{runId}/export:
+    get:
+      tags:
+        - Simulation Runs
+      summary: Export simulation_run_evidence.v1 ZIP bundle
+      operationId: exportSimulationRunEvidence
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: simulation_run_evidence.v1 export bundle
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Simulation run not found
+        '409':
+          description: Agent Journey evidence is not exportable until the run is terminal
+  /api/simulation-runs/{runId}/export/readiness:
+    get:
+      tags:
+        - Simulation Runs
+      summary: Check whether a simulation_run_evidence.v1 ZIP bundle is exportable
+      operationId: getSimulationRunEvidenceExportReadiness
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: The run is terminal and its evidence bundle is exportable
+        '404':
+          description: Simulation run not found
+        '409':
+          description: Agent Journey evidence is not exportable until the run is terminal
+  /api/experiment-runs/{runId}/scenario-lab/bundle:
+    get:
+      tags:
+        - Scenario Lab
+      summary: Load a published authority-backed Scenario Lab report bundle
+      operationId: getScenarioLabBundle
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Scenario Lab bundle
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScenarioLabBundlePayload'
+        '404':
+          description: Run or Scenario Lab bundle artifact not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScenarioLabApiError'
+        '409':
+          description: Launch authority exists but finalized evidence is not published
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScenarioLabApiError'
+        '410':
+          description: No authoritative Scenario Lab report exists for this run
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScenarioLabApiError'
+  /api/experiment-runs/{runId}/artifacts:
+    get:
+      tags:
+        - Experiments
+      summary: List registered run artifacts
+      operationId: listRunArtifacts
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Run artifacts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RunArtifactRecord'
+    post:
+      tags:
+        - Experiments
+      summary: Register a run artifact
+      operationId: registerRunArtifact
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArtifactRegisterRequest'
+      responses:
+        '200':
+          description: Registered artifact
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunArtifactRecord'
+        '404':
+          description: Run not found
+  /api/experiment-runs/{runId}/artifacts/{artifactType}/content:
+    get:
+      tags:
+        - Experiments
+      summary: Download authoritative run artifact content
+      operationId: downloadRunArtifactContent
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: artifactType
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Artifact content
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Run or artifact not found
+        '409':
+          description: Authoritative Scenario Lab evidence is not yet published
+        '410':
+          description: The run has no authoritative Scenario Lab report
+  /api/experiment-runs/{runId}/audit-artifacts/{artifactType}/content:
+    get:
+      tags:
+        - Experiments
+      summary: Download a non-authoritative audit or debug artifact
+      operationId: downloadRunAuditArtifactContent
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: artifactType
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Audit artifact content
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Unsupported or unsafe audit artifact request
+        '404':
+          description: Run or audit artifact not found
+  /api/experiment-runs/{runId}/scenario-lab/evidence-pack:
+    get:
+      tags:
+        - Scenario Lab
+      summary: Export a registry-backed Scenario Lab evidence pack
+      operationId: downloadScenarioLabEvidencePack
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Scenario Lab evidence pack archive
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Run or Scenario Lab artifact not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScenarioLabApiError'
+        '409':
+          description: Authoritative Scenario Lab evidence is not yet published
+        '410':
+          description: The run has no authoritative Scenario Lab report
+  /api/experiment-runs/{runId}/evaluation-link:
+    post:
+      tags:
+        - Experiments
+      summary: Link a run to an evaluation run id
+      operationId: linkRunEvaluation
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RunEvaluationLinkRequest'
+      responses:
+        '200':
+          description: Updated experiment run
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentRunRecord'
+        '404':
+          description: Run not found
+  /api/experiment-runs/{runId}/source-snapshots:
+    post:
+      tags:
+        - Experiments
+      summary: Register a source snapshot against a run
+      operationId: registerRunSourceSnapshot
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SourceSnapshotRegisterRequest'
+      responses:
+        '200':
+          description: Registered source snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SourceSnapshotRecord'
+        '404':
+          description: Run not found
+  /api/calibration-observations:
+    post:
+      tags:
+        - Experiments
+      summary: Persist a calibration observation
+      operationId: createCalibrationObservation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CalibrationObservationCreateRequest'
+      responses:
+        '200':
+          description: Created calibration observation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalibrationObservationRecord'
+  /api/experiment-runs/{runId}/calibration:
+    get:
+      tags:
+        - Experiments
+      summary: List calibration observations for a run
+      operationId: listCalibrationForRun
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Calibration observations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CalibrationObservationRecord'
+  /api/calibration/drift:
+    get:
+      tags:
+        - Experiments
+      summary: Summarize calibration drift state
+      operationId: getCalibrationDrift
+      parameters:
+        - in: query
+          name: runId
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Drift summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalibrationDriftSummary'
+
+components:
+  parameters:
+    CatalogAgentId:
+      in: path
+      name: catalogAgentId
+      required: true
+      schema:
+        type: string
+        format: uuid
+        minLength: 36
+        maxLength: 36
+        pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+  schemas:
+    ExperimentCreateRequest:
+      type: object
+      required:
+        - experimentId
+        - name
+      properties:
+        experimentId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        domain:
+          type: string
+        owner:
+          type: string
+        status:
+          type: string
+    ExperimentRecord:
+      type: object
+      required:
+        - experimentId
+        - name
+        - createdAt
+        - updatedAt
+      properties:
+        experimentId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        domain:
+          type: string
+        owner:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ExperimentRunCreateRequest:
+      type: object
+      required:
+        - runId
+        - experimentId
+      properties:
+        runId:
+          type: string
+        experimentId:
+          type: string
+        scenarioId:
+          type: string
+        branchType:
+          type: string
+        replicateId:
+          type: integer
+          format: int32
+        compareMode:
+          type: string
+        presetId:
+          type: string
+        status:
+          type: string
+        summaryPath:
+          type: string
+        bundlePath:
+          type: string
+        startedAtEpochMs:
+          type: integer
+          format: int64
+        metadata:
+          type: object
+          additionalProperties: true
+    ExperimentRunUpdateRequest:
+      type: object
+      properties:
+        status:
+          type: string
+        summaryPath:
+          type: string
+        bundlePath:
+          type: string
+        completedAtEpochMs:
+          type: integer
+          format: int64
+        metadata:
+          type: object
+          additionalProperties: true
+    ExperimentRunRecord:
+      type: object
+      required:
+        - runId
+        - experimentId
+        - createdAt
+        - updatedAt
+      properties:
+        runId:
+          type: string
+        experimentId:
+          type: string
+        scenarioId:
+          type: string
+        branchType:
+          type: string
+        replicateId:
+          type: integer
+          format: int32
+        compareMode:
+          type: string
+        presetId:
+          type: string
+        status:
+          type: string
+        summaryPath:
+          type: string
+        bundlePath:
+          type: string
+        evaluationRunId:
+          type: string
+        startedAtEpochMs:
+          type: integer
+          format: int64
+        completedAtEpochMs:
+          type: integer
+          format: int64
+        metadata:
+          type: object
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    AgentJourneyLaunchRequest:
+      type: object
+      additionalProperties: false
+      description: >
+        Runtime applies the documented defaults for omitted optional settings. Clients must
+        preserve omission when serializing a saved launch: explicitly supplying a setting
+        can change the immutable request identity even when its execution value is unchanged.
+      required:
+        - requestId
+        - catalogAgentId
+        - catalogRevisionId
+        - catalogDefinitionDigest
+        - instruction
+      allOf:
+        - anyOf:
+            - not:
+                required: [participationPolicy]
+            - required: [completionPolicy]
+      properties:
+        requestId:
+          type: string
+          format: uuid
+          minLength: 36
+          maxLength: 36
+          pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+          description: Caller-owned idempotency identity for this immutable launch body.
+        catalogAgentId:
+          type: string
+          format: uuid
+          minLength: 36
+          maxLength: 36
+          pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+          description: Explicit ACTIVE Agent Catalog definition selected for this launch.
+        catalogRevisionId:
+          type: string
+          format: uuid
+          minLength: 36
+          maxLength: 36
+          pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+          description: Explicit immutable published revision selected for this launch.
+        catalogDefinitionDigest:
+          type: string
+          pattern: '^sha256:[0-9a-f]{64}$'
+          description: Caller-asserted digest of the selected immutable published revision.
+        instruction:
+          type: string
+          minLength: 1
+          maxLength: 32000
+          description: >
+            Durable, exportable evidence content. Leading and trailing Unicode whitespace is
+            removed before idempotency, evidence, and execution. Do not include credentials
+            or other secrets.
+        facts:
+          type: object
+          additionalProperties: true
+          description: >
+            Scenario facts supplied to the simulated customer. Defaults to an empty object.
+            When domain is selected, the top-level domain member is reserved for the
+            read-only provider observation envelope and must not be supplied by the caller.
+            When customerReactionIntervalMs is positive, the top-level customerReaction
+            member is reserved for the coordinator's timestamped observation envelope.
+        initialAgentState:
+          type: object
+          additionalProperties: true
+          description: 'Initial simulated-customer memory. Defaults to {status: NEW}.'
+        logicalTimeEpochMs:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Runtime uses 0 when omitted; clients must preserve omission for replay.
+        logicalHorizonEpochMs:
+          type: integer
+          format: int64
+          minimum: 0
+          description: >
+            Inclusive horizon; must not precede logicalTimeEpochMs or exceed the deployment
+            limit. Runtime uses 172800000 when omitted; clients must preserve omission for replay.
+        decisionSchedule:
+          $ref: '#/components/schemas/AgentJourneyDecisionSchedule'
+        customerReactionIntervalMs:
+          type: integer
+          format: int64
+          minimum: 0
+          description: >
+            Simulated interval before the customer considers a partner reply, tool result,
+            domain observation or configured one-shot observation. Omitted or zero preserves
+            immediate reactions; this is neither a wall-time delay nor an execution-speed setting.
+            The first pending observation fixes the reaction timestamp. Further observations and
+            decision opportunities arriving before that timestamp are retained for that reaction
+            without extending it. Recurring schedules retain their original anchors and model
+            follow-ups retain their requested timestamps. An interval longer than the remaining
+            run horizon is accepted, but customer work beyond the horizon is not executed.
+            The start plus interval must fit a signed 64-bit timestamp. The supplied value is
+            frozen in the immutable launch; explicit zero and omission have different request
+            identities but identical timing semantics. Positive values with a partner target
+            require Runtime deferredPartnerExchangeSupported capability during launch preflight.
+        scheduledInputs:
+          type: array
+          maxItems: 1024
+          description: >
+            Frozen one-shot observations. Input identities must be unique. Execution orders
+            them by logical time, preserving request order for equal timestamps. Future
+            observations are not exposed to the customer before their scheduled time.
+            Their facts may not contain customerReaction when customerReactionIntervalMs is positive.
+          items:
+            $ref: '#/components/schemas/AgentJourneyScheduledInput'
+        partnerTargetAgentKey:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'
+          description: >
+            Optional deployment-owned A2A target the customer may choose to contact.
+            Runtime preflight resolves and freezes its binding revision; no endpoint or
+            credentials belong in this request.
+        completionPolicy:
+          $ref: '#/components/schemas/AgentJourneyGoalCompletionPolicy'
+        participationPolicy:
+          type: string
+          enum: [THROUGH_HORIZON]
+          description: >-
+            Opt-in retained participation, independent of completionPolicy goal assessment.
+            Requires the bounded GOAL completionPolicy and Runtime retainedParticipationSupported.
+            Configured goal achievement is retained without ending participation. FINISH ends
+            the current conversation; the customer remains eligible for future configured inputs
+            and decision opportunities through the inclusive logical horizon, subject to existing
+            execution and safety limits. No activity or model polling is required while idle.
+            Omission preserves legacy early stopping and immutable request identity. The value
+            is frozen for the run; it does not advance an ordinary partner backend's clock or state.
+        domain:
+          $ref: '#/components/schemas/AgentJourneyDomainConfiguration'
+        toolContexts:
+          type: array
+          maxItems: 8
+          description: >
+            Frozen partner-owned customer references, one per granted MCP binding; GOAL profile only.
+            Every MCP grant needs a matching context and unused contexts are rejected. No bank record
+            is supplied. Runtime adds the selected reference to trusted MCP request metadata; the
+            model cannot change it. Host adds this list to partner facts.astraformCustomerContexts.
+          items:
+            $ref: '#/components/schemas/AgentJourneyToolContext'
+        maxPartnerInteractions:
+          type: integer
+          minimum: 1
+          maximum: 10000
+          description: >
+            Maximum customer-to-partner interactions. Requires partnerTargetAgentKey;
+            defaults to 10 when a partner is selected. Admission reserves this many
+            customer reply events in addition to the root, scheduled decisions and inputs.
+      x-validation: >
+        Selecting domain requires completionPolicy.mode GOAL and partnerTargetAgentKey.
+        Neither initial facts nor any scheduledInputs facts may contain a top-level domain
+        member when domain is selected. Unsupported provider capabilities are rejected by
+        preflight before model execution or provider mutation. The accepted domain
+        configuration and resolved deployment binding are pinned in the durable run.
+    AgentJourneyToolContext:
+      type: object
+      additionalProperties: false
+      required: [bindingKey, contextRef, subjectRef]
+      properties:
+        bindingKey:
+          type: string
+          maxLength: 128
+          pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'
+        contextRef: {type: string, minLength: 1, maxLength: 256}
+        subjectRef: {type: string, minLength: 1, maxLength: 256}
+    AgentJourneyDomainConfiguration:
+      type: object
+      additionalProperties: false
+      required: [bindingKey, personaConfiguration, workKinds, maxOperations, seed]
+      description: >
+        Optional existing SDK provider integration for the first single-customer GOAL
+        profile. The provider context is agent-scoped. Its explicitly selected native
+        profile supports pure state transformations or transactional reference state in
+        the provider's database. Runtime preflight resolves the exact deployment-owned
+        endpoint and binding revision; neither endpoint nor credentials belong in this
+        request. Provider preparation occurs after durable launch acceptance. The platform
+        owns autonomous admission of provider work and customer observations; an external
+        client does not advance the domain or drive customer turns.
+      properties:
+        bindingKey:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'
+          description: Deployment-owned domain provider alias resolved and pinned at preflight.
+        toolContextBindingKey:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'
+          description: >
+            Required only for remote-domain.native-reference-state.v1; selects an existing
+            frozen toolContexts entry for the provider-owned customer. Preparation attaches
+            to prepopulated records at the inclusive run start. Pure-state profiles reject
+            this field. Accepted reference receipts supply causal version/time guards for
+            this customer's MCP and partner reads; neither identity nor guard is model-authored.
+        personaConfiguration:
+          type: object
+          additionalProperties: true
+          description: >
+            Provider-owned customer/domain configuration, bounded by the complete launch
+            request's 262144-byte transport limit. It does not prescribe customer decisions
+            or messages. The selected provider validates its supported configuration.
+        workKinds:
+          type: array
+          minItems: 1
+          maxItems: 16
+          uniqueItems: true
+          description: Requested domain work kinds; preflight requires every kind to be supported by the selected provider.
+          items:
+            type: string
+            minLength: 1
+            maxLength: 128
+            pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'
+        maxOperations:
+          type: integer
+          minimum: 1
+          maximum: 10000
+          description: Frozen bound on admitted domain operations for this run; recovery does not reset it.
+        seed:
+          type: integer
+          format: int64
+          minimum: 0
+          maximum: 9007199254740991
+          description: Frozen nonnegative seed within the exact I-JSON integer range, supplied unchanged to the provider.
+    AgentJourneyGoalCondition:
+      type: object
+      additionalProperties: false
+      required: [pointer, oneOf]
+      properties:
+        pointer:
+          type: string
+          minLength: 1
+          maxLength: 256
+          pattern: '^/'
+          description: Non-root RFC 6901 pointer, at most 16 segments, into parsed receipt JSON.
+        oneOf:
+          type: array
+          minItems: 1
+          maxItems: 16
+          description: Non-null scalar alternatives; each serialized JSON value is at most 1024 characters.
+          items:
+            oneOf:
+              - {type: string}
+              - {type: number}
+              - {type: boolean}
+    AgentJourneyGoalCompletionPolicy:
+      type: object
+      additionalProperties: false
+      required: [mode, goalIndex, partnerResponseConditions, requestFactBindings, maxCustomerDecisions, maxWallTimeMs, maxRepeatedExchanges]
+      description: >-
+        First goal-based profile: one customer, one selected published goal and one
+        granted A2A partner. All conditions must match the parsed JSON object in the
+        actual a2aReceipt.text; model claims are not evidence. The reply is delivered
+        to the customer before normal goal completion. Plain-text/subjective goals
+        and time-based completion are not implemented by this policy. Limits stop
+        new work admission; already accepted operations reconcile under their
+        existing bounded timeouts. No new goal or conversation resets these limits.
+      properties:
+        mode:
+          type: string
+          enum: [GOAL]
+        goalIndex:
+          type: integer
+          minimum: 0
+          maximum: 31
+          description: Zero-based index in the pinned Catalog revision's behavior.goals.
+        partnerResponseConditions:
+          type: array
+          minItems: 1
+          maxItems: 16
+          items:
+            $ref: '#/components/schemas/AgentJourneyGoalCondition'
+        requestFactBindings:
+          type: array
+          maxItems: 32
+          description: >-
+            Configured structured request fields must equal the latest supplied fact
+            at the selected pointer from initial facts and already admitted scheduled
+            observations. When domain is selected, pointers at /domain or beneath it
+            instead resolve only to the latest accepted provider observation envelope
+            in facts.domain. Without domain selected, facts.domain retains ordinary
+            caller-supplied fact semantics. Omitted request fields are allowed; null, unknown or
+            mismatched supplied values block dispatch without repairing the request.
+            Model memory/proposals and future observations cannot establish facts.
+            Empty bindings provide no field-grounding protection. Free text is not
+            checked by this profile.
+          items:
+            type: object
+            additionalProperties: false
+            required: [requestPointer, factPointer]
+            properties:
+              requestPointer:
+                type: string
+                minLength: 1
+                maxLength: 256
+                pattern: '^/'
+                description: Unique non-root RFC 6901 pointer into partnerRequest.facts; at most 16 segments.
+              factPointer:
+                type: string
+                minLength: 1
+                maxLength: 256
+                pattern: '^/'
+                description: >-
+                  Non-root RFC 6901 pointer into supplied scenario facts; at most 16
+                  segments. With domain selected, /domain and its descendants refer
+                  exclusively to the latest accepted provider observation envelope.
+        maxCustomerDecisions:
+          type: integer
+          minimum: 1
+          maximum: 10000
+          description: >-
+            Total customer event budget including root and partner replies, bounded by
+            deployment maxEventsPerAgent. Each event retains the root's finite retry
+            limit; maximum model invocation attempts are this budget times that limit.
+            Provider internal retries remain disabled. Current single-customer run and
+            customer budgets coincide; this does not implement shared-cohort budgets.
+        maxWallTimeMs:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 604800000
+          description: Deadline measured from durable launch acceptance; restart does not reset it. New runs pin it into Runtime so expired unstarted model attempts and unsent partner requests fail without invoking them. Already admitted attempts and started effects settle under their existing timeouts; service outages can delay reconciliation. Older saved runs retain their admission-only policy.
+        maxRepeatedExchanges:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: >-
+            Stop after this many consecutive identical request/receipt-text pairs
+            without goal achievement. This exact-repeat guard is not semantic
+            no-progress detection; varying repetitions still hit the total budgets.
+    AgentJourneyDecisionSchedule:
+      type: object
+      additionalProperties: false
+      required: [scheduleId, firstOccurrenceEpochMs, intervalMs, maxOccurrences]
+      description: >
+        Optional fixed elapsed-time decision opportunities, calculated from the immutable
+        first occurrence plus ordinal times interval. The first occurrence must be within
+        the inclusive run horizon. Admission stops at the earlier of the horizon or
+        maxOccurrences, and does not preallocate the full event history. Each opportunity
+        permits an LLM decision; it does not prescribe a business action. Omitting this
+        schedule selects event-only progression. Calendar recurrence is unsupported.
+      properties:
+        scheduleId:
+          type: string
+          minLength: 1
+          maxLength: 128
+          description: Nonblank stable schedule identity without surrounding whitespace.
+        firstOccurrenceEpochMs:
+          type: integer
+          format: int64
+          minimum: 0
+        intervalMs:
+          type: integer
+          format: int64
+          minimum: 1
+        maxOccurrences:
+          type: integer
+          format: int64
+          minimum: 1
+      x-validation: >
+        Timestamps, occurrence arithmetic and aggregate planned work must fit signed 64-bit
+        integers. Launch validates the resolved horizon and aggregate planned work against
+        the selected runtime deployment limits before accepting the run.
+    AgentJourneyScheduledInput:
+      type: object
+      additionalProperties: false
+      required: [inputId, logicalTimeEpochMs, instruction, facts]
+      properties:
+        inputId:
+          type: string
+          minLength: 1
+          maxLength: 128
+          description: Nonblank stable input identity, unique within this launch, without surrounding whitespace.
+        logicalTimeEpochMs:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Must fall within the inclusive run start and horizon.
+        instruction:
+          type: string
+          minLength: 1
+          maxLength: 32000
+          description: Nonblank observation instruction, trimmed before freezing and execution.
+        facts:
+          type: object
+          additionalProperties: true
+          description: >
+            Observed facts supplied only when this input is due; customer actions remain
+            model decisions. When the launch selects domain, the top-level domain member
+            is reserved for provider observations and must not be supplied here.
+    PublicSimulationInputRequest:
+      type: object
+      additionalProperties: false
+      required: [idempotencyKey, logicalTimeEpochMs, expectedStateVersion, instruction, facts]
+      properties:
+        idempotencyKey: {type: string, minLength: 1, maxLength: 512}
+        logicalTimeEpochMs: {type: integer, format: int64, minimum: 0}
+        expectedStateVersion: {type: integer, format: int64, minimum: 0}
+        instruction: {type: string, minLength: 1, maxLength: 32000}
+        facts: {type: object, additionalProperties: true}
+    AgentJourneyLaunchResponse:
+      type: object
+      required:
+        - schemaVersion
+        - requestId
+        - runId
+        - agentId
+        - catalogAgentId
+        - catalogRevisionId
+        - catalogDefinitionDigest
+        - displayName
+        - modelBindingKey
+        - systemInstructionDigest
+        - status
+        - executionProfile
+        - replayed
+        - ledgerUrl
+        - exportUrl
+      properties:
+        schemaVersion:
+          type: string
+          enum:
+            - agent_journey_launch.v2
+        requestId:
+          type: string
+          format: uuid
+        runId:
+          type: string
+          format: uuid
+        agentId:
+          type: string
+          format: uuid
+        catalogAgentId:
+          type: string
+          format: uuid
+        catalogRevisionId:
+          type: string
+          format: uuid
+        catalogDefinitionDigest:
+          type: string
+          pattern: '^sha256:[0-9a-f]{64}$'
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Canonical single-line display name without control characters.
+        modelBindingKey:
+          type: string
+          pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'
+        systemInstructionDigest:
+          type: string
+          pattern: '^sha256:[0-9a-f]{64}$'
+        status:
+          type: string
+          enum:
+            - QUEUED
+            - RUNNING
+            - COMPLETED
+            - FAILED
+        executionProfile:
+          type: string
+          enum:
+            - AGENT_DEFINITION_V1
+        replayed:
+          type: boolean
+        ledgerUrl:
+          type: string
+        exportUrl:
+          type: string
+          description: Future export resource location. It becomes downloadable only after the Agent Journey reaches a terminal state; use its readiness subresource to check first.
+    AgentJourneyApiError:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+    AgentDefinitionCreateRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - requestId
+        - agentKey
+        - displayName
+        - draft
+      properties:
+        requestId:
+          type: string
+          format: uuid
+          minLength: 36
+          maxLength: 36
+          pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+          description: Caller-owned idempotency identity for the normalized create request.
+        agentKey:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Canonical single-line display name without control characters.
+        description:
+          type: string
+          maxLength: 4000
+        draft:
+          $ref: '#/components/schemas/AgentDefinitionDraft'
+    AgentDefinitionDraftUpdateRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - expectedDraftVersion
+        - displayName
+        - draft
+      properties:
+        expectedDraftVersion:
+          type: integer
+          format: int64
+          minimum: 0
+        displayName:
+          type: string
+          description: Canonical single-line display name without control characters.
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          maxLength: 4000
+        draft:
+          $ref: '#/components/schemas/AgentDefinitionDraft'
+    AgentDefinitionPublishRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - expectedDraftVersion
+        - expectedDraftSpecDigest
+      properties:
+        expectedDraftVersion:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Exact version of the saved draft reviewed by the publisher.
+        expectedDraftSpecDigest:
+          type: string
+          pattern: '^sha256:[0-9a-f]{64}$'
+          description: Exact digest of the saved draft reviewed by the publisher.
+    AgentDefinitionDraft:
+      type: object
+      description: >
+        Partner-authored behavior and separately configured execution/tool permissions.
+        Role, purpose, goals, constraints and additionalInstructions use ordinary language
+        describing the actor, business objectives, knowledge and behavior. Agent Runtime
+        supplies protocol/action formats and result locations from bound capability schemas;
+        partners need not embed MCP/A2A wire instructions in persona prose.
+      additionalProperties: false
+      required:
+        - role
+        - purpose
+        - goals
+        - constraints
+        - execution
+        - tools
+      properties:
+        role:
+          type: string
+          minLength: 1
+          maxLength: 255
+        purpose:
+          type: string
+          minLength: 1
+          maxLength: 4000
+        goals:
+          type: array
+          minItems: 1
+          maxItems: 32
+          items:
+            type: string
+            minLength: 1
+            maxLength: 1000
+        constraints:
+          type: array
+          minItems: 1
+          maxItems: 32
+          items:
+            type: string
+            minLength: 1
+            maxLength: 1000
+        additionalInstructions:
+          type: string
+          maxLength: 16000
+          description: >
+            Additional human-readable behavioral guidance. Capability permissions belong in
+            tools and deployment bindings; Runtime owns their execution protocol instructions.
+        execution:
+          $ref: '#/components/schemas/AgentExecutionBinding'
+        tools:
+          type: array
+          maxItems: 8
+          uniqueItems: true
+          description: >
+            Published read-only DOMAIN or MCP permissions with unique toolName values across all
+            grants. DOMAIN grants use one selected domain bindingKey and require that matching
+            native GOAL domain in POST /api/agent-journeys. MCP grants may select multiple approved
+            MCP bindings and require a customer context for each binding at launch. Empty grants
+            preserve existing definitions. Raw simulation-event launches cannot claim a tool-bearing
+            Catalog revision. Launch rejects changed binding, provider, descriptor or schema identities
+            before admitting execution.
+          items:
+            $ref: '#/components/schemas/AgentToolGrant'
+    AgentToolGrant:
+      oneOf:
+        - $ref: '#/components/schemas/AgentDomainToolGrant'
+        - $ref: '#/components/schemas/AgentMcpToolGrant'
+      discriminator:
+        propertyName: kind
+        mapping:
+          DOMAIN: '#/components/schemas/AgentDomainToolGrant'
+          MCP: '#/components/schemas/AgentMcpToolGrant'
+    AgentDomainToolGrant:
+      type: object
+      additionalProperties: false
+      required:
+        - kind
+        - bindingKey
+        - bindingRevision
+        - bindingDigest
+        - providerRevision
+        - toolName
+        - descriptorRevision
+        - descriptorDigest
+        - inputSchemaDigest
+        - outputSchemaDigest
+        - effectClass
+        - scope
+        - maxCalls
+      properties:
+        kind:
+          type: string
+          enum: [DOMAIN]
+        bindingKey:
+          type: string
+          maxLength: 128
+          pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'
+        bindingRevision:
+          type: string
+          minLength: 1
+          maxLength: 256
+          description: Exact canonical deployment binding revision from domain discovery.
+        bindingDigest:
+          type: string
+          pattern: '^sha256:[0-9a-f]{64}$'
+        providerRevision:
+          type: string
+          minLength: 1
+          maxLength: 128
+        toolName:
+          type: string
+          maxLength: 128
+          pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'
+        descriptorRevision:
+          type: string
+          minLength: 1
+          maxLength: 128
+          description: Exact revision from the selected provider tool descriptor.
+        descriptorDigest:
+          type: string
+          pattern: '^sha256:[0-9a-f]{64}$'
+          description: RFC 8785 digest of the complete provider descriptor, including its description.
+        inputSchemaDigest:
+          type: string
+          pattern: '^sha256:[0-9a-f]{64}$'
+        outputSchemaDigest:
+          type: string
+          pattern: '^sha256:[0-9a-f]{64}$'
+        effectClass:
+          type: string
+          enum: [READ_ONLY]
+        scope:
+          type: string
+          enum: [CUSTOMER_CONTEXT]
+          description: Only the accepted domain context of this simulation's customer is accessible.
+        maxCalls:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: Maximum accepted tool reads for this customer run; retries reuse the same intent.
+    AgentMcpToolGrant:
+      type: object
+      additionalProperties: false
+      required:
+        - kind
+        - bindingKey
+        - bindingRevision
+        - bindingDigest
+        - toolName
+        - descriptorDigest
+        - inputSchemaDigest
+        - outputSchemaDigest
+        - effectClass
+        - scope
+        - maxCalls
+      properties:
+        kind:
+          type: string
+          enum: [MCP]
+        bindingKey:
+          type: string
+          maxLength: 128
+          pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'
+        bindingRevision:
+          type: string
+          minLength: 1
+          maxLength: 256
+          description: Exact canonical deployment binding revision from MCP discovery.
+        bindingDigest:
+          type: string
+          pattern: '^sha256:[0-9a-f]{64}$'
+        toolName:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: '^[A-Za-z0-9_.-]{1,128}$'
+        descriptorDigest:
+          type: string
+          pattern: '^sha256:[0-9a-f]{64}$'
+          description: RFC 8785 digest of the pinned MCP tool descriptor, including its description.
+        inputSchemaDigest:
+          type: string
+          pattern: '^sha256:[0-9a-f]{64}$'
+        outputSchemaDigest:
+          type: string
+          pattern: '^sha256:[0-9a-f]{64}$'
+        effectClass:
+          type: string
+          enum: [READ_ONLY]
+        scope:
+          type: string
+          enum: [CUSTOMER_CONTEXT]
+          description: Access is bound to this customer's trusted context for the selected MCP binding.
+        maxCalls:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: Maximum accepted tool reads for this customer run; retries reuse the same intent.
+    AgentExecutionBinding:
+      type: object
+      additionalProperties: false
+      required:
+        - mode
+        - modelBindingKey
+      properties:
+        mode:
+          type: string
+          enum:
+            - MODEL
+        modelBindingKey:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'
+          description: Reference into the separately governed model binding registry.
+    AgentDefinitionView:
+      type: object
+      additionalProperties: false
+      required:
+        - schemaVersion
+        - catalogAgentId
+        - agentKey
+        - displayName
+        - description
+        - status
+        - draftVersion
+        - draft
+        - draftSpecDigest
+        - createdAt
+        - updatedAt
+      properties:
+        schemaVersion:
+          type: string
+          enum:
+            - agent_catalog.v1
+        catalogAgentId:
+          type: string
+          format: uuid
+          pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        agentKey:
+          type: string
+        displayName:
+          type: string
+          description: Canonical single-line display name without control characters.
+        description:
+          type: string
+        status:
+          type: string
+          enum:
+            - DRAFT
+            - ACTIVE
+            - ARCHIVED
+        draftVersion:
+          type: integer
+          format: int64
+        draft:
+          $ref: '#/components/schemas/AgentDefinitionDraft'
+        draftSpecDigest:
+          type: string
+          pattern: '^sha256:[0-9a-f]{64}$'
+        defaultRevisionId:
+          type: string
+          format: uuid
+          pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    AgentDefinitionRevisionView:
+      type: object
+      additionalProperties: false
+      required:
+        - schemaVersion
+        - catalogAgentId
+        - catalogRevisionId
+        - revisionNumber
+        - sourceDraftVersion
+        - catalogDefinitionDigest
+        - displayName
+        - definitionJson
+        - compiledSystemInstruction
+        - systemInstructionDigest
+        - execution
+        - publishedAt
+      properties:
+        schemaVersion:
+          type: string
+          enum:
+            - astraform.agent-definition.v1
+        catalogAgentId:
+          type: string
+          format: uuid
+          pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        catalogRevisionId:
+          type: string
+          format: uuid
+          pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        revisionNumber:
+          type: integer
+          format: int64
+          minimum: 1
+        sourceDraftVersion:
+          type: integer
+          format: int64
+          minimum: 0
+        catalogDefinitionDigest:
+          type: string
+          pattern: '^sha256:[0-9a-f]{64}$'
+        displayName:
+          type: string
+          description: Canonical single-line display name without control characters.
+        definitionJson:
+          type: string
+          description: RFC 8785 canonical behavioral definition JSON without resource-envelope IDs.
+        compiledSystemInstruction:
+          type: string
+          description: Deterministic MODEL instruction bounded to Runtime limits.
+        systemInstructionDigest:
+          type: string
+          pattern: '^sha256:[0-9a-f]{64}$'
+        execution:
+          $ref: '#/components/schemas/AgentExecutionBinding'
+        publishedAt:
+          type: string
+          format: date-time
+    AgentDefinitionCreateResult:
+      type: object
+      additionalProperties: false
+      required:
+        - replayed
+        - definition
+      properties:
+        replayed:
+          type: boolean
+        definition:
+          $ref: '#/components/schemas/AgentDefinitionView'
+    AgentDefinitionPublishResult:
+      type: object
+      additionalProperties: false
+      required:
+        - replayed
+        - definition
+        - revision
+      properties:
+        replayed:
+          type: boolean
+        definition:
+          $ref: '#/components/schemas/AgentDefinitionView'
+        revision:
+          $ref: '#/components/schemas/AgentDefinitionRevisionView'
+    AgentDefinitionDefaultRevisionRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - catalogRevisionId
+      properties:
+        catalogRevisionId:
+          type: string
+          format: uuid
+          minLength: 36
+          maxLength: 36
+          pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    AgentCatalogApiError:
+      type: object
+      additionalProperties: false
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+    SimulationRunCreateRequest:
+      type: object
+      description: Product-facing simulation run creation request for durable evidence capture.
+      properties:
+        runId:
+          type: string
+        experimentId:
+          type: string
+        scenarioId:
+          type: string
+        domainId:
+          type: string
+        cohortId:
+          type: string
+        parentRunId:
+          type: string
+        activationId:
+          type: string
+        presetId:
+          type: string
+        status:
+          type: string
+        startedAtEpochMs:
+          type: integer
+          format: int64
+        metadata:
+          type: object
+          additionalProperties: true
+    SimulationRunUpdateRequest:
+      type: object
+      description: Product-facing simulation run lifecycle update request.
+      properties:
+        status:
+          type: string
+          description: RUNNING, COMPLETED, FAILED, CANCELLED, or ROLLED_BACK.
+        summaryPath:
+          type: string
+        bundlePath:
+          type: string
+        completedAtEpochMs:
+          type: integer
+          format: int64
+        source:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
+    AgentJourneyCustomerReactionObservation:
+      type: object
+      additionalProperties: false
+      required: [kind, identity, logicalTimeEpochMs, instruction, facts]
+      description: >-
+        An admitted observation or decision opportunity collected for one delayed
+        customer decision. Its logical timestamp is its original occurrence time,
+        not the later customer decision time. DOMAIN_SNAPSHOT preserves the initial
+        trigger's older domain observation when facts.domain has been refreshed.
+      properties:
+        kind:
+          type: string
+          enum: [OBSERVATION, RECURRENCE, MODEL, DOMAIN_OBSERVATION, TOOL_RESULT, MCP_TOOL_RESULT, DOMAIN_SNAPSHOT]
+        identity:
+          type: string
+          description: Stable identity from the original input, schedule ordinal, model proposal or initial command.
+        logicalTimeEpochMs:
+          type: integer
+          format: int64
+          minimum: 0
+        instruction:
+          type: string
+        facts:
+          type: object
+          additionalProperties: true
+          description: Actual facts for this occurrence; not model-generated replacements or future observations.
+    AgentJourneyCustomerReactionFacts:
+      type: object
+      additionalProperties: false
+      required: [triggerKind, triggerLogicalTimeEpochMs, readyAtEpochMs, observations]
+      description: >-
+        Host-owned facts.customerReaction supplied to a delayed customer decision
+        when customerReactionIntervalMs is positive. The first trigger fixes readyAtEpochMs;
+        further inputs at or before that timestamp are considered together without
+        resetting it. The original trigger remains in its ordinary facts fields.
+        facts.domain, when present, is the latest admitted provider observation;
+        an earlier changed domain snapshot is preserved among observations.
+        Actual partner/tool receipts retain their original occurrence time and content.
+        No real-time delay or speed multiplier is implied. The initial input plus
+        observations must fit 64 inputs and the complete serialized pending envelope
+        and final command must each fit 262144 UTF-8 bytes, otherwise execution stops
+        with CUSTOMER_REACTION_INPUT_LIMIT without truncating inputs.
+        This envelope is an execution/evidence shape, not an allowed caller-supplied
+        launch or scheduled-input field when the positive policy is selected.
+      properties:
+        triggerKind:
+          type: string
+          enum: [PARTNER_REPLY, OBSERVATION, DOMAIN_OBSERVATION, TOOL_RESULT, MCP_TOOL_RESULT]
+        triggerLogicalTimeEpochMs:
+          type: integer
+          format: int64
+          minimum: 0
+        readyAtEpochMs:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Checked triggerLogicalTimeEpochMs plus the frozen customerReactionIntervalMs; inclusive customer decision time.
+        observations:
+          type: array
+          maxItems: 63
+          description: Additional retained inputs/opportunities and any preserved earlier domain snapshot; the initial trigger counts separately.
+          items:
+            $ref: '#/components/schemas/AgentJourneyCustomerReactionObservation'
+    AgentJourneyCustomerReactionProgress:
+      type: object
+      additionalProperties: false
+      required: [status, triggerKind, triggerLogicalTimeEpochMs, pendingInputCount]
+      description: >-
+        Host-owned summary of the durable pending reaction. SCHEDULED means the customer
+        has not yet received its delayed decision; domain progress may already have advanced.
+        STOPPED preserves pending-work evidence after an explicit failure/limit.
+        For THROUGH_HORIZON participation, OUTSIDE_HORIZON preserves a reaction whose
+        readyAtEpochMs is beyond the horizon; it does not invoke the customer or prevent
+        HORIZON_COVERED completion. Legacy runs retain CUSTOMER_REACTION_BEYOND_HORIZON
+        failure semantics. The trigger, due time and input count remain evidence.
+        readyAtEpochMs is absent only when timestamp arithmetic overflowed.
+        pendingInputCount includes the initial input and stored additional observations;
+        a stopped overflow may exceed the admission bound. It is not a count of LLM calls.
+      properties:
+        status:
+          type: string
+          enum: [SCHEDULED, STOPPED, OUTSIDE_HORIZON]
+        triggerKind:
+          type: string
+          enum: [PARTNER_REPLY, OBSERVATION, DOMAIN_OBSERVATION, TOOL_RESULT, MCP_TOOL_RESULT]
+        triggerLogicalTimeEpochMs:
+          type: integer
+          format: int64
+          minimum: 0
+        readyAtEpochMs:
+          type: integer
+          format: int64
+          minimum: 0
+        pendingInputCount:
+          type: integer
+          minimum: 1
+    AgentJourneyGoalProgress:
+      type: object
+      additionalProperties: false
+      required: [schemaVersion, goalIndex, status, deadlineEpochMs, customerDecisions, modelAttempts]
+      properties:
+        schemaVersion: {type: string, enum: [astraform.goal-progress.v1]}
+        goalIndex: {type: integer, minimum: 0, maximum: 31}
+        status:
+          type: string
+          enum: [ACTIVE, ACHIEVED, ABANDONED, BLOCKED, NO_PROGRESS, HORIZON_REACHED, LIMIT_REACHED, TIMED_OUT, EXECUTION_FAILED]
+        deadlineEpochMs: {type: integer, format: int64}
+        customerDecisions:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Settled customer events, including failed events; root and replies count.
+        modelAttempts:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Settled event attempts; conservative model-call accounting, including attempts that failed before provider invocation.
+        maximumModelAttempts:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Decision limit times the durable root retry limit inherited by subsequent customer events; available after root projection.
+        stopReason: {type: string}
+        lastExchangeDigest: {type: string}
+        repeatedExchanges: {type: integer, minimum: 1}
+        achievementEvidence:
+          type: object
+          additionalProperties: false
+          required: [partnerEventId, customerEventId, receiptDigest, evaluator, matchedConditions]
+          description: >-
+            Matching receipt awaiting customer-reply settlement while ACTIVE; successful
+            completion only when status is ACHIEVED. A later model/execution failure
+            remains failure even with a matching receipt.
+          properties:
+            partnerEventId: {type: string, format: uuid}
+            customerEventId: {type: string, format: uuid}
+            receiptDigest: {type: string}
+            evaluator: {type: string, enum: [astraform.partner-json-conditions.v1]}
+            matchedConditions:
+              type: array
+              items:
+                $ref: '#/components/schemas/AgentJourneyGoalCondition'
+        rejectedRequest:
+          type: object
+          additionalProperties: false
+          required: [customerEventId, requestPointer, factPointer]
+          properties:
+            customerEventId: {type: string, format: uuid}
+            requestPointer: {type: string}
+            factPointer: {type: string}
+    AgentJourneyParticipationProgress:
+      type: object
+      additionalProperties: false
+      required: [policy, status, logicalHorizonEpochMs, lastCustomerEventTimeEpochMs]
+      description: >-
+        Host-owned participation coverage for an opted-in customer, separate from configured
+        goal assessment and the latest conversation decision. Omitted for legacy runs.
+        lastCustomerEventTimeEpochMs records the latest actual customer event; idle coverage
+        never fabricates a Runtime cursor or customer decision. coveredThroughEpochMs is
+        present only after completed coverage and equals logicalHorizonEpochMs. Execution
+        limits or failures stop participation without claiming horizon coverage.
+      allOf:
+        - anyOf:
+            - required: [coveredThroughEpochMs]
+              properties:
+                status: {type: string, enum: [COMPLETED]}
+            - properties:
+                status: {type: string, enum: [ACTIVE, STOPPED]}
+              not:
+                required: [coveredThroughEpochMs]
+      properties:
+        policy:
+          type: string
+          enum: [THROUGH_HORIZON]
+        status:
+          type: string
+          enum: [ACTIVE, COMPLETED, STOPPED]
+        logicalHorizonEpochMs:
+          type: integer
+          format: int64
+          minimum: 0
+        lastCustomerEventTimeEpochMs:
+          type: integer
+          format: int64
+          minimum: 0
+        coveredThroughEpochMs:
+          type: integer
+          format: int64
+          minimum: 0
+        stopReason:
+          type: string
+          pattern: '^[A-Z][A-Z0-9_]{0,95}$'
+      x-validation: >-
+        COMPLETED requires coveredThroughEpochMs equal to logicalHorizonEpochMs;
+        ACTIVE and STOPPED omit coveredThroughEpochMs. The last actual customer event
+        must not exceed the horizon. Terminal status retains the actual stop reason.
+    AgentJourneyNativeProgress:
+      type: object
+      additionalProperties: false
+      required: [logicalTimeEpochMs, nextLogicalTimeEpochMs, stopReason]
+      description: >-
+        Host-owned progress for a coordinated single customer. Customer decision records
+        its latest completed decision, not a business-success verdict. While active,
+        customer status follows that decision unless a pending customerReaction reports
+        SCHEDULED. With ACTIVE THROUGH_HORIZON participation, a latest FINISH projects
+        SCHEDULED when another input is pending or WAITING when idle, retaining the actual
+        customerDecision FINISH. Under legacy stopping semantics, an explicit stop projects
+        STOPPED unless the actual latest decision is FINISH, which retains FINISHED.
+        Terminal progress has no next logical boundary. A retained customerReaction reports
+        STOPPED after failure/limit or OUTSIDE_HORIZON when its due time exceeds retained
+        participation's horizon; its original trigger, due time and input count are preserved.
+        Under legacy stopping semantics,
+        FINISHED describes participation and can accompany a failed or abandoned goal;
+        goal and stopReason retain the result. With participationPolicy THROUGH_HORIZON,
+        FINISH closes only the current conversation; participation reports continuing
+        eligibility or completed/stopped coverage independently of that decision.
+        Finalizers apply this projection only on the first terminal transition. Existing
+        terminal records and exports are not rewritten on reads or replay.
+        CONTACT_PARTNER waits for the actual reply; CALL_TOOL waits for its actual provider
+        result and reports WAITING_FOR_TOOL; SCHEDULE proposes a future decision;
+        WAIT resumes on configured observations or decision opportunities. For legacy runs,
+        FINISH cancels further customer admission and, without a GOAL completion policy,
+        completes with CUSTOMER_FINISHED. GOAL runs retain their assessment and stop reason.
+        For legacy runs, WAIT without another configured input/opportunity stops the run as FAILED with
+        CUSTOMER_WAITING_NO_FUTURE_INPUT. A sole continuation beyond the horizon stops
+        as FAILED with CUSTOMER_CONTINUATION_BEYOND_HORIZON. These represent unfinished
+        customer participation. A delayed reaction beyond the horizon stops legacy runs with
+        CUSTOMER_REACTION_BEYOND_HORIZON. THROUGH_HORIZON runs retain that reaction as
+        OUTSIDE_HORIZON and complete covered participation with HORIZON_COVERED, without
+        fabricating a customer event at the horizon. Arithmetic overflow stops with
+        CUSTOMER_REACTION_TIME_OVERFLOW; bounded input overflow stops with
+        CUSTOMER_REACTION_INPUT_LIMIT. Legacy roots without a frozen decision contract omit
+        customerDecision and customerStatus and retain their original stopping rules.
+        No missing customer decision or legacy status is synthesized by terminal projection.
+      properties:
+        participation:
+          $ref: '#/components/schemas/AgentJourneyParticipationProgress'
+        goal:
+          $ref: '#/components/schemas/AgentJourneyGoalProgress'
+        customerReaction:
+          $ref: '#/components/schemas/AgentJourneyCustomerReactionProgress'
+        logicalTimeEpochMs:
+          type: integer
+          format: int64
+          minimum: 0
+        nextLogicalTimeEpochMs:
+          type: integer
+          format: int64
+          nullable: true
+        stopReason:
+          type: string
+          nullable: true
+          pattern: '^[A-Z][A-Z0-9_]{0,95}$'
+        customerDecision:
+          type: string
+          enum: [CONTACT_PARTNER, CALL_TOOL, SCHEDULE, WAIT, FINISH]
+        customerStatus:
+          type: string
+          enum: [WAITING_FOR_PARTNER, WAITING_FOR_TOOL, SCHEDULED, WAITING, FINISHED, STOPPED]
+    SimulationRunRecord:
+      type: object
+      required:
+        - schemaVersion
+        - runId
+        - experimentId
+      properties:
+        schemaVersion:
+          type: string
+          example: simulation_run_evidence.v1
+        runId:
+          type: string
+        experimentId:
+          type: string
+        scenarioId:
+          type: string
+        status:
+          type: string
+        startedAtEpochMs:
+          type: integer
+          format: int64
+        completedAtEpochMs:
+          type: integer
+          format: int64
+        metadata:
+          type: object
+          additionalProperties: true
+          properties:
+            nativeProgress:
+              $ref: '#/components/schemas/AgentJourneyNativeProgress'
+        simulationWindow:
+          $ref: '#/components/schemas/SimulationRunWindow'
+        simulationHorizonDays:
+          type: number
+          format: double
+          description: Configured simulated duration in days when known.
+        elapsedSimulationDays:
+          type: number
+          format: double
+          description: Elapsed simulated duration in days when the run is still in progress or partially complete.
+        agentCount:
+          type: integer
+          format: int64
+        eventCount:
+          type: integer
+          format: int64
+        checkpointCount:
+          type: integer
+          format: int64
+        evidenceHealth:
+          type: string
+        evidenceDegradation:
+          type: object
+          additionalProperties: true
+          description: Present when evidenceHealth is degraded; contains the latest platform-observed delivery issue.
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        exportUrl:
+          type: string
+    SimulationRunWindow:
+      type: object
+      description: Buyer-facing simulated-time window derived from run metadata.
+      properties:
+        configuredDays:
+          type: number
+          format: double
+        elapsedDays:
+          type: number
+          format: double
+        prePolicyDays:
+          type: number
+          format: double
+        postPolicyDays:
+          type: number
+          format: double
+        source:
+          type: string
+    SimulationRunListResponse:
+      type: object
+      required:
+        - schemaVersion
+        - experimentId
+        - runs
+      properties:
+        schemaVersion:
+          type: string
+          example: simulation_run_evidence.v1
+        experimentId:
+          type: string
+        limit:
+          type: integer
+        count:
+          type: integer
+        total:
+          type: integer
+          format: int64
+        runs:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimulationRunRecord'
+    SimulationRunLedgerResponse:
+      type: object
+      required:
+        - schemaVersion
+        - run
+      properties:
+        schemaVersion:
+          type: string
+          example: simulation_run_evidence.v1
+        run:
+          $ref: '#/components/schemas/SimulationRunRecord'
+        limit:
+          type: integer
+        agents:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimulationRunAgentRecord'
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimulationRunEvent'
+        checkpoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimulationRunCheckpointRecord'
+    SimulationRunAgentRecord:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        runId:
+          type: string
+        agentId:
+          type: string
+        domainId:
+          type: string
+        cohortId:
+          type: string
+        personaName:
+          type: string
+        status:
+          type: string
+        activationMetadata:
+          type: object
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    SimulationRunAgentBatchRequest:
+      type: object
+      properties:
+        source:
+          type: string
+        domainId:
+          type: string
+        cohortId:
+          type: string
+        activationId:
+          type: string
+        agents:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    SimulationRunEventBatchRequest:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimulationRunEvent'
+    SimulationRunCheckpointBatchRequest:
+      type: object
+      properties:
+        checkpoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimulationRunCheckpoint'
+    SimulationRunEvent:
+      type: object
+      allOf:
+        - oneOf:
+            - title: Partner exchange admission evidence
+              required: [eventType, category, payload]
+              properties:
+                eventType:
+                  type: string
+                  enum: [agent-journey.partner-exchange]
+                category:
+                  type: string
+                  enum: [external-interaction]
+                payload:
+                  $ref: '#/components/schemas/AgentJourneyPartnerExchangePayload'
+            - title: Other existing evidence event types
+              not:
+                required: [eventType]
+                properties:
+                  eventType:
+                    type: string
+                    enum: [agent-journey.partner-exchange]
+      properties:
+        eventId:
+          type: string
+        agentId:
+          type: string
+        domainId:
+          type: string
+        category:
+          type: string
+        eventType:
+          type: string
+        simTimeEpochMs:
+          type: integer
+          format: int64
+        correlationId:
+          type: string
+        source:
+          type: string
+        outcome:
+          type: string
+        severity:
+          type: string
+        payload:
+          type: object
+          additionalProperties: true
+          properties:
+            inputEvidence:
+              description: >-
+                Retained admitted input for a terminal customer Runtime event, after
+                Experiment's existing structured redaction. This is not a rendered
+                model prompt or partner-private input. sourceDigest identifies the
+                original EventInputs canonical-payload UTF-8 bytes before JSONB:
+                sorted keys and normalized decimals, not RFC8785, returned JSON or
+                redacted export bytes. CAPTURED describes the retained source;
+                public content may be redacted. Existing export member checksums
+                identify exported bytes. Historical rows may omit inputEvidence;
+                they are never backfilled or replaced, including existing explicit
+                UNAVAILABLE evidence. Original payload facts and their timestamps
+                remain distinct from the event's actual logical execution time.
+              allOf:
+                - $ref: '../../core/common.yaml#/components/schemas/EventInputEvidence'
+            partnerExchange:
+              $ref: '#/components/schemas/AgentJourneyPartnerExchangeReference'
+            a2aInvocation:
+              description: >-
+                Retained single-event Runtime invocation evidence with Experiment's
+                existing structured redaction. Source digests identify normalized
+                pre-redaction source JSON, not the public content or ZIP entry.
+                Optional on terminal partner Runtime event projections; historical
+                evidence may omit it and is not backfilled. Missing evidence does
+                not prove that no exchange occurred. No new accepted customer result
+                is manufactured from an unsuccessful partner receipt.
+              allOf:
+                - $ref: '../../core/common.yaml#/components/schemas/A2aInvocationEvidence'
+          description: |
+            Event-specific evidence. New agent-journey.partner-exchange events use
+            AgentJourneyPartnerExchangePayload and category external-interaction.
+            Terminal partner Runtime event projections may include partnerExchange
+            and a2aInvocation. The original actor-local causation/correlation remains
+            unchanged; partnerExchange adds the initiating customer-decision relation.
+            Historical events may lack these members and are not backfilled.
+
+            New agent-journey.coordination-failed events include
+            customerCheckpoint: {status: CAPTURED, checkpointId: "<root-event-id>:cursor"}
+            when an owner/root-validated Runtime cursor was saved, or
+            customerCheckpoint: {status: UNAVAILABLE} when it could not be obtained.
+            A captured cursor preserves its actual Runtime status and last accepted state,
+            including an initial version-0 state or ACTIVE work; it does not change the
+            run's failureCode or establish that in-flight Runtime work was cancelled.
+            UNAVAILABLE does not mean an empty state or rejected launch. Historical
+            terminal events may omit this member. Terminal replay never backfills or
+            replaces the original capture. The checkpoint uses the existing
+            astraform.agent-journey-cursor.v1 payload and is included in the export.
+    AgentJourneyPartnerExchangeReference:
+      type: object
+      additionalProperties: false
+      description: >-
+        Coordinator-owned association on terminal partner Runtime event evidence.
+        References the actual customer decision and accepted partner event without
+        replacing either actor's original causation. Request intent remains in the
+        referenced customer event; the associated invocation contains normalized
+        request/receipt evidence. This reference does not establish goal success.
+      required: [schemaVersion, customerAgentId, customerEventId, partnerEventId, targetAgentKey]
+      properties:
+        schemaVersion:
+          type: string
+          enum: [astraform.partner-exchange.v1]
+        customerAgentId:
+          type: string
+        customerEventId:
+          type: string
+          format: uuid
+        partnerEventId:
+          type: string
+          format: uuid
+        targetAgentKey:
+          type: string
+    AgentJourneyPartnerExchangePayload:
+      type: object
+      additionalProperties: false
+      oneOf:
+        - properties:
+            disposition:
+              type: string
+              enum: [RUNTIME_ACCEPTED]
+            partnerEventId:
+              type: string
+              format: uuid
+        - properties:
+            disposition:
+              type: string
+              enum: [NOT_DISPATCHED, ACCEPTANCE_UNCERTAIN]
+            partnerEventId:
+              nullable: true
+              not:
+                type: string
+      description: >-
+        Immutable coordinator admission fact for agent-journey.partner-exchange.
+        Its event carries the run-local simulated time; request intent remains in
+        the referenced customer event and is not duplicated here. RUNTIME_ACCEPTED
+        means the existing Runtime command was accepted, not that network delivery,
+        a partner reply or the customer's goal is established. NOT_DISPATCHED records
+        a bounded intent that was not submitted. ACCEPTANCE_UNCERTAIN preserves an
+        unresolved Runtime command outcome and must not be labelled safely unsent
+        or successfully delivered. Later causally linked facts may establish a
+        disposition without overwriting this record or resending work for evidence.
+        Missing historical records remain missing; replay does not fabricate them.
+      required:
+        - schemaVersion
+        - customerAgentId
+        - customerEventId
+        - partnerEventId
+        - targetAgentKey
+        - disposition
+        - reason
+      properties:
+        schemaVersion:
+          type: string
+          enum: [astraform.partner-exchange.v1]
+        customerAgentId:
+          type: string
+        customerEventId:
+          type: string
+          format: uuid
+        partnerEventId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Accepted Runtime partner event identity when established; otherwise null.
+        targetAgentKey:
+          type: string
+        disposition:
+          type: string
+          enum: [RUNTIME_ACCEPTED, NOT_DISPATCHED, ACCEPTANCE_UNCERTAIN]
+        reason:
+          type: string
+          nullable: true
+          description: Existing safe admission/failure reason when present; not a raw exception or invented partner reply.
+    SimulationRunCheckpoint:
+      type: object
+      properties:
+        checkpointId:
+          type: string
+        agentId:
+          type: string
+        domainId:
+          type: string
+        checkpointType:
+          type: string
+        stateSchemaVersion:
+          type: string
+        simTimeEpochMs:
+          type: integer
+          format: int64
+        payload:
+          type: object
+          additionalProperties: true
+    SimulationRunCheckpointRecord:
+      type: object
+      properties:
+        checkpointId:
+          type: string
+        runId:
+          type: string
+        agentId:
+          type: string
+        domainId:
+          type: string
+        checkpointType:
+          type: string
+        stateSchemaVersion:
+          type: string
+        artifactRef:
+          type: string
+        checksum:
+          type: string
+        simTimeEpochMs:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+    SimulationRunBatchResponse:
+      type: object
+      properties:
+        schemaVersion:
+          type: string
+          example: simulation_run_evidence.v1
+        runId:
+          type: string
+        accepted:
+          type: integer
+          format: int32
+        duplicates:
+          type: integer
+          format: int32
+      additionalProperties: true
+    ScenarioLabBundlePayload:
+      type: object
+      description: Registry-backed Scenario Lab bundle payload.
+      additionalProperties: true
+      properties:
+        runId:
+          type: string
+        summaryPath:
+          type: string
+        loadedAt:
+          type: string
+          format: date-time
+        summary:
+          type: object
+          additionalProperties: true
+        artifactPaths:
+          type: object
+          additionalProperties:
+            type: string
+        artifactDownloads:
+          type: object
+          additionalProperties:
+            type: string
+    ArtifactRegisterRequest:
+      type: object
+      required:
+        - artifactType
+        - artifactRef
+      properties:
+        artifactType:
+          type: string
+        artifactRef:
+          type: string
+        contentType:
+          type: string
+        checksum:
+          type: string
+    RunArtifactRecord:
+      type: object
+      required:
+        - id
+        - runId
+        - artifactType
+        - artifactRef
+        - createdAt
+      properties:
+        id:
+          type: integer
+          format: int64
+        runId:
+          type: string
+        artifactType:
+          type: string
+        artifactRef:
+          type: string
+        contentType:
+          type: string
+        checksum:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    RunEvaluationLinkRequest:
+      type: object
+      required:
+        - evaluationRunId
+      properties:
+        evaluationRunId:
+          type: string
+    SourceSnapshotRegisterRequest:
+      type: object
+      required:
+        - sourceSystem
+        - snapshotVersion
+      properties:
+        sourceSystem:
+          type: string
+        snapshotVersion:
+          type: string
+        checksum:
+          type: string
+        effectiveFrom:
+          type: string
+          format: date-time
+        payloadRef:
+          type: string
+    SourceSnapshotRecord:
+      type: object
+      required:
+        - id
+        - runId
+        - sourceSystem
+        - snapshotVersion
+        - createdAt
+      properties:
+        id:
+          type: integer
+          format: int64
+        runId:
+          type: string
+        sourceSystem:
+          type: string
+        snapshotVersion:
+          type: string
+        checksum:
+          type: string
+        effectiveFrom:
+          type: string
+          format: date-time
+        payloadRef:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    CalibrationObservationCreateRequest:
+      type: object
+      required:
+        - runId
+        - driftStatus
+      properties:
+        runId:
+          type: string
+        domain:
+          type: string
+        segment:
+          type: string
+        observationWindow:
+          type: string
+        driftStatus:
+          type: string
+        observedMetrics:
+          type: object
+          additionalProperties: true
+    CalibrationObservationRecord:
+      type: object
+      required:
+        - id
+        - runId
+        - driftStatus
+        - createdAt
+      properties:
+        id:
+          type: integer
+          format: int64
+        runId:
+          type: string
+        domain:
+          type: string
+        segment:
+          type: string
+        observationWindow:
+          type: string
+        driftStatus:
+          type: string
+        observedMetrics:
+          type: object
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+    CalibrationDriftSummary:
+      type: object
+      required:
+        - totalObservations
+        - statuses
+      properties:
+        totalObservations:
+          type: integer
+          format: int32
+        statuses:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int32
+    ScenarioLabPackCatalog:
+      type: object
+      required:
+        - schemaVersion
+        - packs
+      properties:
+        schemaVersion:
+          type: string
+        packs:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScenarioLabPack'
+    ScenarioLabPack:
+      type: object
+      required:
+        - packId
+        - domainId
+        - label
+        - description
+        - presetsPath
+        - runsPath
+      properties:
+        packId:
+          type: string
+        domainId:
+          type: string
+        experimentId:
+          type: string
+        label:
+          type: string
+        description:
+          type: string
+        presetsPath:
+          type: string
+        runsPath:
+          type: string
+        capabilities:
+          type: object
+          additionalProperties: true
+        controlSchema:
+          type: object
+          additionalProperties: true
+        uiSchema:
+          type: object
+          additionalProperties: true
+        outcomeSchema:
+          type: object
+          additionalProperties: true
+        outcomeScorecard:
+          type: object
+          additionalProperties: true
+        outcomeScorecards:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        policyExpressions:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        summarySchemaVersion:
+          type: string
+    ScenarioLabPresetCatalog:
+      type: object
+      description: Pack-specific Scenario Lab preset catalog payload.
+      additionalProperties: true
+      properties:
+        schemaVersion:
+          type: string
+        defaults:
+          type: object
+          additionalProperties: true
+        controls:
+          type: object
+          additionalProperties: true
+        presets:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    ScenarioLabRunStartRequest:
+      type: object
+      description: Pack-specific Scenario Lab run request payload.
+      additionalProperties: true
+      properties:
+        presetId:
+          type: string
+        runMode:
+          type: string
+        compareMode:
+          type: string
+    ScenarioLabRunControlRequest:
+      type: object
+      description: Lifecycle control request for a unified Scenario Lab run.
+      required:
+        - action
+      additionalProperties: true
+      properties:
+        action:
+          type: string
+          enum:
+            - CANCEL
+            - PAUSE
+            - RESUME
+            - FINALIZE
+        reason:
+          type: string
+        source:
+          type: string
+          description: Caller identity for evidence ledger lifecycle events.
+    ScenarioLabRunStatus:
+      type: object
+      required:
+        - packId
+        - runId
+        - status
+        - statusUrl
+        - phase
+        - parameters
+        - startedAt
+        - updatedAt
+        - progress
+        - logTail
+        - bundleReady
+      properties:
+        packId:
+          type: string
+        runId:
+          type: string
+        status:
+          type: string
+          enum:
+            - QUEUED
+            - RUNNING
+            - PAUSED
+            - READY_TO_FINALIZE
+            - CANCEL_REQUESTED
+            - COMPLETED
+            - FAILED
+            - CANCELLED
+            - TIMED_OUT
+        statusUrl:
+          type: string
+        phase:
+          type: string
+        parameters:
+          type: object
+          additionalProperties: true
+        startedAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        progress:
+          type: number
+          format: double
+        phaseTimings:
+          type: array
+          description: Ordered real execution phase timings for the run. Each item may include phase, status, startedAt, completedAt, and durationMs.
+          items:
+            type: object
+            additionalProperties: true
+        logTail:
+          type: array
+          items:
+            type: string
+        error:
+          $ref: '#/components/schemas/ScenarioLabApiError'
+        bundleReady:
+          type: boolean
+        bundleUrl:
+          type: string
+          nullable: true
+        evidencePackUrl:
+          type: string
+          nullable: true
+    ScenarioLabApiError:
+      type: object
+      required:
+        - message
+      additionalProperties: true
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true

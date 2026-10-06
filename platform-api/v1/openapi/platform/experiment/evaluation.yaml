@@ -1,0 +1,535 @@
+openapi: 3.0.3
+info:
+  title: Evaluation Schema
+  version: 0.1.1
+  description: Canonical evaluation payloads for replay and scenario quality decisions.
+paths:
+  /api/evaluations:
+    get:
+      tags:
+        - Evaluations
+      summary: List stored evaluation reports
+      operationId: listReports
+      parameters:
+        - in: query
+          name: scenarioId
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: verdict
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - in: query
+          name: runIdLike
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: manifestLike
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: generatedAfter
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: generatedBefore
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Stored evaluation report summaries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EvaluationRunSummary'
+  /api/evaluations/{runId}:
+    get:
+      tags:
+        - Evaluations
+      summary: Get a stored evaluation report
+      operationId: getReport
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Stored evaluation report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvaluationRunReport'
+        '404':
+          description: Report not found
+  /api/evaluations/run:
+    post:
+      tags:
+        - Evaluations
+      summary: Evaluate a run bundle
+      operationId: evaluate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EvaluateRunRequest'
+      responses:
+        '200':
+          description: Evaluation report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvaluationRunReport'
+  /api/evaluations/compare:
+    get:
+      tags:
+        - Evaluations
+      summary: Compare two stored evaluation reports
+      operationId: compareStoredReports
+      parameters:
+        - in: query
+          name: baselineRunId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: candidateRunId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Regression comparison
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegressionDeltaReport'
+  /api/evaluations/compare-inline:
+    post:
+      tags:
+        - Evaluations
+      summary: Compare two inline evaluation reports
+      operationId: compareInline
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompareInlineRequest'
+      responses:
+        '200':
+          description: Regression comparison
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegressionDeltaReport'
+  /api/evaluations/policy:
+    get:
+      tags:
+        - Evaluations
+      summary: Get the active regression policy
+      operationId: getPolicy
+      responses:
+        '200':
+          description: Regression policy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegressionPolicy'
+components:
+  schemas:
+    EvaluateRunRequest:
+      type: object
+      properties:
+        suiteResult:
+          type: object
+          additionalProperties: true
+        suiteResultPath:
+          type: string
+        bundlePath:
+          type: string
+        baselineRunId:
+          type: string
+        persist:
+          type: boolean
+        overwrite:
+          type: boolean
+
+    CompareInlineRequest:
+      type: object
+      properties:
+        baselineReport:
+          $ref: '#/components/schemas/EvaluationRunReport'
+        candidateReport:
+          $ref: '#/components/schemas/EvaluationRunReport'
+        policy:
+          $ref: '#/components/schemas/RegressionPolicy'
+
+    EvaluationRunSummary:
+      type: object
+      properties:
+        runId:
+          type: string
+        schemaVersion:
+          type: string
+        scenarioId:
+          type: string
+        manifestPath:
+          type: string
+        overallVerdict:
+          type: string
+        overallScore:
+          type: number
+          format: double
+        scenarioCount:
+          type: integer
+          format: int32
+        generatedAt:
+          type: string
+          format: date-time
+
+    EvaluationRunReport:
+      type: object
+      required:
+        - schemaVersion
+        - run
+        - summary
+        - scenarioResults
+        - generatedAt
+      properties:
+        schemaVersion:
+          type: string
+          description: Schema identifier for compatibility checks.
+          example: evaluation.v1
+        run:
+          $ref: '#/components/schemas/EvaluationRunMetadata'
+        summary:
+          $ref: '#/components/schemas/EvaluationSummary'
+        scenarioResults:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScenarioEvaluationResult'
+        regression:
+          $ref: '#/components/schemas/RegressionDeltaReport'
+        generatedAt:
+          type: string
+          format: date-time
+          description: UTC timestamp when evaluation report was produced.
+
+    EvaluationRunMetadata:
+      type: object
+      required:
+        - runId
+        - manifestPath
+        - generatedAt
+      properties:
+        runId:
+          type: string
+          description: Source run identifier.
+        manifestPath:
+          type: string
+          description: Manifest path used for scenario execution.
+        generatedAt:
+          type: string
+          format: date-time
+          description: UTC timestamp from source run metadata.
+        endpoints:
+          type: object
+          additionalProperties:
+            type: string
+          description: Service endpoints used during execution.
+        canonicalArtifactRef:
+          type: string
+          description: Optional pointer to canonical run artifact bundle.
+
+    ScenarioEvaluationResult:
+      type: object
+      required:
+        - scenarioId
+        - status
+        - dimensionScores
+        - overallVerdict
+        - overallScore
+      properties:
+        scenarioId:
+          type: string
+        status:
+          type: string
+          description: Source scenario execution status.
+          enum: [PASS, FAIL]
+        category:
+          type: string
+        overallVerdict:
+          $ref: '#/components/schemas/EvaluationStatus'
+        overallScore:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 1
+        rationale:
+          type: string
+        dimensionScores:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvaluationDimensionScore'
+        thresholdAnnotations:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvaluationThresholdAnnotation'
+        evidence:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvaluationEvidence'
+
+    EvaluationDimensionScore:
+      type: object
+      required:
+        - dimension
+        - score
+        - verdict
+        - confidence
+      properties:
+        dimension:
+          $ref: '#/components/schemas/EvaluationDimension'
+        score:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 1
+        verdict:
+          $ref: '#/components/schemas/EvaluationStatus'
+        confidence:
+          $ref: '#/components/schemas/EvaluationConfidence'
+        rationale:
+          type: string
+
+    EvaluationThresholdAnnotation:
+      type: object
+      required:
+        - key
+        - comparator
+        - expected
+        - actual
+        - passed
+      properties:
+        key:
+          type: string
+          description: Threshold key identifier.
+        comparator:
+          type: string
+          enum: [GTE, LTE, EQ]
+        expected:
+          type: number
+          format: double
+        actual:
+          type: number
+          format: double
+        passed:
+          type: boolean
+        details:
+          type: string
+
+    EvaluationEvidence:
+      type: object
+      required:
+        - kind
+        - ref
+      properties:
+        kind:
+          type: string
+          description: Evidence type (metric, event, replay, assertion).
+        ref:
+          type: string
+          description: Path or identifier for evidence lookup.
+        summary:
+          type: string
+
+    EvaluationConfidence:
+      type: object
+      required:
+        - score
+        - label
+      properties:
+        score:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 1
+        label:
+          type: string
+          enum: [LOW, MEDIUM, HIGH]
+
+    EvaluationSummary:
+      type: object
+      required:
+        - overallVerdict
+        - overallScore
+        - scenarioCount
+        - passedScenarios
+        - failedScenarios
+      properties:
+        overallVerdict:
+          $ref: '#/components/schemas/EvaluationStatus'
+        overallScore:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 1
+        scenarioCount:
+          type: integer
+          format: int32
+          minimum: 0
+        passedScenarios:
+          type: integer
+          format: int32
+          minimum: 0
+        failedScenarios:
+          type: integer
+          format: int32
+          minimum: 0
+        dimensions:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvaluationDimensionScore'
+
+    RegressionDeltaReport:
+      type: object
+      required:
+        - baselineRunId
+        - candidateRunId
+      properties:
+        baselineRunId:
+          type: string
+        candidateRunId:
+          type: string
+        overallDelta:
+          type: number
+          format: double
+        dimensionDeltas:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvaluationDimensionDelta'
+        scenarioDeltas:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScenarioEvaluationDelta'
+        thresholdBreaches:
+          type: array
+          items:
+            $ref: '#/components/schemas/RegressionThresholdBreach'
+
+    EvaluationDimensionDelta:
+      type: object
+      required:
+        - dimension
+        - delta
+      properties:
+        dimension:
+          $ref: '#/components/schemas/EvaluationDimension'
+        delta:
+          type: number
+          format: double
+        baselineScore:
+          type: number
+          format: double
+        candidateScore:
+          type: number
+          format: double
+
+    ScenarioEvaluationDelta:
+      type: object
+      required:
+        - scenarioId
+      properties:
+        scenarioId:
+          type: string
+        verdictChanged:
+          type: boolean
+        overallDelta:
+          type: number
+          format: double
+        dimensionDeltas:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvaluationDimensionDelta'
+
+    RegressionThresholdBreach:
+      type: object
+      required:
+        - key
+        - delta
+        - threshold
+      properties:
+        key:
+          type: string
+        delta:
+          type: number
+          format: double
+        threshold:
+          type: number
+          format: double
+        severity:
+          type: string
+          enum: [INFO, WARN, FAIL]
+
+    EvaluationDimension:
+      type: string
+      enum:
+        - RISK
+        - POLICY
+        - FINANCIAL
+        - BEHAVIORAL
+
+    EvaluationStatus:
+      type: string
+      enum:
+        - PASS
+        - WARN
+        - FAIL
+
+    RegressionPolicy:
+      type: object
+      properties:
+        policyVersion:
+          type: string
+        global:
+          $ref: '#/components/schemas/RegressionGlobalPolicy'
+        scenarios:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/RegressionScenarioPolicy'
+
+    RegressionGlobalPolicy:
+      type: object
+      properties:
+        maxOverallRegression:
+          type: number
+          format: double
+        maxDimensionRegression:
+          type: number
+          format: double
+        failOnVerdictRegression:
+          type: boolean
+
+    RegressionScenarioPolicy:
+      type: object
+      properties:
+        maxOverallRegression:
+          type: number
+          format: double

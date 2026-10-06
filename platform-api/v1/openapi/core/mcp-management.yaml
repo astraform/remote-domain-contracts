@@ -1,0 +1,233 @@
+openapi: 3.0.3
+info:
+  title: MCP Management API
+  version: 0.1.1
+  description: MCP management APIs for tool catalog, registry, and guarded admin actions.
+servers:
+  - url: http://localhost:7456
+paths:
+  /api/tools:
+    get:
+      tags:
+        - ToolsManagement
+      summary: List static tools
+      operationId: listTools
+      responses:
+        '200':
+          description: Static tools
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GenericJsonObject'
+  /api/tools/catalog:
+    get:
+      tags:
+        - ToolsManagement
+      summary: List effective tool catalog
+      operationId: listToolCatalog
+      responses:
+        '200':
+          description: Tool catalog
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GenericJsonObject'
+  /api/tools/catalog/refresh:
+    post:
+      tags:
+        - ToolsManagement
+      summary: Refresh external tool catalog
+      operationId: refreshToolCatalog
+      responses:
+        '200':
+          description: Refresh report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericJsonObject'
+  /api/tools/{toolName}/enabled:
+    put:
+      tags:
+        - ToolsManagement
+      summary: Toggle tool enablement
+      operationId: setToolEnabled
+      parameters:
+        - in: path
+          name: toolName
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ToggleToolRequest'
+      responses:
+        '200':
+          description: Updated tool state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericJsonObject'
+        '404':
+          description: Tool not found
+  /api/mcp-servers:
+    get:
+      tags:
+        - McpServerRegistry
+      summary: List configured MCP servers
+      operationId: listServers
+      parameters:
+        - in: query
+          name: includeStatus
+          required: false
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: Configured MCP servers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GenericJsonObject'
+  /api/mcp-servers/{serverKey}:
+    get:
+      tags:
+        - McpServerRegistry
+      summary: Get a configured MCP server
+      operationId: getServer
+      parameters:
+        - in: path
+          name: serverKey
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: includeStatus
+          required: false
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: MCP server detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericJsonObject'
+        '404':
+          description: Server not found
+    put:
+      tags:
+        - McpServerRegistry
+      summary: Create or update a configured MCP server
+      operationId: upsertServer
+      parameters:
+        - in: path
+          name: serverKey
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/McpServerUpsertRequest'
+      responses:
+        '200':
+          description: Saved MCP server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericJsonObject'
+    delete:
+      tags:
+        - McpServerRegistry
+      summary: Delete a configured MCP server
+      operationId: deleteServer
+      parameters:
+        - in: path
+          name: serverKey
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Delete result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericJsonObject'
+        '404':
+          description: Server not found
+  /api/mcp-servers/{serverKey}/test:
+    post:
+      tags:
+        - McpServerRegistry
+      summary: Test a configured MCP server
+      operationId: testServer
+      parameters:
+        - in: path
+          name: serverKey
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Test result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericJsonObject'
+        '404':
+          description: Server not found
+  /api/admin/restart:
+    post:
+      tags:
+        - AdminManagement
+      summary: Request an MCP server restart
+      operationId: restart
+      responses:
+        '202':
+          description: Restart accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericJsonObject'
+
+components:
+  schemas:
+    GenericJsonObject:
+      type: object
+      additionalProperties: true
+    ToggleToolRequest:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+      required:
+        - enabled
+    McpServerUpsertRequest:
+      type: object
+      properties:
+        url:
+          type: string
+        endpoint:
+          type: string
+        description:
+          type: string
+        enabled:
+          type: boolean
+        authType:
+          type: string
+        authToken:
+          type: string
