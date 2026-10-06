@@ -1,131 +1,102 @@
-# Astraform Remote Domain Contracts
+# Astraform Public Contracts
 
-Public machine-readable contracts for Astraform remote-domain integrations.
+Canonical public API definitions for partner services, SDK generation and the
+Astraform platform. Implementation code stays in the platform and SDK
+repositories. The existing repository name remains `remote-domain-contracts`.
 
-This repository is the public API-contract boundary for external service
-authors and SDK generation. It contains protocol documents, OpenAPI, JSON
-Schema, and sample payloads only. Astraform platform implementation code stays
-private.
+## Contract bundles
 
-## Contents
+| Bundle | Purpose | Version and release |
+| --- | --- | --- |
+| `remote-domain/v1/` | Astraform calls partner domain services | Published `1.1.0`, tag `remote-domain-v1.1.0` |
+| `platform-api/v1/` | Partner applications call Astraform; shared platform API schemas | Prepared `0.1.1`, planned tag `platform-api-v0.1.1`, **unpublished** |
 
-- `remote-domain/v1/`: the public `remote-domain.v1` contract.
-- `remote-domain/v1/openapi/remote-domain.yaml`: HTTP API contract.
-- `remote-domain/v1/schemas/`: JSON Schema contracts for lifecycle payloads
-  and reusable domain payloads.
-- `remote-domain/v1/samples/`: valid example request/response payloads.
-- `remote-domain/v1/docs/`: human-readable protocol guide.
+Each bundle has its own `VERSION`, manifest, immutable ZIP and SHA-256 checksum.
+Their versions are independent of SDK package versions.
 
-## Releases
+The provider bundle contains its OpenAPI, JSON schemas, protocol documentation
+and sample payloads. The platform bundle contains:
 
-GitHub Releases publish the partner handoff bundle:
+- `openapi/platform/experiment/experiments.yaml`: customer authoring, capability
+  discovery, Agent Journey, simulation results, experiment registry and Scenario Lab APIs.
+- `openapi/core/common.yaml`: shared payload schemas without operations.
+- `openapi/platform/experiment/evaluation.yaml`: evaluation APIs.
+- `openapi/core/mcp-management.yaml`: tool and MCP server management APIs.
 
-```text
-remote-domain.v1.zip
-remote-domain.v1.zip.sha256
-```
+Internal runtime commands and authentication declarations remain in the platform
+repository. Its runtime uses the same shared public schemas. Including a public
+API definition does not imply that every deployment gateway exposes every route.
+The current partner SDK still generates from the Experiment entry point only.
 
-The zip contains a top-level `remote-domain.v1/` directory with the versioned
-contract, docs, schemas, and samples.
+## Verify and package
 
-See the [changelog](CHANGELOG.md) and [1.1.0 release notes](RELEASE_NOTES.md).
-This checkout targets contract bundle `1.1.0`, with release tag
-`remote-domain-v1.1.0`. The bundle metadata and OpenAPI document version agree.
-Version preparation does not publish a release: verify that the matching GitHub
-Release and checksum exist before pinning it as an SDK dependency. Native profile
-additions are new since the published 1.0.4 baseline.
-
-CI verifies and packages changes pushed to any branch, plus pull requests and
-manual runs. Release publication remains separate: it runs on a
-`remote-domain-v*` tag or a manual dispatch and requires a commit on `main`.
-
-After publication, public SDKs should pin the new release tag and verify its
-checksum before using the bundle for code generation or conformance tests.
-
-## Local Packaging
-
-Run the public verifier from a clean checkout with one command:
+Use Python 3.12 or newer:
 
 ```bash
 scripts/verify-all.sh
-```
-
-The runner creates an isolated Python 3.12+ environment under `.venv/` and
-installs the complete dependency set pinned in `requirements-verify.txt`.
-It verifies contract metadata, schemas, signed profile samples, and all current
-wire fixtures against the latest published baseline, `remote-domain-v1.0.4`.
-That tag must be available in the local clone. It also verifies that selected
-old-valid customer-trigger payloads remain valid under the current schema.
-During active development, compatibility checks retain this baseline rather
-than a matrix of older releases. These fixture checks protect legacy usage;
-they do not make new native capabilities compatible with older closed manifest
-schemas or prove complete SDK/runtime compatibility.
-
-Then package the verified contract:
-
-```bash
 scripts/package-remote-domain-contract.sh
-cd build/remote-domain-contract
-shasum -a 256 remote-domain.v1.zip
+scripts/package-remote-domain-contract.sh --bundle platform-api
 ```
 
-To validate unreleased contract changes against local SDK snapshots before
-publishing a GitHub Release:
+The verifier creates an isolated `.venv/` using `requirements-verify.txt`. It
+checks both bundle manifests, current provider schemas and fixtures, all public
+platform OpenAPI references, and the existing provider compatibility baseline
+`remote-domain-v1.0.4`. That tag must be available locally for the compatibility
+check. `scripts/verify-all.sh --contract-only` omits that historical check.
 
-```bash
-(cd ../remote-domain-sdk-java && ./scripts/sync-remote-domain-contract.sh --check --zip ../remote-domain-contracts/build/remote-domain-contract/remote-domain.v1.zip)
-(cd ../remote-domain-sdk-python && ./scripts/sync-remote-domain-contract.sh --check --zip ../remote-domain-contracts/build/remote-domain-contract/remote-domain.v1.zip)
+The package command retains its existing optional output-directory argument.
+It emits deterministic archives:
+
+```text
+build/remote-domain-contract/remote-domain.v1.zip  -> remote-domain.v1/
+build/platform-api-contract/platform-api.zip      -> platform-api/
 ```
 
-Run the same commands without `--check` to sync the SDK snapshots from the local
-zip during pre-release development. Published SDK releases should still pin and
-verify the GitHub Release artifact through each SDK's lock file.
+CI verifies and packages both bundles on every branch, pull request and manual
+run. No platform or SDK sibling checkout is required to verify or package them.
 
-## Release Process
+## Use in platform and SDK builds
 
-1. Update `remote-domain/v1/` and assign a new, unused bundle version in
-   `remote-domain/v1/VERSION`, `remote-domain/v1/manifest.json` and OpenAPI
-   `info.version`. Protocol and profile identifiers retain their own versions.
-2. Update `RELEASE_NOTES.md` and the version entry in `CHANGELOG.md`. The workflow
-   uses the notes file for the GitHub release body without a separate release-note
-   validation step.
-3. Run `scripts/verify-all.sh` and `scripts/package-remote-domain-contract.sh`
-   against the final revision.
-4. Merge the reviewed changes to `main`, then trigger
-   `.github/workflows/release.yml` from `main` with the matching version, or push
-   its matching release tag pointing at a commit already on `main`.
-5. Verify the published ZIP and checksum before updating downstream SDK locks.
+Consumers pin a published tag, asset and checksum and resolve the dependency into
+an ignored build cache. They do not maintain editable contract copies. Validation
+schemas needed at runtime are still included in built SDK artifacts.
 
-`RELEASE_NOTES.md` holds the current release's detailed notes. GitHub Releases
-retain the published copies; `CHANGELOG.md` retains the version history.
+The initial platform API bundle is not published yet. For local development,
+package it above and explicitly supply its absolute ZIP path to each build:
 
-Use additive optional changes within `remote-domain.v1` only when old clients
-can safely ignore them. Breaking wire changes require a new protocol directory,
-for example `remote-domain/v2/`.
+- Java SDK/platform: `-Dplatform.api.contract.zip=/absolute/path/platform-api.zip`.
+- Python SDK: `ASTRAFORM_PLATFORM_API_ZIP=/absolute/path/platform-api.zip`.
 
-## Cross-Repository Release Train
+Use clean builds when switching contract inputs. Local ZIP artifacts are marked
+`LOCAL_PRERELEASE`; publication rejects them. Normal builds do not silently select
+local archives or sibling repositories. They require the pinned release to exist.
 
-Contract, SDK, provider, and runtime releases are separate immutable artifacts.
-Publish them in dependency order; a green local snapshot is not a substitute for
-a published upstream release.
+For provider contract development, Java accepts
+`-Dremote-domain.contract.zip=/absolute/path/remote-domain.v1.zip`; each SDK's
+`scripts/sync-remote-domain-contract.sh --zip /absolute/path/remote-domain.v1.zip`
+can explicitly inspect that local input. Use the SDK build guides for its local
+selection; resolving a local archive does not change normal release selection.
 
-The next release train starts with contract `1.1.0`. Java SDK `0.3.0` is being
-prepared separately; SDK package versions do not need to equal the contract
-bundle version.
+## Release
 
-1. Publish the updated `remote-domain.v1` bundle and verify its release checksum.
-2. Update both SDK release locks to that tag/checksum and resync their contract
-   snapshots. Run each SDK's remote `sync-remote-domain-contract.sh --check` and
-   package validation, then publish its new Java or Python package version.
-3. Verify the SDK packages from Maven Central and PyPI before changing provider
-   dependencies or generating new signed conformance attestations.
-4. Upgrade sample/provider builds, run the relevant provider conformance and
-   native behavior checks, and deploy the resulting artifacts and any required
-   attestations together.
-5. Where runtime trust uses an SDK allowlist, explicitly permit the validated new
-   version during rollout. Retire the previous entry only after every authorized
-   provider has been rebuilt and its new attestation is live.
+See the root [release notes](RELEASE_NOTES.md) and [changelog](CHANGELOG.md).
+Both bundles share one release-notes file; the workflow publishes only the
+section whose heading matches the release tag (`## <bundle>-v<version>`).
 
-SDK release workflows deliberately use the remote `--check` path. They must
-fail before step 1 exists; bypassing that failure would publish SDK metadata for
-an unavailable contract artifact.
+1. Update the owning bundle's sources, `VERSION`, manifest and OpenAPI versions.
+   Select a new unused version; never change an already published asset.
+2. Add or update its section in the root `RELEASE_NOTES.md` and the changelog.
+   Verify and package the final revision.
+3. Merge reviewed changes to `main`.
+4. Run `.github/workflows/release.yml` from `main`, selecting `remote-domain` or
+   `platform-api` and its matching version, or push the matching bundle release
+   tag at a commit already on `main`. This workflow publishes; CI is the
+   non-publishing verification path.
+5. Verify the GitHub Release ZIP and checksum, then update platform and SDK pins.
+6. Publish new SDK versions and verify registry availability before upgrading
+   partner samples. Green local builds do not establish release availability.
+
+The workflow checks that release commits belong to `main`, verifies tag identity,
+rejects an existing release, and verifies uploaded archive/checksum bytes before
+publishing its draft. The existing provider release remains unchanged when
+publishing the separate platform API bundle.
