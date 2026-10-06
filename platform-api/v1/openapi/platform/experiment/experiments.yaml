@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Experiment Registry API
-  version: 0.1.1
+  version: 1.2.0
   description: Registry and evidence APIs for experiment definitions, runs, artifacts, source snapshots, and calibration.
 servers:
   - url: http://localhost:7457

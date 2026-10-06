@@ -6,13 +6,18 @@ repositories. The existing repository name remains `remote-domain-contracts`.
 
 ## Contract bundles
 
-| Bundle | Purpose | Version and release |
+| Bundle | Purpose | Shared release |
 | --- | --- | --- |
-| `remote-domain/v1/` | Astraform calls partner domain services | Published `1.1.0`, tag `remote-domain-v1.1.0` |
-| `platform-api/v1/` | Partner applications call Astraform; shared platform API schemas | Prepared `0.1.1`, planned tag `platform-api-v0.1.1`, **unpublished** |
+| `remote-domain/v1/` | Astraform calls partner domain services | `1.2.0`, tag `v1.2.0` (unpublished) |
+| `platform-api/v1/` | Partner applications call Astraform; shared platform API schemas | `1.2.0`, tag `v1.2.0` (unpublished) |
 
-Each bundle has its own `VERSION`, manifest, immutable ZIP and SHA-256 checksum.
-Their versions are independent of SDK package versions.
+The repository-root `VERSION` owns one release version for both bundles. Each
+bundle's `VERSION`, manifest and OpenAPI `info.version` must match it. One GitHub
+release publishes both ZIP assets and their SHA-256 checksums together. Separate
+archives preserve existing SDK and platform dependency paths; they are not
+separate releases. SDK package and protocol versions remain separate.
+
+The previously published `remote-domain-v1.1.0` release remains immutable.
 
 The provider bundle contains its OpenAPI, JSON schemas, protocol documentation
 and sample payloads. The platform bundle contains:
@@ -39,7 +44,7 @@ scripts/package-remote-domain-contract.sh --bundle platform-api
 ```
 
 The verifier creates an isolated `.venv/` using `requirements-verify.txt`. It
-checks both bundle manifests, current provider schemas and fixtures, all public
+checks the shared version, both bundle manifests, current provider schemas and fixtures, all public
 platform OpenAPI references, and the existing provider compatibility baseline
 `remote-domain-v1.0.4`. That tag must be available locally for the compatibility
 check. `scripts/verify-all.sh --contract-only` omits that historical check.
@@ -61,8 +66,9 @@ Consumers pin a published tag, asset and checksum and resolve the dependency int
 an ignored build cache. They do not maintain editable contract copies. Validation
 schemas needed at runtime are still included in built SDK artifacts.
 
-The initial platform API bundle is not published yet. For local development,
-package it above and explicitly supply its absolute ZIP path to each build:
+The combined `v1.2.0` release is not published yet. For local development,
+package the bundles above and explicitly supply their absolute ZIP paths.
+For the platform API input:
 
 - Java SDK/platform: `-Dplatform.api.contract.zip=/absolute/path/platform-api.zip`.
 - Python SDK: `ASTRAFORM_PLATFORM_API_ZIP=/absolute/path/platform-api.zip`.
@@ -79,24 +85,26 @@ selection; resolving a local archive does not change normal release selection.
 
 ## Release
 
-See the root [release notes](RELEASE_NOTES.md) and [changelog](CHANGELOG.md).
-Both bundles share one release-notes file; the workflow publishes only the
-section whose heading matches the release tag (`## <bundle>-v<version>`).
+See the root [release notes](RELEASE_NOTES.md) for the current release and
+[changelog](CHANGELOG.md) for release history. The workflow uses the entire root
+release-notes file as the body of the single GitHub release.
 
-1. Update the owning bundle's sources, `VERSION`, manifest and OpenAPI versions.
+1. Update the root `VERSION`, both bundled `VERSION` files, both manifests and
+   all OpenAPI `info.version` fields together, even when only one API changes.
    Select a new unused version; never change an already published asset.
-2. Add or update its section in the root `RELEASE_NOTES.md` and the changelog.
-   Verify and package the final revision.
+2. Update the root `RELEASE_NOTES.md` and changelog. Verify and package both bundles
+   from the final revision.
 3. Merge reviewed changes to `main`.
-4. Run `.github/workflows/release.yml` from `main`, selecting `remote-domain` or
-   `platform-api` and its matching version, or push the matching bundle release
-   tag at a commit already on `main`. This workflow publishes; CI is the
-   non-publishing verification path.
-5. Verify the GitHub Release ZIP and checksum, then update platform and SDK pins.
+4. Run `.github/workflows/release.yml` from `main` with the matching version
+   (next: `1.2.0`), or push `v<version>` at a commit already on `main`. There is
+   no bundle selector. This workflow publishes; CI is the non-publishing
+   verification path.
+5. Verify both GitHub Release ZIPs and checksums, then update platform and SDK
+   pins to the same release tag and their respective asset checksums.
 6. Publish new SDK versions and verify registry availability before upgrading
    partner samples. Green local builds do not establish release availability.
 
 The workflow checks that release commits belong to `main`, verifies tag identity,
-rejects an existing release, and verifies uploaded archive/checksum bytes before
-publishing its draft. The existing provider release remains unchanged when
-publishing the separate platform API bundle.
+rejects an existing release, and verifies both uploaded archives and checksums
+before publishing its draft. Historical `remote-domain-v*` tags remain available
+but no longer trigger publication. New releases use only the shared `v*` track.
