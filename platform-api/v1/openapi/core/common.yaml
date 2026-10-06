@@ -1,0 +1,1146 @@
+openapi: 3.0.3
+info:
+  title: Platform Common Schema
+  version: 0.1.1
+paths: {}
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Error'
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        title:
+          type: string
+        detail:
+          type: string
+
+    CustomerMcpCapabilities:
+      type: object
+      additionalProperties: false
+      required: [schemaVersion, bindingKey, bindingRevision, bindingDigest, serverInfo, tools]
+      properties:
+        schemaVersion: {type: string, enum: [astraform.mcp-capabilities.v1]}
+        bindingKey: {type: string, pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'}
+        bindingRevision: {type: string, minLength: 1, maxLength: 256}
+        bindingDigest: {type: string, pattern: '^sha256:[0-9a-f]{64}$'}
+        serverInfo: {type: object, additionalProperties: true, description: Standard MCP initialize serverInfo.}
+        tools:
+          type: array
+          maxItems: 64
+          items: {$ref: '#/components/schemas/CustomerMcpToolDescriptor'}
+
+    CustomerMcpToolDescriptor:
+      type: object
+      additionalProperties: false
+      required: [name, description, effectClass, scope, inputSchema, outputSchema, descriptorDigest, inputSchemaDigest, outputSchemaDigest]
+      properties:
+        name: {type: string, pattern: '^[A-Za-z0-9_.-]{1,128}$'}
+        description: {type: string, maxLength: 4096}
+        effectClass: {type: string, enum: [READ_ONLY]}
+        scope: {type: string, enum: [CUSTOMER_CONTEXT]}
+        inputSchema: {type: object, additionalProperties: true, description: Self-contained Draft 2020-12 object schema from MCP tools/list.}
+        outputSchema: {type: object, additionalProperties: true, description: MCP structuredContent schema; an empty object represents an absent optional outputSchema.}
+        descriptorDigest: {type: string, pattern: '^sha256:[0-9a-f]{64}$', description: Canonical digest of name/description/inputSchema/outputSchema/effectClass/scope only.}
+        inputSchemaDigest: {type: string, pattern: '^sha256:[0-9a-f]{64}$'}
+        outputSchemaDigest: {type: string, pattern: '^sha256:[0-9a-f]{64}$'}
+
+    ResolvedMcpToolGrant:
+      type: object
+      additionalProperties: false
+      required: [kind, bindingKey, bindingRevision, bindingDigest, toolName, descriptorDigest, inputSchemaDigest, outputSchemaDigest, effectClass, scope, maxCalls, description, inputSchema, outputSchema]
+      properties:
+        kind: {type: string, enum: [MCP]}
+        bindingKey: {type: string, pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'}
+        bindingRevision: {type: string, minLength: 1, maxLength: 256}
+        bindingDigest: {type: string, pattern: '^sha256:[0-9a-f]{64}$'}
+        toolName: {type: string, pattern: '^[A-Za-z0-9_.-]{1,128}$'}
+        descriptorDigest: {type: string, pattern: '^sha256:[0-9a-f]{64}$'}
+        inputSchemaDigest: {type: string, pattern: '^sha256:[0-9a-f]{64}$'}
+        outputSchemaDigest: {type: string, pattern: '^sha256:[0-9a-f]{64}$'}
+        effectClass: {type: string, enum: [READ_ONLY]}
+        scope: {type: string, enum: [CUSTOMER_CONTEXT]}
+        maxCalls: {type: integer, minimum: 1, maximum: 100}
+        description: {type: string, maxLength: 4096}
+        inputSchema: {type: object, additionalProperties: true}
+        outputSchema: {type: object, additionalProperties: true}
+
+    NativeDomainCapabilities:
+      type: object
+      additionalProperties: false
+      required: [schemaVersion, bindingKey, bindingRevision, bindingDigest, domainId, providerRevision, manifestDigest, nativeSimulation, toolContract, tools]
+      properties:
+        schemaVersion:
+          type: string
+          enum: [astraform.native-domain-capabilities.v1]
+        bindingKey:
+          type: string
+        bindingRevision:
+          type: string
+        bindingDigest:
+          type: string
+          pattern: '^sha256:[0-9a-f]{64}$'
+          description: Pins the deployment origin, key, domain and revision without exposing the origin
+        domainId:
+          type: string
+        providerRevision:
+          type: string
+          description: Provider-declared immutable profile implementation revision; pinned with the complete manifest digest
+        manifestDigest:
+          type: string
+          pattern: '^sha256:[0-9a-f]{64}$'
+        nativeSimulation:
+          $ref: '#/components/schemas/NativeDomainProfile'
+        toolContract:
+          type: string
+          enum: [astraform.customer-domain-tool.v1]
+        tools:
+          type: array
+          maxItems: 64
+          description: Validated read-only descriptors; legacy descriptors without native metadata are excluded.
+          items:
+            $ref: '#/components/schemas/NativeDomainToolDescriptor'
+
+    NativeDomainToolDescriptor:
+      type: object
+      additionalProperties: false
+      required: [name, description, revision, effectClass, scope, inputSchema, outputSchema, descriptorDigest, inputSchemaDigest, outputSchemaDigest]
+      properties:
+        name: {type: string, pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'}
+        description: {type: string, minLength: 1, maxLength: 4096}
+        revision: {type: string, minLength: 1, maxLength: 128}
+        effectClass: {type: string, enum: [READ_ONLY]}
+        scope: {type: string, enum: [CUSTOMER_CONTEXT]}
+        inputSchema: {type: object, additionalProperties: true, description: Closed self-contained Draft 2020-12 object schema.}
+        outputSchema: {type: object, additionalProperties: true, description: Closed self-contained Draft 2020-12 object schema.}
+        descriptorDigest: {type: string, pattern: '^sha256:[0-9a-f]{64}$', description: Canonical digest of the original enriched manifest descriptor without computed digest fields.}
+        inputSchemaDigest: {type: string, pattern: '^sha256:[0-9a-f]{64}$'}
+        outputSchemaDigest: {type: string, pattern: '^sha256:[0-9a-f]{64}$'}
+
+    ResolvedDomainToolGrant:
+      type: object
+      additionalProperties: false
+      required: [kind, bindingKey, bindingRevision, bindingDigest, providerRevision, toolName, descriptorRevision, descriptorDigest, inputSchemaDigest, outputSchemaDigest, effectClass, scope, maxCalls, description, inputSchema, outputSchema]
+      properties:
+        kind: {type: string, enum: [DOMAIN]}
+        bindingKey: {type: string, pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'}
+        bindingRevision: {type: string, minLength: 1, maxLength: 256}
+        bindingDigest: {type: string, pattern: '^sha256:[0-9a-f]{64}$'}
+        providerRevision: {type: string, minLength: 1, maxLength: 128}
+        toolName: {type: string, pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'}
+        descriptorRevision: {type: string, minLength: 1, maxLength: 128}
+        descriptorDigest: {type: string, pattern: '^sha256:[0-9a-f]{64}$'}
+        inputSchemaDigest: {type: string, pattern: '^sha256:[0-9a-f]{64}$'}
+        outputSchemaDigest: {type: string, pattern: '^sha256:[0-9a-f]{64}$'}
+        effectClass: {type: string, enum: [READ_ONLY]}
+        scope: {type: string, enum: [CUSTOMER_CONTEXT]}
+        maxCalls: {type: integer, minimum: 1, maximum: 100}
+        description: {type: string, minLength: 1, maxLength: 4096}
+        inputSchema: {type: object, additionalProperties: true}
+        outputSchema: {type: object, additionalProperties: true}
+
+    NativeDomainProfile:
+      oneOf:
+        - $ref: '#/components/schemas/NativePureDomainProfile'
+        - $ref: '#/components/schemas/NativeReferenceDomainProfile'
+
+    NativePureDomainProfile:
+      type: object
+      additionalProperties: false
+      required: [profile, providerRevision, mutationMode, stateScope, workKinds, maxWindowWorkItems, initialBoundaryMode]
+      properties:
+        profile:
+          type: string
+          enum: [remote-domain.native-state-transform.v1]
+        providerRevision:
+          type: string
+          minLength: 1
+          maxLength: 128
+        mutationMode:
+          type: string
+          enum: [PURE_STATE_TRANSFORM]
+        stateScope:
+          type: string
+          enum: [AGENT]
+        workKinds:
+          type: array
+          minItems: 1
+          maxItems: 32
+          uniqueItems: true
+          items:
+            type: string
+            minLength: 1
+            maxLength: 128
+        maxWindowWorkItems:
+          type: integer
+          minimum: 1
+          maximum: 1024
+        initialBoundaryMode:
+          type: string
+          enum: [PREPARE_INCLUDES_START]
+
+    NativeReferenceDomainProfile:
+      type: object
+      additionalProperties: false
+      required: [profile, providerRevision, mutationMode, stateScope, workKinds, maxWindowWorkItems, initialBoundaryMode]
+      properties:
+        profile:
+          type: string
+          enum: [remote-domain.native-reference-state.v1]
+        providerRevision:
+          type: string
+          minLength: 1
+          maxLength: 128
+        mutationMode:
+          type: string
+          enum: [TRANSACTIONAL_REFERENCE_STATE]
+        stateScope:
+          type: string
+          enum: [AGENT]
+        workKinds:
+          type: array
+          minItems: 1
+          maxItems: 32
+          uniqueItems: true
+          items:
+            type: string
+            minLength: 1
+            maxLength: 128
+        maxWindowWorkItems:
+          type: integer
+          minimum: 1
+          maximum: 1024
+        initialBoundaryMode:
+          type: string
+          enum: [ATTACH_PREPOPULATED_STATE]
+
+    SimulationEventLaunchRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - runId
+        - agentId
+        - logicalTimeEpochMs
+        - logicalHorizonEpochMs
+        - idempotencyKey
+        - instruction
+        - initialAgentState
+      properties:
+        runId:
+          type: string
+          minLength: 1
+          maxLength: 512
+        agentId:
+          type: string
+          minLength: 1
+          maxLength: 512
+        logicalTimeEpochMs:
+          type: integer
+          format: int64
+          description: Logical execution time in epoch milliseconds.
+        logicalHorizonEpochMs:
+          type: integer
+          format: int64
+          description: >
+            Inclusive logical horizon in epoch milliseconds. It must not precede
+            logicalTimeEpochMs or exceed the deployment run-horizon limit.
+        idempotencyKey:
+          type: string
+          minLength: 1
+          maxLength: 512
+        instruction:
+          type: string
+          minLength: 1
+          maxLength: 32000
+        facts:
+          type: object
+          nullable: true
+          additionalProperties: true
+          description: Optional facts object; null or omission is normalized to an empty object.
+        initialAgentState:
+          type: object
+          additionalProperties: true
+          description: >-
+            Initial customer behavioral memory. New MODEL roots validate it against the
+            host-frozen BehavioralStatePolicy before acceptance: at most 4096 compact JSON
+            UTF-8 bytes, with top-level platformConfig, interactionContext, transcript and
+            recalledMemory reserved. Arbitrary other behavioral and nested domain fields
+            are supported. The policy is not supplied through this request. Exact replay
+            uses the accepted root's saved policy, including its absence on older roots.
+        modelBindingKey:
+          type: string
+          pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'
+          description: >
+            Required for model execution. Selects a deployment-owned binding whose provider,
+            exact model, credentials, endpoint, and non-secret revision are fixed by Runtime.
+            `deterministic-stub` is the built-in installation-verification binding.
+        systemInstruction:
+          type: string
+          minLength: 1
+          maxLength: 64000
+          description: Required for model execution.
+        systemInstructionDigest:
+          type: string
+          pattern: '^sha256:[0-9a-f]{64}$'
+          description: >
+            Required for model execution. Raw UTF-8 SHA-256 identity of systemInstruction;
+            Runtime recomputes and verifies it before persisting or executing the definition.
+        targetAgentKey:
+          type: string
+          pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'
+          description: >
+            Selects an optional deployment-owned strict A2A 1.0 target. When set,
+            modelBindingKey, systemInstruction, and systemInstructionDigest must be omitted.
+        continuationAuthority:
+          type: string
+          enum: [RUNTIME, EXPERIMENT]
+          default: RUNTIME
+          description: >
+            Frozen admission owner. RUNTIME retains isolated continuation behavior.
+            EXPERIMENT records valid model proposals in result.proposedNextEvent without
+            directly scheduling children. Each customer decision replaces its previous
+            proposed self-scheduled action; null clears it. Experiment owns run admission.
+        participationPolicy:
+          type: string
+          enum: [THROUGH_HORIZON]
+          description: >-
+            Optional frozen participation policy, independent of goal assessment. Requires an
+            EXPERIMENT-owned MODEL root and executionDeadlineEpochMs. FINISH ends the current
+            conversation while retaining eligibility for future configured observations and
+            decision opportunities through the logical horizon. Idle time requires no model
+            calls. Omission preserves the accepted legacy stopping behavior and replay identity.
+        executionDeadlineEpochMs:
+          type: integer
+          format: int64
+          minimum: 1
+          description: >
+            Optional frozen operational deadline for EXPERIMENT-owned goal runs, in wall-clock
+            epoch milliseconds. It is unrelated to logical simulation time. Runtime permanently
+            fails customer work or unsent A2A intents with GOAL_DEADLINE_REACHED when it cannot
+            begin before the deadline, including accepted work deferred by unavailable bindings
+            or capacity. Already-started model calls retain their results and provider timeout;
+            sent or ambiguous partner effects retain their receipt-recovery deadlines. Exact
+            replay and subsequent inputs retain the original deadline; omission preserves legacy behavior.
+        domainToolGrants:
+          type: array
+          maxItems: 8
+          description: >
+            Resolved immutable Catalog grants plus pinned descriptor/schema material. Nonempty grants
+            require an EXPERIMENT-owned MODEL customer and freeze customer-decision.v2. Empty/omitted
+            grants retain v1 behavior. Their exact content participates in the launch identity.
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/ResolvedDomainToolGrant'
+              - $ref: '#/components/schemas/ResolvedMcpToolGrant'
+        toolContexts:
+          type: array
+          maxItems: 8
+          description: >
+            Host-owned customer references, required for every distinct MCP grant binding and
+            forbidden for ungranted bindings. Binding keys must be unique. Frozen into platformConfig
+            and launch identity; omitted from the model prompt copy. Runtime uses these exact values
+            to verify the host-added astraformCustomerContexts field in actual partner requests.
+            Empty/omitted preserves existing roots without MCP grants.
+          items:
+            type: object
+            additionalProperties: false
+            required: [bindingKey, contextRef, subjectRef]
+            properties:
+              bindingKey: {type: string, pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'}
+              contextRef: {type: string, minLength: 1, maxLength: 256}
+              subjectRef: {type: string, minLength: 1, maxLength: 256}
+        partnerTargetAgentKey:
+          type: string
+          pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'
+          description: >
+            Optional partner grant for MODEL customers with continuationAuthority EXPERIMENT.
+            Its binding revision and configuration identity are frozen into platformConfig.
+            An optional model response partnerRequest must name this target and contain its
+            actual nonblank instruction and object facts; it cannot coexist with nextEvent.
+            Runtime records the request unchanged; Experiment coordinates actual A2A execution.
+        expectedModelBindingRevision:
+          type: string
+          minLength: 1
+          maxLength: 256
+          description: Optional MODEL-only preflight pin; mismatch fails before first acceptance.
+        expectedPartnerBindingRevision:
+          type: string
+          minLength: 1
+          maxLength: 256
+          description: >
+            Optional preflight pin for partnerTargetAgentKey or an A2A targetAgentKey.
+            Mismatch fails before first acceptance. Exact replay uses accepted frozen identities.
+        catalogAgentId:
+          type: string
+          format: uuid
+          minLength: 36
+          maxLength: 36
+          pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+          description: Optional immutable Catalog agent provenance. All four Catalog fields must be supplied together.
+        catalogRevisionId:
+          type: string
+          format: uuid
+          minLength: 36
+          maxLength: 36
+          pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+          description: Optional immutable Catalog revision provenance. All four Catalog fields must be supplied together.
+        catalogDefinitionDigest:
+          type: string
+          pattern: '^sha256:[0-9a-f]{64}$'
+          description: Optional digest asserted by the trusted launch coordinator and frozen into the run definition.
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: >
+            Optional canonical single-line display-name snapshot without control characters or
+            leading/trailing Unicode whitespace. It is provenance only and grants no runtime authority.
+      allOf:
+        - oneOf:
+            - title: Deployment-owned model binding
+              required:
+                - modelBindingKey
+                - systemInstruction
+                - systemInstructionDigest
+              not:
+                required:
+                  - targetAgentKey
+            - title: Deployment-owned A2A target binding
+              required:
+                - targetAgentKey
+              not:
+                anyOf:
+                  - required: [modelBindingKey]
+                  - required: [systemInstruction]
+                  - required: [systemInstructionDigest]
+                  - required: [expectedModelBindingRevision]
+                  - required: [partnerTargetAgentKey]
+        - anyOf:
+            - not:
+                required: [executionDeadlineEpochMs]
+            - required: [continuationAuthority]
+              properties:
+                continuationAuthority:
+                  enum: [EXPERIMENT]
+        - anyOf:
+            - not:
+                required: [participationPolicy]
+            - required: [modelBindingKey, continuationAuthority, executionDeadlineEpochMs]
+              properties:
+                continuationAuthority: {type: string, enum: [EXPERIMENT]}
+              not:
+                required: [targetAgentKey]
+        - anyOf:
+            - not:
+                required: [domainToolGrants]
+            - properties:
+                domainToolGrants: {type: array, maxItems: 0}
+            - required: [modelBindingKey, continuationAuthority]
+              properties:
+                continuationAuthority: {type: string, enum: [EXPERIMENT]}
+              not:
+                required: [targetAgentKey]
+        - anyOf:
+            - not:
+                required: [partnerTargetAgentKey]
+            - required: [partnerTargetAgentKey, modelBindingKey, continuationAuthority]
+              properties:
+                continuationAuthority:
+                  enum: [EXPERIMENT]
+        - anyOf:
+            - not:
+                required: [expectedPartnerBindingRevision]
+            - required: [partnerTargetAgentKey]
+            - required: [targetAgentKey]
+        - oneOf:
+            - title: No Catalog provenance
+              not:
+                anyOf:
+                  - required: [catalogAgentId]
+                  - required: [catalogRevisionId]
+                  - required: [catalogDefinitionDigest]
+                  - required: [displayName]
+            - title: Complete immutable Catalog provenance
+              required:
+                - catalogAgentId
+                - catalogRevisionId
+                - catalogDefinitionDigest
+                - displayName
+
+    SimulationEventLaunchResponse:
+      type: object
+      required:
+        - eventId
+        - eventSequence
+        - logicalTimeEpochMs
+        - replayed
+        - registrationReused
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        eventSequence:
+          type: integer
+          format: int64
+          minimum: 1
+        logicalTimeEpochMs:
+          type: integer
+          format: int64
+        replayed:
+          type: boolean
+          description: True when the same durable event identity already existed.
+        registrationReused:
+          type: boolean
+          description: True when the durable agent binding or event registration was reused.
+
+    SimulationEventStatusResponse:
+      type: object
+      required:
+        - eventId
+        - runId
+        - agentId
+        - eventSequence
+        - logicalTimeEpochMs
+        - eventType
+        - status
+        - attemptCount
+        - maxAttempts
+        - completedStateVersion
+        - lastErrorCode
+        - lastErrorMessage
+        - result
+        - cursor
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        runId:
+          type: string
+        agentId:
+          type: string
+        eventSequence:
+          type: integer
+          format: int64
+        logicalTimeEpochMs:
+          type: integer
+          format: int64
+        eventType:
+          type: string
+        status:
+          $ref: '#/components/schemas/SimulationEventState'
+        attemptCount:
+          type: integer
+          format: int32
+          minimum: 0
+        maxAttempts:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 10
+        completedStateVersion:
+          type: integer
+          format: int64
+          nullable: true
+        lastErrorCode:
+          type: string
+          nullable: true
+        lastErrorMessage:
+          type: string
+          nullable: true
+        result:
+          $ref: '#/components/schemas/AnyJsonValue'
+        cursor:
+          $ref: '#/components/schemas/SimulationAgentCursor'
+        inputEvidence:
+          description: >-
+            Admitted input retained for this AGENT_DECISION_REQUESTED event. This
+            additive member is returned only by the single-event resource, never
+            in paginated journey rows. Null for other event types; older Runtime
+            responses may omit it. Reading evidence does not execute the event.
+          oneOf:
+            - $ref: '#/components/schemas/EventInputEvidence'
+            - type: object
+              nullable: true
+              enum: [null]
+        a2aInvocation:
+          description: >-
+            Bounded evidence from the existing invocation owner for this event.
+            Returned only by this single-event resource, not the paginated journey.
+            Null for a non-A2A event; older responses may omit this additive member.
+            Availability is explicit for an A2A event with no retained invocation.
+            Reading evidence never sends a request or advances execution.
+          oneOf:
+            - $ref: '#/components/schemas/A2aInvocationEvidence'
+            - type: object
+              nullable: true
+              enum: [null]
+
+    EventInputEvidence:
+      type: object
+      additionalProperties: false
+      description: >-
+        Existing durable input admitted for one customer decision, including its
+        instruction, facts and any stored observation or preceding-event
+        attribution. All listed members are present. CAPTURED requires both
+        retained input and its source digest; UNAVAILABLE leaves content and
+        sourceDigest null. Missing evidence does not establish an empty input or
+        prove that no execution occurred. This is not the rendered model prompt,
+        retrieved memory, hidden reasoning or proof that the model received it.
+        The source admission bounds the canonical input to 1,000,000 Java string
+        characters; JSONB storage may reformat its textual representation.
+        Source business input is captured by the runtime; the
+        public Experiment projection applies its existing structured redaction.
+      required:
+        - schemaVersion
+        - availability
+        - eventId
+        - runId
+        - agentId
+        - representation
+        - canonicalization
+        - sourceDigest
+        - content
+      allOf:
+        - oneOf:
+            - properties:
+                availability:
+                  enum: [CAPTURED]
+                sourceDigest:
+                  type: string
+                content:
+                  type: object
+            - properties:
+                availability:
+                  enum: [UNAVAILABLE]
+                sourceDigest:
+                  not: {type: string}
+                content:
+                  not: {type: object}
+      properties:
+        schemaVersion:
+          type: string
+          enum: [astraform.event-input-evidence.v1]
+        availability:
+          type: string
+          enum: [CAPTURED, UNAVAILABLE]
+        eventId:
+          type: string
+          format: uuid
+        runId:
+          type: string
+        agentId:
+          type: string
+        representation:
+          type: string
+          enum: [ADMITTED_EVENT_INPUT_JSON]
+        canonicalization:
+          type: string
+          enum: [SIMULATION_EVENT_PAYLOAD_SHA256]
+          description: >-
+            SHA-256 of UTF-8 bytes from the existing event-input canonicalizer:
+            sorted object keys and normalized plain decimal/integer values before
+            JSONB storage. This is not RFC 8785 or a hash of the returned JSON
+            serialization. Preserve the stored source digest across rendering
+            and public redaction; do not recompute it from exported content.
+        sourceDigest:
+          type: string
+          nullable: true
+          pattern: '^sha256:[0-9a-f]{64}$'
+        content:
+          type: object
+          nullable: true
+          additionalProperties: true
+          description: >-
+            Parsed stored input, preserving admitted instruction, facts and
+            attribution without reconstructing missing observations or prompts.
+
+    A2aInvocationEvidence:
+      type: object
+      additionalProperties: false
+      description: >-
+        Snapshot of existing A2A invocation ordinal 0, not a new execution state
+        machine or a complete remote Task history. All listed fields are present.
+        UNAVAILABLE preserves event/run/agent identity and leaves invocation fields
+        null; it does not prove no request was sent. CAPTURED includes the normalized
+        request and a receipt availability wrapper. INTENT means prepared;
+        IN_FLIGHT means send claimed before network I/O, not confirmed delivery;
+        PENDING means a known remote task remains pending; AMBIGUOUS preserves an
+        uncertain outcome. TERMINAL, INTERRUPTED or FAILED retains the observed
+        transport/task outcome without establishing the customer's goal. ABORTED
+        records an existing pre-dispatch rejection. Receipt consumption and product
+        run status are separate facts. This snapshot neither changes historical
+        records nor repairs unavailable content. Deployment endpoints, credentials,
+        AgentCards, configuration and raw transport exceptions are excluded. Stored
+        business request/receipt JSON remains captured source content;
+        the public Experiment projection applies its existing structured redaction.
+      required:
+        - schemaVersion
+        - availability
+        - eventId
+        - runId
+        - agentId
+        - invocationOrdinal
+        - invocationKey
+        - targetAgentKey
+        - bindingRevision
+        - messageId
+        - contextId
+        - status
+        - sendCount
+        - request
+        - receipt
+        - consumed
+        - failureCode
+      properties:
+        schemaVersion:
+          type: string
+          enum: [astraform.a2a-invocation-evidence.v1]
+        availability:
+          type: string
+          enum: [CAPTURED, UNAVAILABLE]
+        eventId:
+          type: string
+          format: uuid
+        runId:
+          type: string
+        agentId:
+          type: string
+        invocationOrdinal:
+          type: integer
+          format: int32
+          nullable: true
+          enum: [0, null]
+        invocationKey:
+          type: string
+          nullable: true
+        targetAgentKey:
+          type: string
+          nullable: true
+        bindingRevision:
+          type: string
+          nullable: true
+        messageId:
+          type: string
+          nullable: true
+        contextId:
+          type: string
+          nullable: true
+        status:
+          type: string
+          nullable: true
+          enum: [INTENT, IN_FLIGHT, PENDING, TERMINAL, INTERRUPTED, FAILED, AMBIGUOUS, ABORTED, null]
+        sendCount:
+          type: integer
+          format: int32
+          nullable: true
+          enum: [0, 1, null]
+          description: A send claim count is not proof of delivery to the remote agent.
+        request:
+          oneOf:
+            - $ref: '#/components/schemas/A2aInvocationRequestEvidence'
+            - type: object
+              nullable: true
+              enum: [null]
+        receipt:
+          oneOf:
+            - $ref: '#/components/schemas/A2aInvocationReceiptEvidence'
+            - type: object
+              nullable: true
+              enum: [null]
+        consumed:
+          type: boolean
+          nullable: true
+        failureCode:
+          type: string
+          nullable: true
+          description: Existing safe failure classification, without a raw exception message.
+
+    A2aInvocationRequestEvidence:
+      type: object
+      additionalProperties: false
+      required: [representation, canonicalization, sourceDigest, content]
+      properties:
+        representation:
+          type: string
+          enum: [NORMALIZED_A2A_APPLICATION_JSON]
+        canonicalization:
+          type: string
+          enum: [RFC8785_SHA256]
+        sourceDigest:
+          type: string
+          pattern: '^sha256:[a-f0-9]{64}$'
+          description: >-
+            Digest of the stored normalized source JSON before Experiment's structured
+            redaction. It is not a hash of the original model intent, HTTP wire bytes,
+            redacted public content or the exported ZIP entry; export checksums remain
+            the authority for exported bytes.
+        content:
+          description: >-
+            Stored normalized outbound application JSON after host-owned context
+            injection, bounded to 524288 UTF-8 bytes by the existing invocation store.
+            This representation is not a byte-for-byte HTTP/A2A wire capture.
+          allOf:
+            - $ref: '#/components/schemas/A2aNormalizedApplicationRequest'
+
+    A2aNormalizedApplicationRequest:
+      type: object
+      additionalProperties: false
+      required: [schemaVersion, eventId, runId, agentId, invocationKey, logicalTimeEpochMs, request]
+      properties:
+        schemaVersion:
+          type: string
+          enum: [astraform.isolated-event-a2a-invocation.v1]
+        eventId:
+          type: string
+          format: uuid
+        runId:
+          type: string
+        agentId:
+          type: string
+        invocationKey:
+          type: string
+        logicalTimeEpochMs:
+          type: integer
+          format: int64
+        request:
+          $ref: '#/components/schemas/A2aStoredEventRequest'
+
+    A2aStoredEventRequest:
+      type: object
+      additionalProperties: true
+      description: >-
+        Existing admitted event request retained inside the normalized A2A envelope.
+        Root requests include launchFingerprint; appended inputs include their
+        predecessor and expected state version. Facts and existing request extensions
+        retain domain JSON without inventing a domain-specific public schema.
+      required: [schemaVersion, instruction]
+      properties:
+        schemaVersion:
+          type: string
+          enum: [astraform.agent-event-request.v1]
+        instruction:
+          type: string
+          minLength: 1
+          maxLength: 32000
+        facts:
+          type: object
+          additionalProperties: true
+        launchFingerprint:
+          type: string
+        precedingEventId:
+          type: string
+          format: uuid
+        expectedStateVersion:
+          type: integer
+          format: int64
+          minimum: 0
+
+    A2aInvocationReceiptEvidence:
+      type: object
+      additionalProperties: false
+      description: >-
+        Available normalized receipt, including unsuccessful partner replies, or
+        explicit UNAVAILABLE content. Availability follows retained receipt JSON and
+        its source digest, independently of invocation status. A receipt may coexist
+        with AMBIGUOUS status; presence does not imply successful execution. The
+        current text profile does not retain a complete Task history or non-text
+        attachments. Unavailable receipt fields are null, not empty messages.
+      required:
+        - availability
+        - representation
+        - canonicalization
+        - coverage
+        - sourceDigest
+        - content
+        - text
+        - remoteTaskId
+        - remoteContextId
+        - remoteState
+      properties:
+        availability:
+          type: string
+          enum: [CAPTURED, UNAVAILABLE]
+        representation:
+          type: string
+          enum: [NORMALIZED_A2A_RECEIPT_JSON]
+        canonicalization:
+          type: string
+          enum: [RFC8785_SHA256]
+        coverage:
+          type: string
+          enum: [TEXT_RECEIPT_PROFILE]
+        sourceDigest:
+          type: string
+          nullable: true
+          pattern: '^sha256:[a-f0-9]{64}$'
+          description: >-
+            RFC8785 SHA-256 of stored normalized receipt JSON before public redaction;
+            distinct from the checksum of redacted exported bytes.
+        content:
+          description: Stored receipt JSON, bounded to 524288 UTF-8 bytes; not an invented accepted customer result.
+          oneOf:
+            - $ref: '#/components/schemas/A2aNormalizedReceipt'
+            - type: object
+              nullable: true
+              enum: [null]
+        text:
+          type: string
+          nullable: true
+          maxLength: 524288
+          description: Normalized available partner text, additionally bounded to 524288 UTF-8 bytes.
+        remoteTaskId:
+          type: string
+          nullable: true
+          maxLength: 4096
+          description: At most 16384 UTF-8 bytes.
+        remoteContextId:
+          type: string
+          nullable: true
+          maxLength: 4096
+          description: At most 16384 UTF-8 bytes.
+        remoteState:
+          type: string
+          nullable: true
+          maxLength: 256
+
+    A2aNormalizedReceipt:
+      type: object
+      additionalProperties: false
+      description: >-
+        Stored normalized receipt profile produced by the existing A2A executor.
+        Partner message/task kinds retain extracted text and available identities;
+        protocolError retains a safe transport/protocol diagnostic, never a partner
+        utterance. Missing optional fields were not present in the source response.
+      required: [schemaVersion, kind]
+      not:
+        properties:
+          kind:
+            not:
+              enum: [protocolError]
+        anyOf:
+          - required: [httpStatus]
+          - required: [protocolErrorCode]
+          - required: [message]
+      oneOf:
+        - required: [remoteState, text]
+          properties:
+            kind:
+              type: string
+              enum: [message]
+            remoteState:
+              type: string
+              enum: [TASK_STATE_COMPLETED]
+        - required: [remoteTaskId, remoteState, text]
+          properties:
+            kind:
+              type: string
+              enum: [task]
+        - required: [remoteTaskId, remoteState, text]
+          properties:
+            kind:
+              type: string
+              enum: [taskStatusUpdate]
+        - required: [remoteTaskId, remoteState, text]
+          properties:
+            kind:
+              type: string
+              enum: [taskArtifactUpdate]
+            remoteState:
+              type: string
+              enum: [TASK_STATE_WORKING]
+        - required: [message]
+          properties:
+            kind:
+              type: string
+              enum: [protocolError]
+          not:
+            anyOf:
+              - required: [text]
+              - required: [remoteTaskId]
+              - required: [remoteContextId]
+              - required: [remoteState]
+              - required: [metadata]
+      properties:
+        schemaVersion:
+          type: string
+          enum: [astraform.agent-event-a2a-receipt.v1]
+        kind:
+          type: string
+          enum: [message, task, taskStatusUpdate, taskArtifactUpdate, protocolError]
+        remoteTaskId:
+          type: string
+          maxLength: 4096
+        remoteContextId:
+          type: string
+          maxLength: 4096
+        remoteState:
+          type: string
+          maxLength: 256
+        text:
+          type: string
+          maxLength: 524288
+          description: Extracted partner text, additionally bounded to 524288 UTF-8 bytes.
+        metadata:
+          type: object
+          additionalProperties: true
+          description: Available partner message metadata; arbitrary domain JSON remains subject to public structured redaction.
+        httpStatus:
+          type: integer
+          format: int32
+        protocolErrorCode:
+          type: integer
+          format: int32
+        message:
+          type: string
+          enum:
+            - Remote A2A response leaves the send outcome ambiguous
+            - Remote A2A endpoint rejected the request
+          description: Fixed safe protocol diagnostic, not a partner reply or raw exception message.
+
+    SimulationAgentJourney:
+      type: object
+      required:
+        - runId
+        - agentId
+        - cursor
+        - totalEvents
+        - afterEventSequence
+        - limit
+        - nextAfterEventSequence
+        - hasMore
+        - events
+      properties:
+        runId:
+          type: string
+        agentId:
+          type: string
+        cursor:
+          $ref: '#/components/schemas/SimulationAgentCursor'
+        totalEvents:
+          type: integer
+          format: int64
+          minimum: 0
+        afterEventSequence:
+          type: integer
+          format: int64
+          minimum: 0
+        limit:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 100
+        nextAfterEventSequence:
+          type: integer
+          format: int64
+          minimum: 0
+        hasMore:
+          type: boolean
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimulationJourneyEvent'
+
+    SimulationJourneyEvent:
+      type: object
+      required:
+        - eventId
+        - eventSequence
+        - logicalTimeEpochMs
+        - eventType
+        - status
+        - attemptCount
+        - maxAttempts
+        - completedStateVersion
+        - causationEventId
+        - lastErrorCode
+        - lastErrorMessage
+        - result
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        eventSequence:
+          type: integer
+          format: int64
+        logicalTimeEpochMs:
+          type: integer
+          format: int64
+        eventType:
+          type: string
+        status:
+          $ref: '#/components/schemas/SimulationEventState'
+        attemptCount:
+          type: integer
+          format: int32
+          minimum: 0
+        maxAttempts:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 10
+        completedStateVersion:
+          type: integer
+          format: int64
+          nullable: true
+        causationEventId:
+          type: string
+          format: uuid
+          nullable: true
+        lastErrorCode:
+          type: string
+          nullable: true
+        lastErrorMessage:
+          type: string
+          nullable: true
+        result:
+          $ref: '#/components/schemas/AnyJsonValue'
+
+    SimulationAgentCursor:
+      type: object
+      required:
+        - status
+        - logicalTimeEpochMs
+        - stateVersion
+        - state
+        - activeEventId
+        - lastCompletedEventId
+      properties:
+        status:
+          $ref: '#/components/schemas/SimulationAgentCursorState'
+        logicalTimeEpochMs:
+          type: integer
+          format: int64
+        stateVersion:
+          type: integer
+          format: int64
+          minimum: 0
+        state:
+          $ref: '#/components/schemas/AnyJsonValue'
+        activeEventId:
+          type: string
+          format: uuid
+          nullable: true
+        lastCompletedEventId:
+          type: string
+          format: uuid
+          nullable: true
+
+    SimulationEventState:
+      type: string
+      enum: [READY, RUNNING, COMPLETED, FAILED]
+
+    SimulationAgentCursorState:
+      type: string
+      enum: [ACTIVE, COMPLETED, FAILED]
+
+    AnyJsonValue:
+      nullable: true
+      description: Any JSON value, including null.
+

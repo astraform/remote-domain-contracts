@@ -1,18 +1,27 @@
-name: Remote Domain Contract Release
+name: Public Contract Release
 
 on:
   push:
     tags:
       - "remote-domain-v*"
+      - "platform-api-v*"
   workflow_dispatch:
     inputs:
+      bundle:
+        description: Public contract bundle to publish
+        required: true
+        default: remote-domain
+        type: choice
+        options:
+          - remote-domain
+          - platform-api
       version:
-        description: "Contract version to publish, for example 1.1.0"
+        description: "Contract version to publish, for example provider 1.1.0 or platform 0.1.1"
         required: true
         type: string
 
 concurrency:
-  group: remote-domain-contract-release
+  group: public-contract-release
   cancel-in-progress: false
 
 permissions:
@@ -40,6 +49,7 @@ jobs:
         id: release
         env:
           REQUESTED_VERSION: ${{ inputs.version || '' }}
+          REQUESTED_BUNDLE: ${{ inputs.bundle || '' }}
         run: |
           set -euo pipefail
 
@@ -55,7 +65,29 @@ jobs:
             exit 1
           fi
 
-          version="$(tr -d '[:space:]' < remote-domain/v1/VERSION)"
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            bundle="${REQUESTED_BUNDLE}"
+          else
+            case "${GITHUB_REF_NAME}" in
+              remote-domain-v*) bundle="remote-domain" ;;
+              platform-api-v*) bundle="platform-api" ;;
+              *) echo "Unsupported contract release tag" >&2; exit 1 ;;
+            esac
+          fi
+          case "${bundle}" in
+            remote-domain)
+              source_dir="remote-domain/v1"
+              asset="remote-domain.v1.zip"
+              out_dir="build/remote-domain-contract"
+              ;;
+            platform-api)
+              source_dir="platform-api/v1"
+              asset="platform-api.zip"
+              out_dir="build/platform-api-contract"
+              ;;
+            *) echo "Unsupported contract bundle ${bundle}" >&2; exit 1 ;;
+          esac
+          version="$(tr -d '[:space:]' < "${source_dir}/VERSION")"
           if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "Contract VERSION ${version} must be an exact semantic version." >&2
             exit 1
@@ -64,17 +96,17 @@ jobs:
           if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
             requested_version="${REQUESTED_VERSION}"
             if [ "${requested_version}" != "${version}" ]; then
-              echo "Requested version ${requested_version} does not match remote-domain contract VERSION ${version}" >&2
+              echo "Requested version ${requested_version} does not match ${bundle} contract VERSION ${version}" >&2
               exit 1
             fi
-            release_tag="remote-domain-v${requested_version}"
+            release_tag="${bundle}-v${requested_version}"
           else
             release_tag="${GITHUB_REF_NAME}"
           fi
 
-          expected_tag="remote-domain-v${version}"
+          expected_tag="${bundle}-v${version}"
           if [ "${release_tag}" != "${expected_tag}" ]; then
-            echo "Release tag ${release_tag} does not match remote-domain contract VERSION ${version}" >&2
+            echo "Release tag ${release_tag} does not match ${bundle} contract VERSION ${version}" >&2
             exit 1
           fi
 
@@ -90,34 +122,53 @@ jobs:
             exit 1
           fi
 
+          notes="${RUNNER_TEMP}/contract-release-notes.md"
+          awk -v heading="## ${release_tag}" '
+            $0 == heading { selected = 1; print; next }
+            selected && /^## / { exit }
+            selected { print }
+          ' RELEASE_NOTES.md > "${notes}"
+
+          echo "bundle=${bundle}" >> "${GITHUB_OUTPUT}"
+          echo "asset=${asset}" >> "${GITHUB_OUTPUT}"
+          echo "out_dir=${out_dir}" >> "${GITHUB_OUTPUT}"
+          echo "notes=${notes}" >> "${GITHUB_OUTPUT}"
           echo "version=${version}" >> "${GITHUB_OUTPUT}"
           echo "tag=${release_tag}" >> "${GITHUB_OUTPUT}"
           echo "commit=${release_commit}" >> "${GITHUB_OUTPUT}"
 
-      - name: Verify contract and legacy v1 compatibility
+      - name: Verify public contracts and legacy provider compatibility
         run: scripts/verify-all.sh
 
-      - name: Package remote-domain contract
-        run: scripts/package-remote-domain-contract.sh
+      - name: Package selected public contract
+        env:
+          BUNDLE: ${{ steps.release.outputs.bundle }}
+        run: scripts/package-remote-domain-contract.sh --bundle "$BUNDLE"
 
       - name: Generate checksum
+        env:
+          OUT_DIR: ${{ steps.release.outputs.out_dir }}
+          ASSET: ${{ steps.release.outputs.asset }}
         run: |
           set -euo pipefail
-          cd build/remote-domain-contract
-          sha256sum remote-domain.v1.zip > remote-domain.v1.zip.sha256
-          sha256sum --check remote-domain.v1.zip.sha256
+          cd "$OUT_DIR"
+          sha256sum "$ASSET" > "$ASSET.sha256"
+          sha256sum --check "$ASSET.sha256"
 
       - name: Publish immutable GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ steps.release.outputs.tag }}
-          RELEASE_TITLE: remote-domain.v1 ${{ steps.release.outputs.tag }}
+          RELEASE_TITLE: ${{ steps.release.outputs.bundle }} ${{ steps.release.outputs.tag }}
           RELEASE_COMMIT: ${{ steps.release.outputs.commit }}
+          OUT_DIR: ${{ steps.release.outputs.out_dir }}
+          ASSET: ${{ steps.release.outputs.asset }}
+          RELEASE_NOTES: ${{ steps.release.outputs.notes }}
         run: |
           set -euo pipefail
 
-          zip_path="build/remote-domain-contract/remote-domain.v1.zip"
-          checksum_path="build/remote-domain-contract/remote-domain.v1.zip.sha256"
+          zip_path="${OUT_DIR}/${ASSET}"
+          checksum_path="${zip_path}.sha256"
 
           if gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
             echo "Release ${RELEASE_TAG} already exists and is immutable." >&2
@@ -143,20 +194,20 @@ jobs:
           gh release create "${RELEASE_TAG}" "${zip_path}" "${checksum_path}" \
             --draft \
             --title "${RELEASE_TITLE}" \
-            --notes-file RELEASE_NOTES.md \
+            --notes-file "${RELEASE_NOTES}" \
             --target "${RELEASE_COMMIT}" \
             --latest=false
           release_created=true
 
           gh release download "${RELEASE_TAG}" \
             --dir "${verify_dir}" \
-            --pattern "remote-domain.v1.zip" \
-            --pattern "remote-domain.v1.zip.sha256"
-          cmp "${zip_path}" "${verify_dir}/remote-domain.v1.zip"
-          cmp "${checksum_path}" "${verify_dir}/remote-domain.v1.zip.sha256"
+            --pattern "${ASSET}" \
+            --pattern "${ASSET}.sha256"
+          cmp "${zip_path}" "${verify_dir}/${ASSET}"
+          cmp "${checksum_path}" "${verify_dir}/${ASSET}.sha256"
           (
             cd "${verify_dir}"
-            sha256sum --check remote-domain.v1.zip.sha256
+            sha256sum --check "${ASSET}.sha256"
           )
 
           gh release edit "${RELEASE_TAG}" --draft=false --latest=false

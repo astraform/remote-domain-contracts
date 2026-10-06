@@ -49,7 +49,7 @@ if [ -f "$STAMP_FILE" ]; then
 fi
 
 if [ "$INSTALLED_FINGERPRINT" != "$REQUIREMENTS_FINGERPRINT" ] || \
-   ! "$VENV_DIR/bin/python" -c 'import cryptography, jsonschema, rfc8785' >/dev/null 2>&1; then
+   ! "$VENV_DIR/bin/python" -c 'import cryptography, jsonschema, rfc8785, yaml' >/dev/null 2>&1; then
   "$VENV_DIR/bin/python" -m pip install \
     --disable-pip-version-check \
     --requirement "$REQUIREMENTS_FILE"
@@ -59,6 +59,8 @@ fi
 REMOTE_DOMAIN_VERIFY_BOOTSTRAPPED=true \
 REMOTE_DOMAIN_VERIFY_PYTHON="$VENV_DIR/bin/python" \
   "$ROOT_DIR/scripts/verify-remote-domain-contract.sh"
+
+"$VENV_DIR/bin/python" "$ROOT_DIR/scripts/verify-platform-api-contract.py"
 
 if [ "$MODE" = "all" ]; then
   "$VENV_DIR/bin/python" "$ROOT_DIR/scripts/verify-v1-backward-compatibility.py"
