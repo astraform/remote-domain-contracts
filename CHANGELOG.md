@@ -1,27 +1,28 @@
 # Changelog
 
-Notable changes to the public contract bundles are recorded here. Bundle
-release versions are separate from the `remote-domain.v1` protocol, native profile
-identifiers and Java/Python SDK versions. Unreleased changes are not a published
-contract dependency.
+Notable changes to the public contracts are recorded here. From 1.2.0, both
+bundles share the repository-root release version and ship together. Protocol,
+native profile, platform application and Java/Python SDK versions remain separate.
+Unreleased changes are not a published contract dependency.
 
-## Platform API 0.1.1 — Unreleased
+## 1.2.0 — Unreleased
 
-- Adds the canonical public platform API bundle alongside the independently
-  versioned provider contract. It includes Experiment/Simulation, evaluation and
-  MCP management APIs with shared public schemas, without internal runtime routes
-  or deployment authentication declarations.
+- Adds the canonical public platform API bundle alongside the provider contract,
+  including Experiment/Simulation, evaluation and MCP management APIs with shared
+  public schemas. Internal runtime routes and authentication remain private.
 - Preserves existing operation IDs and payload validation while moving shared
   simulation schemas out of the internal runtime OpenAPI document.
-- Extends the existing packaging, verification and immutable release workflow to
-  select either bundle. Planned platform tag: `platform-api-v0.1.1`.
-- Consolidates both bundles' release notes in the root `RELEASE_NOTES.md`;
-  publication selects the section matching the release tag.
+- Introduces a root `VERSION`, mirrored in both bundles' version files, manifests
+  and OpenAPI documents, with alignment checked by the existing verifiers.
+- Replaces separate bundle release tracks with one `v1.2.0` release containing
+  both existing ZIP assets and their checksums. Historical provider tags and
+  artifacts are unchanged.
+- Uses the complete root `RELEASE_NOTES.md` as the current release body.
 
 ## Remote Domain 1.1.0 — Published
 
-Prepared on 2026-09-27 and published as `remote-domain-v1.1.0`. The unchanged
-bundle remains independent of the new platform API artifact.
+Prepared on 2026-09-27 and published as `remote-domain-v1.1.0`. This historical
+provider-only release and its assets remain unchanged.
 
 ### Added
 
@@ -58,8 +59,8 @@ The new OpenAPI tool descriptor closes extra properties to match the existing
 JSON Schema restriction.
 
 Published as `remote-domain-v1.1.0`, preserving the existing 1.0.4 release.
-See [the 1.1.0 release notes](RELEASE_NOTES.md#remote-domain-v110) for scope
-and upgrade instructions.
+See [the published 1.1.0 release notes](https://github.com/astraform/remote-domain-contracts/releases/tag/remote-domain-v1.1.0)
+for scope and upgrade instructions.
 
 ## 1.0.4 — 2026-07-24
 

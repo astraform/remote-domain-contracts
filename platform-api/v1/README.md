@@ -12,7 +12,9 @@ individual deployments determine which routes their gateway exposes.
 
 The initial partner SDK generates from the Experiment entry point only; including
 other public API documents does not expand the SDK's supported operation surface.
-- Bundle version: `0.1.1`; planned release tag: `platform-api-v0.1.1`.
+- Shared contract version: `1.2.0`; planned release tag: `v1.2.0`.
+  This bundle ships together with the provider bundle under the repository-root
+  `VERSION`, not as a separate release.
 - Release asset: `platform-api.zip`, containing top-level `platform-api/`.
 
 This bundle contains API definitions, not platform implementation or deployment

@@ -3,13 +3,18 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from urllib.parse import unquote
 import yaml
 
 root = Path(__file__).resolve().parents[1] / "platform-api/v1"
 manifest = json.loads((root / "manifest.json").read_text())
-version = (root / "VERSION").read_text().strip()
+version = (root.parents[1] / "VERSION").read_text().strip()
+if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version):
+    raise SystemExit("Root VERSION must be an exact semantic version")
+if (root / "VERSION").read_text().strip() != version:
+    raise SystemExit("Platform bundle VERSION must match root VERSION")
 expected = {
     "bundleId": "platform-api", "version": version,
     "releaseArtifact": "platform-api.zip",
