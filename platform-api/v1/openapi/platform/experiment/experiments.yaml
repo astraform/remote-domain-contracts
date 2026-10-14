@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Experiment Registry API
-  version: 1.2.0
+  version: 1.2.1
   description: Registry and evidence APIs for experiment definitions, runs, artifacts, source snapshots, and calibration.
 servers:
   - url: http://localhost:7457
@@ -1904,6 +1904,15 @@ components:
           minimum: 0
           maximum: 31
           description: Zero-based index in the pinned Catalog revision's behavior.goals.
+        requireCustomerFinish:
+          type: boolean
+          description: >-
+            When true, matching partner receipt evidence does not achieve the goal
+            until the customer's accepted explicit FINISH decision settles successfully.
+            FINISH alone is insufficient without all configured receipt conditions.
+            Omitted or false preserves receipt-qualified completion after the customer's
+            successful next turn. This governs goal achievement, not retained participation
+            or semantic assessment of customer understanding. Existing limits still apply.
         partnerResponseConditions:
           type: array
           minItems: 1
@@ -2595,6 +2604,18 @@ components:
       type: object
       description: Product-facing simulation run lifecycle update request.
       properties:
+        runId:
+          type: string
+          description: Run identity retained in provider finalization evidence; the endpoint path selects the run.
+        operationId:
+          type: string
+          description: Existing provider finalization operation identity retained in the lifecycle event payload.
+        inputDigest:
+          type: string
+          description: Existing finalization input digest retained for provider operation correlation.
+        providerRevision:
+          type: string
+          description: Existing provider binding revision retained in finalization evidence.
         status:
           type: string
           description: RUNNING, COMPLETED, FAILED, CANCELLED, or ROLLED_BACK.

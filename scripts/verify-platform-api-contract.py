@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import json
 import re
+from copy import deepcopy
 from pathlib import Path
 from urllib.parse import unquote
 import yaml
+from jsonschema import Draft7Validator
 
 root = Path(__file__).resolve().parents[1] / "platform-api/v1"
 manifest = json.loads((root / "manifest.json").read_text())
@@ -50,6 +52,53 @@ for field in ("canonicalSources", "partnerContents"):
             raise SystemExit(f"Platform manifest missing file: {value}")
 
 documents = {relative: yaml.load((root / relative).read_text(), Loader=UniqueKeysLoader) for relative in files}
+
+# The runtime defaults omission to false. A wire default would make generated
+# clients inject an unsupported property into otherwise older-compatible requests.
+experiment = documents["openapi/platform/experiment/experiments.yaml"]
+update = experiment["components"]["schemas"]["SimulationRunUpdateRequest"]
+for field in ("runId", "operationId", "inputDigest", "providerRevision"):
+    definition = update.get("properties", {}).get(field, {})
+    if (definition.get("type") != "string" or definition.get("nullable", False)
+            or field in update.get("required", [])):
+        raise SystemExit(f"SimulationRunUpdateRequest.{field} must preserve optional finalization correlation")
+update_schema = {"components": experiment["components"],
+                 "$ref": "#/components/schemas/SimulationRunUpdateRequest"}
+update_validator = Draft7Validator(update_schema)
+for field in ("runId", "operationId", "inputDigest", "providerRevision"):
+    if list(update_validator.iter_errors({field: "recorded-value"})):
+        raise SystemExit(f"SimulationRunUpdateRequest.{field} must accept the existing string field")
+    for invalid in (None, True, 1, [], {}):
+        if not list(update_validator.iter_errors({field: invalid})):
+            raise SystemExit(f"SimulationRunUpdateRequest.{field} must reject non-string correlation fields")
+if list(update_validator.iter_errors({"status": "COMPLETED"})):
+    raise SystemExit("Existing lifecycle updates must not require finalization correlation")
+policy = experiment["components"]["schemas"]["AgentJourneyGoalCompletionPolicy"]
+finish = policy["properties"]["requireCustomerFinish"]
+if (finish.get("type") != "boolean" or finish.get("nullable", False)
+        or "default" in finish or "requireCustomerFinish" in policy["required"]):
+    raise SystemExit("requireCustomerFinish must be optional, non-nullable and have no wire default")
+policy_schema = {"components": experiment["components"],
+                 "$ref": "#/components/schemas/AgentJourneyGoalCompletionPolicy"}
+validator = Draft7Validator(policy_schema)
+old_schema = deepcopy(policy_schema)
+del old_schema["components"]["schemas"]["AgentJourneyGoalCompletionPolicy"]["properties"]["requireCustomerFinish"]
+old_validator = Draft7Validator(old_schema)
+example = {"mode": "GOAL", "goalIndex": 0,
+           "partnerResponseConditions": [{"pointer": "/status", "oneOf": ["ok"]}],
+           "requestFactBindings": [], "maxCustomerDecisions": 8,
+           "maxWallTimeMs": 900000, "maxRepeatedExchanges": 3}
+validator.validate(example)
+old_validator.validate(example)
+for value in (False, True):
+    explicit = example | {"requireCustomerFinish": value}
+    validator.validate(explicit)
+    if old_validator.is_valid(explicit):
+        raise SystemExit("Older goal contracts must reject explicit requireCustomerFinish")
+for value in (None, "true", "false", 0, 1):
+    if validator.is_valid(example | {"requireCustomerFinish": value}):
+        raise SystemExit(f"requireCustomerFinish accepted a non-Boolean value: {value!r}")
+
 reference_count = 0
 operation_count = 0
 
