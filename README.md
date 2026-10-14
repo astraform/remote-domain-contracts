@@ -4,12 +4,26 @@ Canonical public API definitions for partner services, SDK generation and the
 Astraform platform. Implementation code stays in the platform and SDK
 repositories. The existing repository name remains `remote-domain-contracts`.
 
+## Local 1.2.1 candidate — unreleased
+
+Source metadata now targets shared contract 1.2.1 for strict customer completion
+and existing completion-update identity fidelity. It is a LOCAL_PRERELEASE
+development input, not a published dependency. Published 1.2.0 ZIPs and checksums
+remain immutable. Both SDKs must preserve omitted/false/true
+`completionPolicy.requireCustomerFinish` and reject explicit null or non-Boolean
+values. The four optional non-null update strings (`runId`, `operationId`,
+`inputDigest`, `providerRevision`) retain their existing native meaning. No
+protocol identifiers, paths, default stopping behavior or global clock are changed.
+Use explicit local ZIP selection for controlled generation and verify actual
+artifact metadata; normal release consumers keep their published pins until the
+reviewed shared contract and SDK delivery.
+
 ## Contract bundles
 
 | Bundle | Purpose | Shared release |
 | --- | --- | --- |
-| `remote-domain/v1/` | Astraform calls partner domain services | `1.2.0`, tag `v1.2.0` (unpublished) |
-| `platform-api/v1/` | Partner applications call Astraform; shared platform API schemas | `1.2.0`, tag `v1.2.0` (unpublished) |
+| `remote-domain/v1/` | Astraform calls partner domain services | [`1.2.0`, tag `v1.2.0`](https://github.com/astraform/remote-domain-contracts/releases/tag/v1.2.0) |
+| `platform-api/v1/` | Partner applications call Astraform; shared platform API schemas | [`1.2.0`, tag `v1.2.0`](https://github.com/astraform/remote-domain-contracts/releases/tag/v1.2.0) |
 
 The repository-root `VERSION` owns one release version for both bundles. Each
 bundle's `VERSION`, manifest and OpenAPI `info.version` must match it. One GitHub
@@ -17,7 +31,8 @@ release publishes both ZIP assets and their SHA-256 checksums together. Separate
 archives preserve existing SDK and platform dependency paths; they are not
 separate releases. SDK package and protocol versions remain separate.
 
-The previously published `remote-domain-v1.1.0` release remains immutable.
+The shared `v1.2.0` release was published on 6 October 2026. Its archives and
+checksums, and the earlier `remote-domain-v1.1.0` release, remain immutable.
 
 The provider bundle contains its OpenAPI, JSON schemas, protocol documentation
 and sample payloads. The platform bundle contains:
@@ -28,9 +43,11 @@ and sample payloads. The platform bundle contains:
 - `openapi/platform/experiment/evaluation.yaml`: evaluation APIs.
 - `openapi/core/mcp-management.yaml`: tool and MCP server management APIs.
 
-Internal runtime commands and authentication declarations remain in the platform
-repository. Its runtime uses the same shared public schemas. Including a public
-API definition does not imply that every deployment gateway exposes every route.
+Public customer and simulation payload schemas belong to this repository.
+Internal runtime commands and authentication declarations remain in the private
+platform repository; the runtime consumes these same shared public schemas.
+Including a public API definition does not imply that every deployment gateway
+exposes every route.
 The current partner SDK still generates from the Experiment entry point only.
 
 ## Verify and package
@@ -66,12 +83,17 @@ Consumers pin a published tag, asset and checksum and resolve the dependency int
 an ignored build cache. They do not maintain editable contract copies. Validation
 schemas needed at runtime are still included in built SDK artifacts.
 
-The combined `v1.2.0` release is not published yet. For local development,
-package the bundles above and explicitly supply their absolute ZIP paths.
-For the platform API input:
+Normal builds consume the published `v1.2.0` assets with their pinned checksums;
+a local contract checkout or ZIP is not required. Only for explicit contract
+development, package the bundles above and supply their absolute ZIP paths.
+For the platform API development input:
 
 - Java SDK/platform: `-Dplatform.api.contract.zip=/absolute/path/platform-api.zip`.
 - Python SDK: `ASTRAFORM_PLATFORM_API_ZIP=/absolute/path/platform-api.zip`.
+
+Published archives are immutable snapshots. Later source documentation corrections
+do not update those archives or their checksums; a rebuilt local ZIP is a
+development input, not a replacement for the published asset.
 
 Use clean builds when switching contract inputs. Local ZIP artifacts are marked
 `LOCAL_PRERELEASE`; publication rejects them. Normal builds do not silently select
@@ -96,8 +118,8 @@ release-notes file as the body of the single GitHub release.
    from the final revision.
 3. Merge reviewed changes to `main`.
 4. Run `.github/workflows/release.yml` from `main` with the matching version
-   (next: `1.2.0`), or push `v<version>` at a commit already on `main`. There is
-   no bundle selector. This workflow publishes; CI is the non-publishing
+   for the new unused version, or push `v<version>` at a commit already on
+   `main`. There is no bundle selector. This workflow publishes; CI is the non-publishing
    verification path.
 5. Verify both GitHub Release ZIPs and checksums, then update platform and SDK
    pins to the same release tag and their respective asset checksums.

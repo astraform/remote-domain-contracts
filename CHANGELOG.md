@@ -5,7 +5,22 @@ bundles share the repository-root release version and ship together. Protocol,
 native profile, platform application and Java/Python SDK versions remain separate.
 Unreleased changes are not a published contract dependency.
 
-## 1.2.0 — Unreleased
+## 1.2.1 — Unreleased local candidate
+
+- Packages the existing optional non-null `requireCustomerFinish` Boolean without
+  a wire default; omission/false retain legacy completion and true requires
+  customer FINISH plus configured receipt evidence. Null/non-Boolean values are
+  invalid and must not be silently omitted or coerced by generated SDKs.
+- Includes the existing four optional non-null completion-update correlation
+  strings, preserving operation and evidence identity through native clients.
+- Aligns root/both bundle metadata and every OpenAPI version to 1.2.1 while
+  retaining protocol/profile identifiers and immutable published 1.2.0 assets.
+  This source is unreleased; local generation/publication proof remain distinct.
+
+## 1.2.0 — Published 2026-10-06
+
+Published as [`v1.2.0`](https://github.com/astraform/remote-domain-contracts/releases/tag/v1.2.0)
+with both contract ZIP assets and their SHA-256 checksums.
 
 - Adds the canonical public platform API bundle alongside the provider contract,
   including Experiment/Simulation, evaluation and MCP management APIs with shared

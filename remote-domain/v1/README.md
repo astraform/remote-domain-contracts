@@ -73,8 +73,9 @@ The script writes `build/remote-domain-contract/remote-domain.v1/` and
 - `remote-domain.v1` is the protocol identifier and compatibility boundary.
 - The repository-root `VERSION` owns the shared public-contract release version.
   This bundle's `VERSION`, `manifest.json` and OpenAPI `info.version` mirror it
-  (`1.2.0` in this bundle). Both provider and platform API bundles ship together
-  under tag `v1.2.0`; protocol and SDK package versions remain separate.
+  (`1.2.1` in this local unreleased candidate). Both provider and platform API
+  bundles share that source version. Published baseline `v1.2.0` remains immutable;
+  candidate packaging is not publication. Protocol and SDK versions stay separate.
 - Breaking protocol changes require `remote-domain.v2`.
 - Additive optional fields may stay in `remote-domain.v1` when old clients can ignore them safely.
 

@@ -1,8 +1,30 @@
+# Astraform Public Contracts 1.2.1 — unreleased local candidate
+
+This local candidate packages strict customer completion and the existing native
+completion-update correlation fields. It has not been committed, published or
+validated as a public release. Both archives share source version 1.2.1; consumers
+select them explicitly as LOCAL_PRERELEASE inputs with truthful checksums and
+provenance. Published 1.2.0 and earlier assets remain immutable.
+
+The optional non-null `requireCustomerFinish` Boolean has no wire default:
+omission/false preserve receipt-qualified stopping, true requires the customer
+to FINISH as well as satisfy the configured receipt conditions. Explicit null or
+non-Boolean values are invalid. Native updates retain `runId`, `operationId`,
+`inputDigest` and `providerRevision` as optional non-null strings. SDK generation
+and actual typed request/response/sample verification remain separate gates.
+Protocol/profile identifiers, API paths, safety limits and existing product
+restoration obligations remain unchanged. Public contract/SDK publication and
+consumer pin/artifact adoption require later reviewed delivery.
+
+## Earlier 1.2.0 release notes — preserved history
+
 # Astraform Public Contracts 1.2.0
 
 The provider and platform API contracts now share one version and one release:
-`v1.2.0`. The repository-root `VERSION` owns that version, and CI verifies it
-against both bundle manifests, bundled version files and OpenAPI documents.
+[`v1.2.0`](https://github.com/astraform/remote-domain-contracts/releases/tag/v1.2.0),
+published on 6 October 2026. The repository-root `VERSION` owns that version,
+and CI verifies it against both bundle manifests, bundled version files and
+OpenAPI documents.
 
 ## What changes
 
@@ -35,12 +57,13 @@ Existing published releases, including `remote-domain-v1.1.0`, remain unchanged.
 
 ## Consumer upgrade
 
-After publication, pin both inputs to `v1.2.0` with their respective verified ZIP
+Pin both inputs to the published `v1.2.0` assets with their respective verified ZIP
 checksums and regenerate/build the SDKs. The Java and Python author kits each
 package the provider adapter and platform client together; their package versions
 remain separate from this contract release version. Platform implementation
 versions also remain separate.
 
-Local ZIP builds are development inputs. They do not establish that this release
-or a new SDK version is available to partners. See [CHANGELOG.md](CHANGELOG.md)
-for historical release details.
+Local ZIP builds are explicit development inputs; normal consumers use the
+published assets. Later source documentation corrections do not alter those
+immutable archives or their checksums. SDK publication remains a separate step.
+See [CHANGELOG.md](CHANGELOG.md) for historical release details.
