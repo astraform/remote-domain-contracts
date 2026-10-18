@@ -1,68 +1,126 @@
-# Astraform Public Contracts 1.2.2 — unreleased local candidate
+Version 1.2.2 extends the shared provider and platform API contracts with
+cross-domain run discovery, domain-aware MCP bindings, domain-owned assessments,
+captured-result presentation and opt-in authoritative request metadata.
+The provider protocol remains `remote-domain.v1`.
 
-Adds optional non-null `completionPolicy.requestFactBindingMode` with no wire
-default. Omission/`VALIDATE` preserve prior equality validation; explicit
-`RESOLVE_TRUSTED` resolves configured outgoing metadata from admitted
-observations, preserving original model proposals and freezing the validated
-resolved request before transport/retry. Customer decisions, instructions,
-unbound facts and actual partner replies are not repaired. Invalid/missing
-sources, reserved/overlapping targets and invalid paths or limits fail closed.
+These bundles contain API definitions, schemas, documentation and examples.
+Using a new contract requires a supporting platform and SDK implementation;
+contract publication does not deploy features or update installed SDKs.
 
-Both bundles share source version 1.2.2 and require explicit `LOCAL_PRERELEASE`
-selection. The latest published release is
-[`v1.2.1`](https://github.com/astraform/remote-domain-contracts/releases/tag/v1.2.1),
-which includes strict customer FINISH and completion-update correlation fields.
-Its archives and all earlier releases remain immutable. The 1.2.2 candidate
-has not been published.
+## Highlights
 
-## Earlier 1.2.0 release notes — preserved history
+### Find simulations across domains
 
-# Astraform Public Contracts 1.2.0
+- Adds optional `AgentJourneyLaunchRequest.domainId` to record an explicit run
+  classification, including journeys without a native domain provider. When a
+  native provider is selected, the classification must match that provider.
+  The value is frozen with the launch identity; it does not activate a provider
+  or grant tenant, project or tool permissions.
+- Extends `GET /api/simulation-runs` with literal name/run-ID search, domain,
+  known/unknown classification, execution-status and creation-time filters.
+- Adds opaque cursor continuation, `hasMore`, nullable `nextCursor`, a retained
+  creation-time boundary, declared sort order and optional exact totals through
+  `includeTotal`. Repeat the original filters when following a cursor. Existing
+  runs can still change; pagination does not provide an immutable data snapshot.
+- Changes omitted `experimentId` to select runs across experiments. Send an
+  explicit `experimentId` to retain the former experiment-specific scope.
 
-The provider and platform API contracts now share one version and one release:
-[`v1.2.0`](https://github.com/astraform/remote-domain-contracts/releases/tag/v1.2.0),
-published on 6 October 2026. The repository-root `VERSION` owns that version,
-and CI verifies it against both bundle manifests, bundled version files and
-OpenAPI documents.
+### Select MCP bindings by domain
 
-## What changes
+- Adds `GET /api/simulation-events/mcp-bindings` and the typed
+  `CustomerMcpBindings` / `CustomerMcpBinding` inventory with bounded pagination
+  and optional domain filtering. It describes deployment-configured bindings
+  without contacting MCP endpoints or publishing their URLs or credentials.
+- Adds `allowedDomainIds` to binding/capability metadata and a frozen `domainId`
+  on restricted tool grants. Restricted bindings require an eligible run domain
+  before discovery and retain that domain for enforcement before transport.
+- Preserves unrestricted legacy behavior when the inventory allowlist is empty
+  or a legacy capability omits it. Domain classification and eligibility do not
+  establish departmental ownership, authentication or tenant isolation.
 
-- Adds the public platform API bundle for customer authoring, capability
-  discovery, Agent Journey, simulation results, experiment registry, Scenario
-  Lab, evaluation and MCP management. Shared payloads live in the schema-only
-  `core/common.yaml`; internal runtime commands and their authentication remain
-  outside the public bundle.
-- Preserves existing API operation IDs, routes, request/response validation and
-  generated SDK namespaces. The partner SDK still generates from the Experiment
-  entry point; including additional documents does not expand SDK or deployment
-  gateway capabilities.
-- Aligns the provider bundle metadata to `1.2.0` without changing its wire
-  payloads or protocol/profile identifiers. `remote-domain.v1` remains the
-  provider protocol.
-- Publishes both bundles together. The previous bundle selector and separate
-  release-tag tracks are removed. One root release-notes file supplies the
-  entire GitHub release body.
+### Assess results with domain-owned criteria
 
-## Release artifacts
+- Adds `domain_assessment.v1` with domain, evaluator, rubric and configuration
+  identities; evidence run/scenario identity and digest; references, timestamps,
+  rationale, native structured results and arbitrary metric IDs.
+- Defines `evaluation.v2` reports with explicit `PASS`, `WARN`, `FAIL`,
+  `NOT_ASSESSED` and `ERROR` assessment states. Summary/scenario scores are
+  nullable; missing or errored assessment results do not imply zero or success.
+  Execution status remains separate from assessment outcome.
+- Retains an open source-suite object on the existing evaluation request while
+  publishing typed suite/scenario schemas. Optional native-result containers
+  distinguish omission, explicit null and empty values. Normalized scores use a
+  declared higher-is-better meaning; arbitrary tool scores are not automatically
+  interchangeable or averaged.
+- Adds comparison status/reasons, nullable deltas and custom metric comparison
+  records. Compatible qualitative assessments can be compared without numeric
+  scores. Missing, unassessed and incompatible metrics retain an explanation
+  rather than an invented delta. Historical `evaluation.v1` report fields and
+  legacy dimension definitions remain available.
+- Defines the evidence digest as SHA-256 of RFC 8785 canonical JSON for the
+  decoded suite with its root and immediate scenario assessment annotations
+  removed. Compute it after final source serialization. This identifies the
+  decoded snapshot, not original HTTP/file bytes; represent exact values beyond
+  binary64 precision as strings.
 
-The single `v1.2.0` release contains:
+The six evaluation routes already exist; this version extends their payloads.
+An attributed assessment does not authenticate its submitter, append immutable
+native simulation evidence or change customer-goal completion. Managed evaluator
+adapters, independent multi-tool history and native export integration require
+separate implementation.
 
-- `remote-domain.v1.zip` and `remote-domain.v1.zip.sha256`.
-- `platform-api.zip` and `platform-api.zip.sha256`.
+### Show domain labels and formats
 
-Archive roots remain `remote-domain.v1/` and `platform-api/`, preserving consumer
-paths. Both archives are verified after upload before the release is published.
-Existing published releases, including `remote-domain-v1.1.0`, remain unchanged.
+- Adds `astraform.result-presentation.v1` as an optional `presentation` annotation
+  in captured A2A JSON responses or MCP `structuredContent`, with a shared schema,
+  provider guide and banking/marketing examples.
+- Supports bounded labels and pointers into the same captured result, with
+  `text`, `currency` and `date` formats. Original values, JSON types and evidence
+  remain intact; invalid annotations fall back to generic presentation.
+- Defines text escaping, no network lookup, decoded-pointer uniqueness and an
+  8,192-byte annotation bound. MCP output-schema publication requires an inline,
+  self-contained schema. Presentation confers no execution, permission, goal or
+  business-verdict authority. As part of a recorded reply, annotations may also
+  be visible to the customer model; identical subsequent decisions are not
+  guaranteed.
 
-## Consumer upgrade
+### Resolve authoritative request metadata
 
-Pin both inputs to the published `v1.2.0` assets with their respective verified ZIP
-checksums and regenerate/build the SDKs. The Java and Python author kits each
-package the provider adapter and platform client together; their package versions
-remain separate from this contract release version. Platform implementation
-versions also remain separate.
+- Adds optional non-null `completionPolicy.requestFactBindingMode` with values
+  `VALIDATE` and `RESOLVE_TRUSTED`, without a wire default. Omission or `VALIDATE`
+  preserves existing equality validation without request repair.
+- `RESOLVE_TRUSTED` copies configured bound fields from already admitted
+  authoritative observations into the outgoing request. It preserves the
+  original model proposal, chosen action, instruction and unbound facts. The
+  validated resolved request is frozen before dispatch and retry.
+- Missing/null sources, reserved or overlapping targets, incompatible containers,
+  unsupported paths and size violations block dispatch. Model memory and future
+  observations cannot supply authoritative values; partner output is not repaired.
 
-Local ZIP builds are explicit development inputs; normal consumers use the
-published assets. Later source documentation corrections do not alter those
-immutable archives or their checksums. SDK publication remains a separate step.
-See [CHANGELOG.md](CHANGELOG.md) for historical release details.
+## Upgrade notes
+
+Update consumers for the new assessment states, nullable scores/deltas and
+pagination fields. Preserve omitted versus explicit-null values. Use supporting
+Java/Python author-kit releases or their updated generators built against these
+contracts. Changing an archive pin alone does not update installed clients or
+add previously ungenerated operations. SDK package versions remain independent
+of contract version 1.2.2.
+
+Use a matching platform implementation and gateway for the selected operations.
+Existing strict customer FINISH and finalization-correlation fields from 1.2.1
+remain available. Provider routes, protocol/profile identifiers and published
+historical release assets remain unchanged.
+
+## Downloads
+
+Both bundles share root version 1.2.2 and ship together with separate checksums:
+
+- `remote-domain.v1.zip` and `remote-domain.v1.zip.sha256`, rooted at
+  `remote-domain.v1/`.
+- `platform-api.zip` and `platform-api.zip.sha256`, rooted at `platform-api/`.
+
+After publication, pin the shared `v1.2.2` tag and verify each asset's own
+checksum before regenerating consumers. Until publication, use only explicitly
+selected development ZIPs with `LOCAL_PRERELEASE` provenance. Local rebuilds do
+not replace immutable published archives. See [CHANGELOG.md](CHANGELOG.md) for
+historical releases and [README.md](README.md#release) for the release procedure.
