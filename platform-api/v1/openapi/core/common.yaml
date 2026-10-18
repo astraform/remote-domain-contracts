@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Platform Common Schema
-  version: 1.2.1
+  version: 1.2.2
 paths: {}
 components:
   schemas:
@@ -22,6 +22,40 @@ components:
         detail:
           type: string
 
+    CustomerMcpBindings:
+      type: object
+      additionalProperties: false
+      required: [schemaVersion, bindings, hasMore, nextBindingKey]
+      properties:
+        schemaVersion: {type: string, enum: [astraform.mcp-bindings.v1]}
+        hasMore: {type: boolean}
+        nextBindingKey:
+          type: string
+          nullable: true
+          minLength: 1
+          maxLength: 128
+          pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'
+          description: Last returned binding key when another page exists, otherwise null. Supply it as afterBindingKey for continuation.
+        bindings:
+          type: array
+          description: Deployment-approved customer MCP bindings ordered by bindingKey. Listing reads configuration only and does not contact MCP endpoints.
+          items: {$ref: '#/components/schemas/CustomerMcpBinding'}
+
+    CustomerMcpBinding:
+      type: object
+      additionalProperties: false
+      required: [bindingKey, bindingRevision, bindingDigest, allowedDomainIds]
+      properties:
+        bindingKey: {type: string, pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'}
+        bindingRevision: {type: string, minLength: 1, maxLength: 256}
+        bindingDigest: {type: string, pattern: '^sha256:[0-9a-f]{64}$'}
+        allowedDomainIds:
+          type: array
+          maxItems: 64
+          uniqueItems: true
+          description: Sorted deployment domain allowlist. An empty list preserves unrestricted legacy behavior. Classification matching does not establish tenant or project ownership, authentication or authorization.
+          items: {type: string, minLength: 1, maxLength: 128, pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'}
+
     CustomerMcpCapabilities:
       type: object
       additionalProperties: false
@@ -31,6 +65,12 @@ components:
         bindingKey: {type: string, pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'}
         bindingRevision: {type: string, minLength: 1, maxLength: 256}
         bindingDigest: {type: string, pattern: '^sha256:[0-9a-f]{64}$'}
+        allowedDomainIds:
+          type: array
+          maxItems: 64
+          uniqueItems: true
+          description: Sorted deployment domain allowlist, omitted for unrestricted legacy bindings. A restricted launch must select a permitted native provider domain or explicit run classification before MCP discovery; this is not organizational authorization.
+          items: {type: string, minLength: 1, maxLength: 128, pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'}
         serverInfo: {type: object, additionalProperties: true, description: Standard MCP initialize serverInfo.}
         tools:
           type: array
@@ -61,6 +101,12 @@ components:
         bindingKey: {type: string, pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'}
         bindingRevision: {type: string, minLength: 1, maxLength: 256}
         bindingDigest: {type: string, pattern: '^sha256:[0-9a-f]{64}$'}
+        domainId:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'
+          description: Frozen selected run domain for a restricted deployment MCP binding. Omitted for unrestricted legacy grants; Runtime rechecks it against the deployment restriction before transport.
         toolName: {type: string, pattern: '^[A-Za-z0-9_.-]{1,128}$'}
         descriptorDigest: {type: string, pattern: '^sha256:[0-9a-f]{64}$'}
         inputSchemaDigest: {type: string, pattern: '^sha256:[0-9a-f]{64}$'}

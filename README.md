@@ -4,26 +4,24 @@ Canonical public API definitions for partner services, SDK generation and the
 Astraform platform. Implementation code stays in the platform and SDK
 repositories. The existing repository name remains `remote-domain-contracts`.
 
-## Local 1.2.1 candidate — unreleased
+## Local 1.2.2 candidate — unreleased
 
-Source metadata now targets shared contract 1.2.1 for strict customer completion
-and existing completion-update identity fidelity. It is a LOCAL_PRERELEASE
-development input, not a published dependency. Published 1.2.0 ZIPs and checksums
-remain immutable. Both SDKs must preserve omitted/false/true
-`completionPolicy.requireCustomerFinish` and reject explicit null or non-Boolean
-values. The four optional non-null update strings (`runId`, `operationId`,
-`inputDigest`, `providerRevision`) retain their existing native meaning. No
-protocol identifiers, paths, default stopping behavior or global clock are changed.
-Use explicit local ZIP selection for controlled generation and verify actual
-artifact metadata; normal release consumers keep their published pins until the
-reviewed shared contract and SDK delivery.
+Source metadata targets shared contract 1.2.2. It adds explicit opt-in
+`completionPolicy.requestFactBindingMode: RESOLVE_TRUSTED` for platform-owned
+outgoing metadata. Omission and `VALIDATE` preserve existing equality checks;
+there is no wire default. The customer's decision, instruction and unbound
+facts remain model-owned, and original proposals remain recorded. See the
+[platform guide](platform-api/v1/README.md#authoritative-request-metadata-122-candidate).
+Both bundles must be selected explicitly as `LOCAL_PRERELEASE` inputs for local
+SDK generation. Published 1.2.1 dependencies and all earlier archives/checksums
+remain immutable. Nothing here publishes a contract or an SDK.
 
 ## Contract bundles
 
 | Bundle | Purpose | Shared release |
 | --- | --- | --- |
-| `remote-domain/v1/` | Astraform calls partner domain services | [`1.2.0`, tag `v1.2.0`](https://github.com/astraform/remote-domain-contracts/releases/tag/v1.2.0) |
-| `platform-api/v1/` | Partner applications call Astraform; shared platform API schemas | [`1.2.0`, tag `v1.2.0`](https://github.com/astraform/remote-domain-contracts/releases/tag/v1.2.0) |
+| `remote-domain/v1/` | Astraform calls partner domain services | [`1.2.1`, tag `v1.2.1`](https://github.com/astraform/remote-domain-contracts/releases/tag/v1.2.1) |
+| `platform-api/v1/` | Partner applications call Astraform; shared platform API schemas | [`1.2.1`, tag `v1.2.1`](https://github.com/astraform/remote-domain-contracts/releases/tag/v1.2.1) |
 
 The repository-root `VERSION` owns one release version for both bundles. Each
 bundle's `VERSION`, manifest and OpenAPI `info.version` must match it. One GitHub
@@ -31,8 +29,9 @@ release publishes both ZIP assets and their SHA-256 checksums together. Separate
 archives preserve existing SDK and platform dependency paths; they are not
 separate releases. SDK package and protocol versions remain separate.
 
-The shared `v1.2.0` release was published on 6 October 2026. Its archives and
-checksums, and the earlier `remote-domain-v1.1.0` release, remain immutable.
+The latest published shared release is
+[`v1.2.1`](https://github.com/astraform/remote-domain-contracts/releases/tag/v1.2.1).
+Its archives and checksums, and all earlier releases, remain immutable.
 
 The provider bundle contains its OpenAPI, JSON schemas, protocol documentation
 and sample payloads. The platform bundle contains:
@@ -83,7 +82,7 @@ Consumers pin a published tag, asset and checksum and resolve the dependency int
 an ignored build cache. They do not maintain editable contract copies. Validation
 schemas needed at runtime are still included in built SDK artifacts.
 
-Normal builds consume the published `v1.2.0` assets with their pinned checksums;
+Normal builds consume the published `v1.2.1` assets with their pinned checksums;
 a local contract checkout or ZIP is not required. Only for explicit contract
 development, package the bundles above and supply their absolute ZIP paths.
 For the platform API development input:

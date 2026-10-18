@@ -117,7 +117,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ steps.release.outputs.tag }}
-          RELEASE_TITLE: Astraform Public Contracts ${{ steps.release.outputs.tag }}
+          RELEASE_TITLE: ${{ steps.release.outputs.tag }}
           RELEASE_COMMIT: ${{ steps.release.outputs.commit }}
         run: |
           set -euo pipefail

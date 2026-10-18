@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "banking.statement-advice.response.v1",
+  "decision": "payment_due",
+  "readOnly": true,
+  "message": "Your statement minimum payment is AUD 48. The full balance is AUD 1,200, due on 14 February 2026.",
+  "missingFields": [],
+  "statement": {
+    "billId": "example-statement",
+    "accountId": "example-card",
+    "minimumAmountDue": "48",
+    "closingAmount": "-1200",
+    "currency": "AUD",
+    "statementEndDate": "2026-01-31",
+    "dueDate": "2026-02-14"
+  },
+  "presentation": {
+    "schemaVersion": "astraform.result-presentation.v1",
+    "fields": [
+      {
+        "pointer": "/statement/minimumAmountDue",
+        "label": "Minimum payment",
+        "format": "currency",
+        "currencyPointer": "/statement/currency"
+      },
+      {
+        "pointer": "/statement/closingAmount",
+        "label": "Closing balance as returned",
+        "format": "currency",
+        "currencyPointer": "/statement/currency"
+      },
+      {
+        "pointer": "/statement/dueDate",
+        "label": "Due date",
+        "format": "date"
+      }
+    ]
+  }
+}

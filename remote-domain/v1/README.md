@@ -23,6 +23,13 @@ It is intentionally about the wire contract, not the monorepo implementation.
   and adversarial conformance vectors for crash-safe finalization.
 - `manifest.json`: bundle metadata, source provenance, and release artifact name.
 
+## Captured result display
+
+Providers can annotate recorded A2A and MCP structured results with optional,
+bounded labels and formats. See [Captured result presentation v1](docs/result-presentation-v1.md)
+and its reusable JSON Schema. Annotations travel with the original receipt;
+they do not introduce executable UI or alter business values.
+
 ## Code Generation Direction
 
 Astraform should not let Java become the real contract by accident. The schema
@@ -73,9 +80,10 @@ The script writes `build/remote-domain-contract/remote-domain.v1/` and
 - `remote-domain.v1` is the protocol identifier and compatibility boundary.
 - The repository-root `VERSION` owns the shared public-contract release version.
   This bundle's `VERSION`, `manifest.json` and OpenAPI `info.version` mirror it
-  (`1.2.1` in this local unreleased candidate). Both provider and platform API
-  bundles share that source version. Published baseline `v1.2.0` remains immutable;
-  candidate packaging is not publication. Protocol and SDK versions stay separate.
+  (`1.2.2` in this local unreleased candidate). Both provider and platform API
+  bundles share that source version. The latest published release is `v1.2.1`;
+  its archives and all earlier releases remain immutable. Candidate packaging is
+  not publication. Protocol and SDK versions stay separate.
 - Breaking protocol changes require `remote-domain.v2`.
 - Additive optional fields may stay in `remote-domain.v1` when old clients can ignore them safely.
 

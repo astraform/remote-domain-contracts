@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Evaluation Schema
-  version: 1.2.1
+  version: 1.2.2
   description: Canonical evaluation payloads for replay and scenario quality decisions.
 paths:
   /api/evaluations:
@@ -160,6 +160,12 @@ components:
         suiteResult:
           type: object
           additionalProperties: true
+          description: >-
+            Source suite conforming to EvaluationSuiteResult and its nested
+            EvaluationScenarioSource and DomainAssessment schemas. The dynamic
+            object preserves arbitrary source evidence and the existing Map-shaped
+            operation input without generating a separate transport representation.
+            This does not establish published SDK evaluation-operation support.
         suiteResultPath:
           type: string
         bundlePath:
@@ -170,6 +176,201 @@ components:
           type: boolean
         overwrite:
           type: boolean
+
+    EvaluationSuiteResult:
+      type: object
+      additionalProperties: true
+      required: [runId, scenarios]
+      description: >-
+        Source execution evidence with optional independently computed domain assessments.
+        Execution statuses and arbitrary metrics are retained as evidence and do not
+        produce a semantic assessment by themselves. Additional source fields are preserved.
+      properties:
+        runId:
+          type: string
+          minLength: 1
+          maxLength: 120
+        manifestPath:
+          type: string
+        generatedAt:
+          type: string
+          format: date-time
+        endpoints:
+          type: object
+          additionalProperties:
+            type: string
+        domainId:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'
+        assessment:
+          $ref: '#/components/schemas/DomainAssessment'
+        scenarios:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvaluationScenarioSource'
+
+    EvaluationScenarioSource:
+      type: object
+      additionalProperties: true
+      required: [id]
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 120
+        status:
+          type: string
+          description: Source execution status, distinct from semantic assessment status.
+        category:
+          type: string
+        metrics:
+          type: object
+          additionalProperties: true
+        assessment:
+          $ref: '#/components/schemas/DomainAssessment'
+
+    DomainAssessment:
+      type: object
+      additionalProperties: false
+      description: >-
+        A domain-owned result supplied by an evaluator. Astraform validates, records
+        and compares attributed assessments; it does not execute their business
+        scoring rules. evidenceDigest is lowercase SHA-256 of RFC 8785 canonical JSON
+        for the entire submitted suite after removing its root assessment and every
+        scenarios[].assessment. The digest identifies the decoded JSON source snapshot,
+        not the original HTTP or file bytes. JSON number precision follows binary64
+        decoding; encode exact wider integers or decimal values as strings. Numbers
+        in the decoded snapshot must retain their value through canonicalization.
+        It binds all submitted evidence, not authenticated native-ledger authority.
+        evidenceRunId must equal the suite runId. A scenario
+        assessment must also supply its exact evidenceScenarioId; root assessments
+        must omit that field. Non-null normalized scores require scoreSemanticsId and
+        declare a domain-defined higher-is-better scale between zero and one.
+      required:
+        - schemaVersion
+        - domainId
+        - evaluatorId
+        - evaluatorVersion
+        - rubricId
+        - rubricVersion
+        - configurationDigest
+        - evidenceRunId
+        - evidenceDigest
+        - generatedAt
+        - status
+        - evidenceRefs
+      properties:
+        schemaVersion:
+          type: string
+          enum: [domain_assessment.v1]
+        domainId:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'
+        evaluatorId:
+          type: string
+          minLength: 1
+          maxLength: 256
+        evaluatorVersion:
+          type: string
+          minLength: 1
+          maxLength: 128
+        rubricId:
+          type: string
+          minLength: 1
+          maxLength: 256
+        rubricVersion:
+          type: string
+          minLength: 1
+          maxLength: 128
+        configurationDigest:
+          type: string
+          pattern: '^[a-f0-9]{64}$'
+          description: SHA-256 identifying the evaluator's immutable scoring configuration.
+        evidenceRunId:
+          type: string
+          minLength: 1
+          maxLength: 120
+        evidenceScenarioId:
+          type: string
+          minLength: 1
+          maxLength: 120
+        evidenceDigest:
+          type: string
+          pattern: '^[a-f0-9]{64}$'
+        generatedAt:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/EvaluationStatus'
+        evidenceRefs:
+          type: array
+          minItems: 1
+          maxItems: 256
+          uniqueItems: true
+          items:
+            type: string
+            minLength: 1
+            maxLength: 2048
+        score:
+          type: number
+          format: double
+          nullable: true
+          minimum: 0
+          maximum: 1
+          description: Optional domain-normalized higher-is-better score, never inferred by the platform.
+        scoreSemanticsId:
+          type: string
+          minLength: 1
+          maxLength: 256
+          description: Stable identity of the normalization and meaning of the domain score.
+        rationale:
+          type: string
+          maxLength: 16384
+        nativeResult:
+          type: object
+          nullable: true
+          additionalProperties: true
+          description: Original domain-native result, including native scores and scale when supplied.
+        dimensions:
+          type: array
+          nullable: true
+          maxItems: 128
+          items:
+            $ref: '#/components/schemas/DomainAssessmentDimension'
+
+    DomainAssessmentDimension:
+      type: object
+      additionalProperties: false
+      required: [metricId, status]
+      properties:
+        metricId:
+          type: string
+          minLength: 1
+          maxLength: 256
+        status:
+          $ref: '#/components/schemas/EvaluationStatus'
+        score:
+          type: number
+          format: double
+          nullable: true
+          minimum: 0
+          maximum: 1
+          description: Optional higher-is-better normalized score; requires scoreSemanticsId when non-null.
+        scoreSemanticsId:
+          type: string
+          minLength: 1
+          maxLength: 256
+        rationale:
+          type: string
+          maxLength: 16384
+        nativeResult:
+          type: object
+          nullable: true
+          additionalProperties: true
 
     CompareInlineRequest:
       type: object
@@ -197,6 +398,7 @@ components:
         overallScore:
           type: number
           format: double
+          nullable: true
         scenarioCount:
           type: integer
           format: int32
@@ -215,8 +417,11 @@ components:
       properties:
         schemaVersion:
           type: string
-          description: Schema identifier for compatibility checks.
-          example: evaluation.v1
+          description: >-
+            Report semantics identifier. Stored evaluation.v1 reports retain their
+            historical numeric scoring. New evaluation.v2 reports contain attributed
+            domain assessments and explicit NOT_ASSESSED or ERROR outcomes.
+          example: evaluation.v2
         run:
           $ref: '#/components/schemas/EvaluationRunMetadata'
         summary:
@@ -225,6 +430,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ScenarioEvaluationResult'
+        assessment:
+          $ref: '#/components/schemas/DomainAssessment'
         regression:
           $ref: '#/components/schemas/RegressionDeltaReport'
         generatedAt:
@@ -257,6 +464,15 @@ components:
         canonicalArtifactRef:
           type: string
           description: Optional pointer to canonical run artifact bundle.
+        domainId:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'
+        sourceDigest:
+          type: string
+          pattern: '^[a-f0-9]{64}$'
+          description: RFC 8785 canonical evidence digest defined by DomainAssessment.evidenceDigest.
 
     ScenarioEvaluationResult:
       type: object
@@ -280,6 +496,7 @@ components:
         overallScore:
           type: number
           format: double
+          nullable: true
           minimum: 0
           maximum: 1
         rationale:
@@ -288,6 +505,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/EvaluationDimensionScore'
+        assessment:
+          $ref: '#/components/schemas/DomainAssessment'
         thresholdAnnotations:
           type: array
           items:
@@ -389,6 +608,7 @@ components:
         overallScore:
           type: number
           format: double
+          nullable: true
           minimum: 0
           maximum: 1
         scenarioCount:
@@ -407,6 +627,17 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/EvaluationDimensionScore'
+        rationale:
+          type: string
+          description: Explains assessment coverage or an unavailable aggregate assessment.
+        unassessedScenarios:
+          type: integer
+          format: int32
+          minimum: 0
+        errorScenarios:
+          type: integer
+          format: int32
+          minimum: 0
 
     RegressionDeltaReport:
       type: object
@@ -421,6 +652,17 @@ components:
         overallDelta:
           type: number
           format: double
+          nullable: true
+        comparisonStatus:
+          type: string
+          enum: [COMPARABLE, NOT_COMPARABLE]
+          description: Matching qualitative verdicts may be comparable with an unavailable numerical delta.
+        comparisonReason:
+          type: string
+        assessmentDimensionDeltas:
+          type: array
+          items:
+            $ref: '#/components/schemas/DomainAssessmentDimensionDelta'
         dimensionDeltas:
           type: array
           items:
@@ -464,10 +706,60 @@ components:
         overallDelta:
           type: number
           format: double
+          nullable: true
+        comparisonStatus:
+          type: string
+          enum: [COMPARABLE, NOT_COMPARABLE]
+          description: Matching qualitative verdicts may be comparable with an unavailable numerical delta.
+        comparisonReason:
+          type: string
+        assessmentDimensionDeltas:
+          type: array
+          items:
+            $ref: '#/components/schemas/DomainAssessmentDimensionDelta'
         dimensionDeltas:
           type: array
           items:
             $ref: '#/components/schemas/EvaluationDimensionDelta'
+
+    DomainAssessmentDimensionDelta:
+      type: object
+      required: [metricId, comparisonStatus]
+      description: >-
+        Comparison coverage for every metric ID present in either assessment.
+        Matching qualitative verdicts can be comparable without numerical scores.
+        A numerical delta requires scores with identical nonblank scoreSemanticsId;
+        missing, incompatible or unassessed metrics retain an explicit reason and no
+        numerical delta instead of being silently omitted or assigned zero.
+      properties:
+        metricId:
+          type: string
+          minLength: 1
+          maxLength: 256
+        comparisonStatus:
+          type: string
+          enum: [COMPARABLE, NOT_COMPARABLE]
+          description: Matching qualitative verdicts may be comparable with an unavailable numerical delta.
+        comparisonReason:
+          type: string
+        baselineScore:
+          type: number
+          format: double
+          nullable: true
+          minimum: 0
+          maximum: 1
+        candidateScore:
+          type: number
+          format: double
+          nullable: true
+          minimum: 0
+          maximum: 1
+        delta:
+          type: number
+          format: double
+          nullable: true
+          minimum: -1
+          maximum: 1
 
     RegressionThresholdBreach:
       type: object
@@ -498,10 +790,13 @@ components:
 
     EvaluationStatus:
       type: string
+      description: Semantic assessment status, independent of source execution status.
       enum:
         - PASS
         - WARN
         - FAIL
+        - NOT_ASSESSED
+        - ERROR
 
     RegressionPolicy:
       type: object

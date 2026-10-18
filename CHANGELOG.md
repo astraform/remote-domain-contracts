@@ -5,7 +5,57 @@ bundles share the repository-root release version and ship together. Protocol,
 native profile, platform application and Java/Python SDK versions remain separate.
 Unreleased changes are not a published contract dependency.
 
-## 1.2.1 — Unreleased local candidate
+## 1.2.2 — Unreleased
+
+### Added
+
+- Explicit optional launch `domainId`, frozen with the run identity, and
+  cross-domain run discovery with name/ID, domain/classification, status and
+  creation-time filters, opaque cursor pagination and optional exact totals.
+- Paginated deployment-configured customer MCP binding discovery, domain
+  eligibility allowlists and frozen domain identity on restricted tool grants.
+  Inventory reads do not contact MCP endpoints or expose URLs/credentials.
+- `domain_assessment.v1` and typed suite/scenario schemas for domain-owned
+  assessments, including evaluator/rubric/configuration and decoded-evidence
+  identity, native results, references and arbitrary metrics.
+- `evaluation.v2` report states including `NOT_ASSESSED` and `ERROR`, nullable
+  scores, coverage counts and explicit comparison status/reasons. Compatible
+  qualitative results need no numeric score; missing or incompatible metrics
+  retain explanations without fabricated deltas. Historical v1 report fields
+  and legacy dimension definitions remain available.
+- Optional `astraform.result-presentation.v1` annotations for captured A2A/MCP
+  results, with bounded same-result labels/pointers, text/currency/date formats,
+  a provider guide and banking/marketing examples. Presentation preserves source
+  values and has no execution, permission or outcome authority.
+- Opt-in `completionPolicy.requestFactBindingMode: RESOLVE_TRUSTED` for
+  authoritative outgoing metadata, preserving original model proposals,
+  customer-selected actions and unbound facts while freezing validated resolved
+  requests for transport and retries. Omission/`VALIDATE` retains prior behavior;
+  explicit null is invalid and no wire default is introduced.
+
+### Changed and compatibility
+
+- Omitting `experimentId` when listing runs now selects all experiments. Supply
+  an explicit experiment ID to retain the former scope. Cursor continuation
+  retains a creation-time boundary; updates to existing runs remain live.
+- New assessment states and nullable scores/deltas require supporting readers.
+  The six evaluation routes already existed; their payloads are extended.
+  Evidence digests identify decoded canonical JSON rather than original bytes;
+  encode exact values beyond binary64 precision as strings.
+- Domain classification/MCP eligibility does not establish organizational or
+  tenant authorization. Submitted assessments do not establish authenticated
+  evaluator provenance or immutable native evidence. New annotations can appear
+  in model-visible replies and do not guarantee identical later decisions.
+- Root, both bundle manifests/version files and OpenAPI metadata target 1.2.2;
+  provider protocol/profile identifiers, archive roots and historical published
+  assets remain unchanged. The two existing ZIPs ship together with separate
+  SHA-256 checksums. Platform and SDK implementation/publication remain separate;
+  regenerate compatible consumers from an explicitly selected contract release.
+
+## 1.2.1 — Published 2026-10-14
+
+Published as [`v1.2.1`](https://github.com/astraform/remote-domain-contracts/releases/tag/v1.2.1)
+with both contract ZIP assets and their SHA-256 checksums.
 
 - Packages the existing optional non-null `requireCustomerFinish` Boolean without
   a wire default; omission/false retain legacy completion and true requires
@@ -14,8 +64,7 @@ Unreleased changes are not a published contract dependency.
 - Includes the existing four optional non-null completion-update correlation
   strings, preserving operation and evidence identity through native clients.
 - Aligns root/both bundle metadata and every OpenAPI version to 1.2.1 while
-  retaining protocol/profile identifiers and immutable published 1.2.0 assets.
-  This source is unreleased; local generation/publication proof remain distinct.
+  retaining protocol/profile identifiers and immutable earlier release assets.
 
 ## 1.2.0 — Published 2026-10-06
 
