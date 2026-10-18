@@ -1,20 +1,19 @@
-# Astraform Public Contracts 1.2.1 — unreleased local candidate
+# Astraform Public Contracts 1.2.2 — unreleased local candidate
 
-This local candidate packages strict customer completion and the existing native
-completion-update correlation fields. It has not been committed, published or
-validated as a public release. Both archives share source version 1.2.1; consumers
-select them explicitly as LOCAL_PRERELEASE inputs with truthful checksums and
-provenance. Published 1.2.0 and earlier assets remain immutable.
+Adds optional non-null `completionPolicy.requestFactBindingMode` with no wire
+default. Omission/`VALIDATE` preserve prior equality validation; explicit
+`RESOLVE_TRUSTED` resolves configured outgoing metadata from admitted
+observations, preserving original model proposals and freezing the validated
+resolved request before transport/retry. Customer decisions, instructions,
+unbound facts and actual partner replies are not repaired. Invalid/missing
+sources, reserved/overlapping targets and invalid paths or limits fail closed.
 
-The optional non-null `requireCustomerFinish` Boolean has no wire default:
-omission/false preserve receipt-qualified stopping, true requires the customer
-to FINISH as well as satisfy the configured receipt conditions. Explicit null or
-non-Boolean values are invalid. Native updates retain `runId`, `operationId`,
-`inputDigest` and `providerRevision` as optional non-null strings. SDK generation
-and actual typed request/response/sample verification remain separate gates.
-Protocol/profile identifiers, API paths, safety limits and existing product
-restoration obligations remain unchanged. Public contract/SDK publication and
-consumer pin/artifact adoption require later reviewed delivery.
+Both bundles share source version 1.2.2 and require explicit `LOCAL_PRERELEASE`
+selection. The latest published release is
+[`v1.2.1`](https://github.com/astraform/remote-domain-contracts/releases/tag/v1.2.1),
+which includes strict customer FINISH and completion-update correlation fields.
+Its archives and all earlier releases remain immutable. The 1.2.2 candidate
+has not been published.
 
 ## Earlier 1.2.0 release notes — preserved history
 

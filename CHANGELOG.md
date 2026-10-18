@@ -5,7 +5,19 @@ bundles share the repository-root release version and ship together. Protocol,
 native profile, platform application and Java/Python SDK versions remain separate.
 Unreleased changes are not a published contract dependency.
 
-## 1.2.1 — Unreleased local candidate
+## 1.2.2 — Unreleased local candidate
+
+- Adds opt-in `requestFactBindingMode: RESOLVE_TRUSTED` for authoritative outgoing
+  request metadata. Omitted/VALIDATE mode preserves existing no-repair validation.
+- Preserves raw model proposals, caller-selected actions and unbound values;
+  resolved transport requests remain separately validated and frozen for retries.
+- Retains published 1.2.1 consumer locks; local SDK generation uses explicit
+  local bundles, truthful candidate versions and LOCAL_PRERELEASE provenance.
+
+## 1.2.1 — Published 2026-10-14
+
+Published as [`v1.2.1`](https://github.com/astraform/remote-domain-contracts/releases/tag/v1.2.1)
+with both contract ZIP assets and their SHA-256 checksums.
 
 - Packages the existing optional non-null `requireCustomerFinish` Boolean without
   a wire default; omission/false retain legacy completion and true requires
@@ -14,8 +26,7 @@ Unreleased changes are not a published contract dependency.
 - Includes the existing four optional non-null completion-update correlation
   strings, preserving operation and evidence identity through native clients.
 - Aligns root/both bundle metadata and every OpenAPI version to 1.2.1 while
-  retaining protocol/profile identifiers and immutable published 1.2.0 assets.
-  This source is unreleased; local generation/publication proof remain distinct.
+  retaining protocol/profile identifiers and immutable earlier release assets.
 
 ## 1.2.0 — Published 2026-10-06
 

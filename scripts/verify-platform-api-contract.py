@@ -5,10 +5,11 @@ from __future__ import annotations
 import json
 import re
 from copy import deepcopy
+from datetime import datetime
 from pathlib import Path
 from urllib.parse import unquote
 import yaml
-from jsonschema import Draft7Validator
+from jsonschema import Draft7Validator, FormatChecker
 
 root = Path(__file__).resolve().parents[1] / "platform-api/v1"
 manifest = json.loads((root / "manifest.json").read_text())
@@ -98,6 +99,117 @@ for value in (False, True):
 for value in (None, "true", "false", 0, 1):
     if validator.is_valid(example | {"requireCustomerFinish": value}):
         raise SystemExit(f"requireCustomerFinish accepted a non-Boolean value: {value!r}")
+
+for mode in ("VALIDATE", "RESOLVE_TRUSTED"):
+    validator.validate(example | {"requestFactBindingMode": mode})
+for invalid in (None, "", "validate", "REPAIR", True, 1, [], {}):
+    if validator.is_valid(example | {"requestFactBindingMode": invalid}):
+        raise SystemExit(f"requestFactBindingMode accepted an invalid mode: {invalid!r}")
+
+# Exercise the additive launch classification through the canonical schema.
+launch_validator = Draft7Validator({"components": experiment["components"],
+                                   "$ref": "#/components/schemas/AgentJourneyLaunchRequest"})
+launch = {"requestId": "00000000-0000-4000-8000-000000000001",
+          "catalogAgentId": "00000000-0000-4000-8000-000000000002",
+          "catalogRevisionId": "00000000-0000-4000-8000-000000000003",
+          "catalogDefinitionDigest": "sha256:" + "a" * 64,
+          "instruction": "Review the supplied information."}
+launch_validator.validate(launch)
+for domain_id in ("banking", "marketing-ops", "custom.domain_1", "a" * 128):
+    launch_validator.validate(launch | {"domainId": domain_id})
+for invalid in (None, "", "Banking", " banking", "banking/retail", "a" * 129, True, 1, [], {}):
+    if launch_validator.is_valid(launch | {"domainId": invalid}):
+        raise SystemExit(f"domainId accepted an invalid classification: {invalid!r}")
+
+# Exercise run-library query values and additive response compatibility.
+run_query = experiment["paths"]["/api/simulation-runs"]["get"]["parameters"]
+run_formats = FormatChecker()
+@run_formats.checks("date-time", raises=ValueError)
+def is_offset_datetime(value):
+    if not isinstance(value, str):
+        return True
+    return datetime.fromisoformat(value.replace("Z", "+00:00")).utcoffset() is not None
+
+query_validator = Draft7Validator({"type": "object", "properties": {
+    parameter["name"]: parameter["schema"] for parameter in run_query},
+    "additionalProperties": False}, format_checker=run_formats)
+for query in ({}, {"limit": 1, "includeTotal": False},
+              {"q": "Review 50%_", "domainId": "banking", "domainClassification": "known",
+               "status": "COMPLETED", "createdAfter": "2026-01-01T00:00:00Z",
+               "createdBefore": "2026-12-31T00:00:00Z", "cursor": "opaque_123-A"},
+              {"domainClassification": "unknown", "q": "a" * 160, "limit": 100}):
+    query_validator.validate(query)
+for query in ({"limit": 0}, {"limit": 101}, {"q": "a" * 161},
+              {"domainId": "Banking"}, {"domainClassification": "missing"},
+              {"status": "completed"}, {"status": "A" * 65},
+              {"createdAfter": "yesterday"}, {"cursor": "not+padded="},
+              {"cursor": "a" * 2049}, {"includeTotal": "false"}):
+    if query_validator.is_valid(query):
+        raise SystemExit(f"Run history query accepted an invalid value: {query!r}")
+# OpenAPI 3 nullable is converted only for this executable JSON Schema check.
+run_list_schema = deepcopy(experiment["components"]["schemas"]["SimulationRunListResponse"])
+for field in run_list_schema["properties"].values():
+    if field.pop("nullable", False):
+        field["type"] = [field["type"], "null"]
+run_list_validator = Draft7Validator(run_list_schema, format_checker=run_formats)
+legacy_page = {"schemaVersion": "simulation_run_evidence.v1", "experimentId": "agent-journey", "runs": []}
+run_list_validator.validate(legacy_page)
+run_list_validator.validate(legacy_page | {"experimentId": "all", "scope": "all", "hasMore": False,
+    "nextCursor": None, "snapshotAt": "2026-01-01T00:00:00Z", "sort": "createdAt:desc,runId:desc"})
+run_list_validator.validate(legacy_page | {"hasMore": True, "nextCursor": "opaque_123-A"})
+for invalid in ({"hasMore": "true"}, {"nextCursor": 1}, {"snapshotAt": "yesterday"}, {"sort": "name"}):
+    if run_list_validator.is_valid(legacy_page | invalid):
+        raise SystemExit(f"Run history response accepted an invalid page value: {invalid!r}")
+
+# Domain-aware customer MCP inventory and frozen grants stay additive.
+common = documents["openapi/core/common.yaml"]
+def common_validator(name):
+    components = deepcopy(common["components"])
+    # OpenAPI nullable is a JSON null union for executable JSON Schema checks.
+    continuation = components["schemas"]["CustomerMcpBindings"]["properties"]["nextBindingKey"]
+    continuation["type"] = ["string", "null"]
+    return Draft7Validator({"components": components, "$ref": "#/components/schemas/" + name})
+
+binding = {"bindingKey": "customer-tools", "bindingRevision": "revision-1", "bindingDigest": "sha256:" + "a" * 64,
+           "allowedDomainIds": []}
+inventory_validator = common_validator("CustomerMcpBindings")
+for domains in ([], ["banking"], ["banking", "marketing-ops"]):
+    inventory_validator.validate({"schemaVersion": "astraform.mcp-bindings.v1", "hasMore": False, "nextBindingKey": None,
+                                  "bindings": [binding | {"allowedDomainIds": domains}]})
+for invalid in (None, "banking", [None], ["Banking"], ["banking", "banking"], ["a" * 129],
+                ["domain-" + str(index) for index in range(65)]):
+    value = {"schemaVersion": "astraform.mcp-bindings.v1", "hasMore": False, "nextBindingKey": None, "bindings": [binding | {"allowedDomainIds": invalid}]}
+    if inventory_validator.is_valid(value):
+        raise SystemExit(f"Customer MCP inventory accepted invalid domain restrictions: {invalid!r}")
+inventory_validator.validate({"schemaVersion": "astraform.mcp-bindings.v1", "bindings": [binding],
+                              "hasMore": True, "nextBindingKey": binding["bindingKey"]})
+inventory_query = experiment["paths"]["/api/simulation-events/mcp-bindings"]["get"]["parameters"]
+inventory_query_validator = Draft7Validator({"type": "object", "properties": {
+    parameter["name"]: parameter["schema"] for parameter in inventory_query}, "additionalProperties": False})
+for value in ({}, {"limit": 1, "domainId": "banking"}, {"limit": 100, "afterBindingKey": "customer-tools"}):
+    inventory_query_validator.validate(value)
+for value in ({"limit": 0}, {"limit": 101}, {"afterBindingKey": "Banking"}, {"domainId": "banking/retail"}):
+    if inventory_query_validator.is_valid(value):
+        raise SystemExit(f"Customer MCP inventory accepted an invalid page query: {value!r}")
+capabilities = {"schemaVersion": "astraform.mcp-capabilities.v1", **{key: binding[key] for key in
+                ("bindingKey", "bindingRevision", "bindingDigest")}, "serverInfo": {}, "tools": []}
+capability_validator = common_validator("CustomerMcpCapabilities")
+capability_validator.validate(capabilities)
+capability_validator.validate(capabilities | {"allowedDomainIds": ["banking", "marketing-ops"]})
+if capability_validator.is_valid(capabilities | {"allowedDomainIds": None}):
+    raise SystemExit("Customer MCP capabilities accepted a null domain restriction")
+grant = {"kind": "MCP", **{key: binding[key] for key in ("bindingKey", "bindingRevision", "bindingDigest")},
+         "toolName": "read_customer", "descriptorDigest": "sha256:" + "b" * 64,
+         "inputSchemaDigest": "sha256:" + "c" * 64, "outputSchemaDigest": "sha256:" + "d" * 64,
+         "effectClass": "READ_ONLY", "scope": "CUSTOMER_CONTEXT", "maxCalls": 1,
+         "description": "Read the selected customer.", "inputSchema": {}, "outputSchema": {}}
+grant_validator = common_validator("ResolvedMcpToolGrant")
+grant_validator.validate(grant)
+for domain in ("banking", "marketing-ops"):
+    grant_validator.validate(grant | {"domainId": domain})
+for invalid in (None, "", "Banking", "banking/retail", True, 1, [], {}):
+    if grant_validator.is_valid(grant | {"domainId": invalid}):
+        raise SystemExit(f"Resolved MCP grant accepted invalid frozen domain identity: {invalid!r}")
 
 reference_count = 0
 operation_count = 0
