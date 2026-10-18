@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "marketing.creative-agency.response.v1",
+  "responseText": "The brief has been reviewed. Launch remains blocked until the outstanding approval is supplied.",
+  "reviewStatus": "review_completed_blocked",
+  "launchApproved": false,
+  "remainingApprovals": 1,
+  "presentation": {
+    "schemaVersion": "astraform.result-presentation.v1",
+    "fields": [
+      {
+        "pointer": "/reviewStatus",
+        "label": "Brief review status"
+      },
+      {
+        "pointer": "/launchApproved",
+        "label": "Launch approved",
+        "format": "text"
+      },
+      {
+        "pointer": "/remainingApprovals",
+        "label": "Outstanding approvals",
+        "format": "text"
+      }
+    ]
+  }
+}

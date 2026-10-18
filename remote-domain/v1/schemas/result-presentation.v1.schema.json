@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://astraform.ai/schema/remote-domain/v1/result-presentation.v1.schema.json",
+  "title": "Captured result presentation annotations v1",
+  "description": "Optional provider-authored presentation object inside a captured structured response. Labels and formats annotate values in that same response; they do not change values, establish business correctness or authorize actions. Consumers additionally enforce the documented byte, duplicate-pointer, resolution and formatting rules.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "fields"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "astraform.result-presentation.v1"
+    },
+    "fields": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": {
+        "$ref": "#/$defs/field"
+      }
+    }
+  },
+  "$defs": {
+    "pointer": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^/(?:[^~]|~[01])*$",
+      "allOf": [
+        {
+          "not": {
+            "anyOf": [
+              {
+                "const": "/presentation"
+              },
+              {
+                "pattern": "^/presentation/"
+              }
+            ]
+          }
+        },
+        {
+          "not": {
+            "pattern": "[\\uD800-\\uDFFF]"
+          }
+        }
+      ],
+      "description": "Nonempty RFC 6901 JSON Pointer into the same captured result, with valid ~0/~1 escapes. The root and /presentation subtree are excluded. Bounds count Unicode scalar values. Consumers resolve own properties only and never traverse prototypes or fetch references."
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120,
+      "description": "Provider-authored plain text, one line, without control characters or lone surrogates; length counts Unicode scalar values. It is not HTML or a business verdict.",
+      "not": {
+        "pattern": "[\\u0000-\\u001F\\u007F-\\u009F\\u2028\\u2029\\uD800-\\uDFFF]"
+      }
+    },
+    "field": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pointer",
+        "label"
+      ],
+      "properties": {
+        "pointer": {
+          "$ref": "#/$defs/pointer"
+        },
+        "label": {
+          "$ref": "#/$defs/label"
+        },
+        "format": {
+          "type": "string",
+          "enum": [
+            "text",
+            "currency",
+            "date"
+          ],
+          "default": "text"
+        },
+        "currencyPointer": {
+          "$ref": "#/$defs/pointer"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "format"
+            ],
+            "properties": {
+              "format": {
+                "const": "currency"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "currencyPointer"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "currencyPointer"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}
