@@ -1,6 +1,6 @@
 {
   "bundleId": "platform-api",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "releaseArtifact": "platform-api.zip",
   "entrypoint": "openapi/platform/experiment/experiments.yaml",
   "canonicalSources": [

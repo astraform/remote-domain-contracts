@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Experiment Registry API
-  version: 1.2.1
+  version: 1.2.2
   description: Registry and evidence APIs for experiment definitions, runs, artifacts, source snapshots, and calibration.
 servers:
   - url: http://localhost:7457
@@ -426,6 +426,44 @@ paths:
           description: Runtime agent not found.
         '503':
           description: Runtime unavailable.
+  /api/simulation-events/mcp-bindings:
+    get:
+      tags: [Simulation Events]
+      operationId: listPublicCustomerMcpBindings
+      summary: List deployment-approved customer MCP bindings
+      description: >
+        Reads Runtime's configured binding inventory without contacting MCP endpoints.
+        Returns binding identities and explicit domain restrictions without endpoint
+        URLs or credentials. This inventory is separate from the MCP management
+        server registry and does not grant a customer tool permission. Publish the
+        selected descriptor and schema pins through the existing Agent Catalog tools
+        contract. Pages seek by bindingKey ascending; configuration may change on
+        restart, so this is not a snapshot. Capability discovery and grant pins
+        validate the selected current binding. The dashboard proxy exposes /api/dashboard/simulation-events/mcp-bindings.
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema: {type: integer, minimum: 1, maximum: 100, default: 50}
+        - name: afterBindingKey
+          in: query
+          required: false
+          schema: {type: string, minLength: 1, maxLength: 128, pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'}
+          description: Exclusive continuation key from nextBindingKey.
+        - name: domainId
+          in: query
+          required: false
+          schema: {type: string, minLength: 1, maxLength: 128, pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'}
+          description: Advisory eligibility filter including unrestricted bindings or bindings permitting this domain. This does not grant a customer capability or establish organizational authorization.
+      responses:
+        '200':
+          description: Sanitized configured bindings, ordered by bindingKey.
+          content:
+            application/json:
+              schema:
+                $ref: '../../core/common.yaml#/components/schemas/CustomerMcpBindings'
+        '400': {description: 'Invalid limit, continuation key or domain filter.'}
+        '503': {description: Runtime is unavailable or returned an invalid binding inventory.}
   /api/simulation-events/mcp-capabilities:
     get:
       tags: [Simulation Events]
@@ -955,7 +993,14 @@ paths:
     get:
       tags:
         - Simulation Runs
-      summary: List durable simulation runs
+      summary: Find durable simulation runs
+      description: >-
+        Search recorded run names and identifiers across experiments or within one
+        experiment. Results are ordered by createdAt descending, then runId
+        descending. Cursor pages share a creation-time snapshot, while mutable
+        names, statuses and evidence remain live; this is not an MVCC snapshot.
+        Repeat the same filters, limit and includeTotal value with a returned
+        cursor. Changing them, or supplying a malformed cursor, returns 400.
       operationId: listSimulationRuns
       parameters:
         - in: query
@@ -963,7 +1008,7 @@ paths:
           required: false
           schema:
             type: string
-          description: Defaults to the customer outcome simulation experiment.
+          description: Exact experiment scope; omission lists runs across experiments.
         - in: query
           name: limit
           required: false
@@ -972,13 +1017,75 @@ paths:
             minimum: 1
             maximum: 100
             default: 20
+        - in: query
+          name: q
+          required: false
+          schema:
+            type: string
+            maxLength: 160
+          description: Trimmed case-insensitive literal substring of recorded metadata.displayName or runId. Blank input is ignored; SQL wildcard characters are literal.
+        - in: query
+          name: domainId
+          required: false
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 128
+            pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'
+          description: Exact recorded domain classification. Cannot be combined with domainClassification=unknown; this filter does not establish tenant ownership or authorization.
+        - in: query
+          name: domainClassification
+          required: false
+          schema:
+            type: string
+            enum: [known, unknown]
+          description: Known requires a valid canonical metadata.domainId; missing or invalid recorded domain identity is unknown. Omission includes both.
+        - in: query
+          name: status
+          required: false
+          schema:
+            type: string
+            maxLength: 64
+            pattern: '^[A-Z][A-Z0-9_]{0,63}$'
+          description: Exact execution status token, independent of customer-goal and business outcomes.
+        - in: query
+          name: createdAfter
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Inclusive lower bound for run creation time, in RFC 3339 format.
+        - in: query
+          name: createdBefore
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Inclusive upper bound for run creation time, in RFC 3339 format. Must not precede createdAfter.
+        - in: query
+          name: cursor
+          required: false
+          schema:
+            type: string
+            maxLength: 2048
+            pattern: '^[A-Za-z0-9_-]+$'
+          description: Opaque URL-safe unpadded cursor from nextCursor. Clients must not construct or decode it.
+        - in: query
+          name: includeTotal
+          required: false
+          schema:
+            type: boolean
+            default: true
+          description: Defaults to true for existing callers. False avoids an exact matching-run count and omits total; hasMore still indicates another page.
       responses:
         '200':
-          description: Durable simulation run history
+          description: Bounded durable simulation run history
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/SimulationRunListResponse'
+        '400':
+          description: Invalid query values, incompatible filters or cursor, or reversed creation bounds.
     post:
       tags:
         - Simulation Runs
@@ -1680,6 +1787,19 @@ components:
           type: string
           pattern: '^sha256:[0-9a-f]{64}$'
           description: Caller-asserted digest of the selected immutable published revision.
+        domainId:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: '^[a-z0-9][a-z0-9._-]{0,127}$'
+          description: >-
+            Optional caller-declared business domain classification for this run,
+            frozen into its immutable launch identity and recorded run metadata.
+            It does not activate a native provider, grant permissions, identify a
+            tenant or establish verified provider identity. When domain is selected,
+            this value must match the resolved native provider's domainId. Omission
+            preserves provider-derived classification for native runs and leaves
+            other runs unclassified. Explicit null is invalid.
         instruction:
           type: string
           minLength: 1
@@ -1919,11 +2039,34 @@ components:
           maxItems: 16
           items:
             $ref: '#/components/schemas/AgentJourneyGoalCondition'
+        requestFactBindingMode:
+          type: string
+          enum: [VALIDATE, RESOLVE_TRUSTED]
+          description: >-
+            Optional ownership mode for requestFactBindings; no wire default.
+            Omitted or VALIDATE preserves equality validation without request repair,
+            including allowing omitted request fields. RESOLVE_TRUSTED makes each
+            configured outgoing field platform-owned metadata: the platform copies
+            the latest admitted authoritative value at factPointer into requestPointer,
+            ignoring any model-authored duplicate at that bound location. It preserves
+            the original model proposal as evidence and leaves the customer's decision,
+            instruction and unbound facts unchanged. Missing or null authoritative
+            sources, reserved-field overlap, overlapping target paths, incompatible
+            target containers and request-size violations block dispatch. Target paths
+            traverse/create object properties only; an existing null, scalar or array
+            ancestor is incompatible. Source paths retain ordinary JSON Pointer array
+            selection. Non-null resolved values retain their JSON types. The complete
+            resolved request is limited to 262144 compact UTF-8 bytes. The resolved
+            request is validated against the frozen partner input schema and durably
+            frozen before transport or retries. Model memory and future observations
+            cannot supply these values. This does not repair partner output or choose
+            the customer's business action. Explicit null and unknown modes are invalid.
         requestFactBindings:
           type: array
           maxItems: 32
           description: >-
-            Configured structured request fields must equal the latest supplied fact
+            Under omitted/VALIDATE mode, configured structured request fields must
+            equal the latest supplied fact
             at the selected pointer from initial facts and already admitted scheduled
             observations. When domain is selected, pointers at /domain or beneath it
             instead resolve only to the latest accepted provider observation envelope
@@ -1932,7 +2075,10 @@ components:
             mismatched supplied values block dispatch without repairing the request.
             Model memory/proposals and future observations cannot establish facts.
             Empty bindings provide no field-grounding protection. Free text is not
-            checked by this profile.
+            checked by this profile. RESOLVE_TRUSTED instead resolves every binding
+            as platform-owned metadata under requestFactBindingMode; source selection
+            is otherwise identical. Bound targets may not overlap one another or the
+            host-owned astraformCustomerContexts namespace in that mode.
           items:
             type: object
             additionalProperties: false
@@ -2983,6 +3129,10 @@ components:
           example: simulation_run_evidence.v1
         experimentId:
           type: string
+          description: Exact experiment scope, or all for runs across experiments.
+        scope:
+          type: string
+          enum: [experiment, all]
         limit:
           type: integer
         count:
@@ -2990,6 +3140,22 @@ components:
         total:
           type: integer
           format: int64
+          description: Matching runs within the creation snapshot, before cursor seeking. Omitted when includeTotal=false; mutable fields are evaluated live.
+        hasMore:
+          type: boolean
+          description: Whether another matching row exists after this page.
+        nextCursor:
+          type: string
+          nullable: true
+          maxLength: 2048
+          description: Opaque continuation cursor, or null when there is no next page. Repeat the original query filters, limit and includeTotal value.
+        snapshotAt:
+          type: string
+          format: date-time
+          description: Creation-time upper bound retained across cursor pages; updates to existing runs remain live.
+        sort:
+          type: string
+          enum: ['createdAt:desc,runId:desc']
         runs:
           type: array
           items:
