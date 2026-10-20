@@ -11,13 +11,12 @@ individual deployments determine which routes their gateway exposes.
 - Tool and MCP server management APIs: `openapi/core/mcp-management.yaml`.
 - Governed connection registry APIs:
   `openapi/platform/experiment/domain-connections.yaml`, referenced by the
-  Experiment entry point in prepared 1.2.3.
+  Experiment entry point in 1.2.3.
 
-The initial partner SDK generates from the Experiment entry point only; including
-other public API documents does not expand the SDK's supported operation surface.
-- Local source contract version: `1.2.3`, prepared and unreleased.
-  The latest published release is `1.2.2`, tag `v1.2.2`. Both source bundles share
-  the repository-root `VERSION` and ship together after reviewed publication.
+Supporting SDKs generate the Experiment entry point and evaluation APIs;
+including other public API documents does not expand their operation surface.
+- Shared published contract version: `1.2.3`, tag `v1.2.3`. Both bundles share
+  the repository-root `VERSION` and ship together in one release.
 - Release asset: `platform-api.zip`, containing top-level `platform-api/`.
 
 This bundle contains API definitions, not platform implementation or deployment
@@ -30,7 +29,7 @@ OpenAPI generators consume the entry point and its relative schema references.
 
 The platform repository and both language SDKs consume the same checksum-pinned
 release. Edit these canonical files here and publish a new immutable contract
-version before updating consumers. The published `v1.2.2` asset is the normal
+version before updating consumers. The published `v1.2.3` asset is the normal
 build input; explicit local ZIP builds are for development only.
 
 ## Typed completion updates
@@ -80,17 +79,22 @@ this mode does not select a business action or prescribe a customer question.
 Resolution can change what a partner receives and consequently its response;
 it does not guarantee identical model decisions.
 
-## Governed connection registry (1.2.3 prepared)
+<a id="governed-connection-registry-123-prepared"></a>
 
-The prepared contract adds the
+## Governed connection registry (1.2.3)
+
+Published contract 1.2.3 adds the
 [Domain Connection Registry API](openapi/platform/experiment/domain-connections.yaml)
 for owner-scoped immutable `A2A`, `NATIVE_DOMAIN` and `CUSTOMER_MCP` revisions.
 It requires a matching platform implementation and Java/Python SDKs containing
 `DomainConnectionsApi` and registered-selection launch models. Published contract
 1.2.2, Java SDK 0.4.4 and Python SDK 0.3.4 do not contain these operations.
-For development, generate compatible SDKs from both explicitly selected local
-1.2.3 ZIPs with `LOCAL_PRERELEASE` provenance. Use their native clients and request
-models in applications and samples; do not substitute raw platform HTTP.
+Generate compatible SDKs from both checksum-pinned published 1.2.3 bundles. The
+next Java 0.4.5 and Python 0.3.5 SDKs require their own publication before registry
+installation. Explicitly selected local ZIPs remain `LOCAL_PRERELEASE` development
+inputs. Use native clients and request models in applications and samples; do
+not substitute raw platform HTTP. Source documentation edits do not update the
+published bundles or their checksums.
 
 ### Configure authority before registration
 

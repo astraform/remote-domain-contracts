@@ -1,4 +1,4 @@
-# remote-domain.v1 Partner Contract Bundle
+# Domain provider contract (`remote-domain.v1`)
 
 This directory is the source of the partner-facing `remote-domain.v1` handoff.
 Astraform Runtime calls these HTTP/JSON endpoints on the partner-hosted domain
@@ -12,7 +12,7 @@ This bundle defines the wire contract, not the platform implementation.
 - `openapi/remote-domain.yaml`: HTTP/JSON API contract.
 - `schemas/remote-domain.schema.json`: JSON Schema bundle for lifecycle payload validation.
 - `schemas/*.v1.schema.json`: language-neutral schema source for reusable
-  remote-domain documents such as scorecards, Wind Tunnel metadata, cohort
+  provider documents such as scorecards, Wind Tunnel metadata, cohort
   bundles, population catalogs, and evidence exports.
 - `docs/remote-domain-protocol-v1.md`: rendered protocol guide and ownership boundary.
 - `docs/opportunity-worker-conformance-profile.md`: optional out-of-band worker
@@ -42,7 +42,7 @@ source in this bundle is the cross-language source of truth.
 - Java: use `openapi-generator-maven-plugin` for OpenAPI model generation.
 - Python: use `datamodel-code-generator` to generate Pydantic v2 models from
   OpenAPI/JSON Schema.
-- SDK author kits may add builders, adapters, and conformance helpers around
+- SDKs may add builders, adapters, and conformance helpers around
   generated models.
 - Contract generation must not generate domain business behavior, CEL execution,
   scorecard execution, Spring/FastAPI adapters, or private platform internals.

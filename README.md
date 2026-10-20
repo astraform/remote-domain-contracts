@@ -2,31 +2,35 @@
 
 Canonical public API definitions for partner services, SDK generation and the
 Astraform platform. Implementation code stays in the platform and SDK
-repositories. The existing repository name remains `remote-domain-contracts`.
+repositories. The provider protocol is `remote-domain.v1`; platform APIs form a separate bundle.
 
-## Prepared 1.2.3 — unreleased
+## Published 1.2.3
 
-Source metadata targets shared contract 1.2.3. It adds owner-scoped connection
-registration, discovery, approval and activation, plus opt-in Agent Journey
-`connectionSelection: REGISTERED`. Approved active revisions can be selected
-without restarting Runtime; accepted runs retain their exact frozen revisions.
-This requires a matching platform implementation, deployment-configured operator
-permissions and generated SDK support. Published Java 0.4.4 and Python 0.3.4 do
-not include these operations. See the
-[platform guide](platform-api/v1/README.md#governed-connection-registry-123-prepared).
+Shared [contract 1.2.3](https://github.com/astraform/remote-domain-contracts/releases/tag/v1.2.3)
+includes owner-scoped connection registration, discovery, approval and activation,
+plus opt-in Agent Journey `connectionSelection: REGISTERED`. Approved active
+revisions can be selected without restarting Runtime; accepted runs retain their
+exact frozen revisions. Use a matching platform implementation, configured
+operator permissions and a supporting SDK. Published Java 0.4.4 and Python 0.3.4
+do not include these operations. See the
+[platform guide](platform-api/v1/README.md#governed-connection-registry-123).
 
-Select both development bundles explicitly as `LOCAL_PRERELEASE` inputs when
-generating local SDKs. Published 1.2.2 remains the normal pinned dependency;
-its archives and all earlier archives/checksums remain immutable. Preparing or
-packaging these sources does not publish a contract, deploy a platform or release
-an SDK.
+Partner applications use the [Astraform SDK for Java](https://github.com/astraform/sdk-java)
+or [Astraform SDK for Python](https://github.com/astraform/sdk-python). A domain
+provider is the partner-owned business service; `remote-domain.v1` remains its
+stable protocol identifier. Prepared SDK versions 0.4.5 and 0.3.5 require their
+own publication before registry installation.
+
+Published archives and checksums remain immutable. Source documentation updates
+are carried into a future contract release if its bundles are repackaged; a
+local rebuild is not a replacement for the published 1.2.3 assets.
 
 ## Contract bundles
 
 | Bundle | Purpose | Shared release |
 | --- | --- | --- |
-| `remote-domain/v1/` | Astraform Runtime calls partner-hosted domain services | [`1.2.2`, tag `v1.2.2`](https://github.com/astraform/remote-domain-contracts/releases/tag/v1.2.2) |
-| `platform-api/v1/` | Partner applications and authorized operators call Astraform-hosted APIs | [`1.2.2`, tag `v1.2.2`](https://github.com/astraform/remote-domain-contracts/releases/tag/v1.2.2) |
+| `remote-domain/v1/` | Astraform Runtime calls partner-hosted domain services | [`1.2.3`, tag `v1.2.3`](https://github.com/astraform/remote-domain-contracts/releases/tag/v1.2.3) |
+| `platform-api/v1/` | Partner applications and authorized operators call Astraform-hosted APIs | [`1.2.3`, tag `v1.2.3`](https://github.com/astraform/remote-domain-contracts/releases/tag/v1.2.3) |
 
 The repository-root `VERSION` owns one release version for both bundles. Each
 bundle's `VERSION`, manifest and OpenAPI `info.version` must match it. One GitHub
@@ -35,7 +39,7 @@ archives preserve existing SDK and platform dependency paths; they are not
 separate releases. SDK package and protocol versions remain separate.
 
 The latest published shared release is
-[`v1.2.2`](https://github.com/astraform/remote-domain-contracts/releases/tag/v1.2.2).
+[`v1.2.3`](https://github.com/astraform/remote-domain-contracts/releases/tag/v1.2.3).
 Its archives and checksums, and all earlier releases, remain immutable.
 
 The provider bundle contains its OpenAPI, JSON schemas, protocol documentation
@@ -47,14 +51,15 @@ and sample payloads. The platform bundle contains:
 - `openapi/platform/experiment/evaluation.yaml`: evaluation APIs.
 - `openapi/core/mcp-management.yaml`: tool and MCP server management APIs.
 - `openapi/platform/experiment/domain-connections.yaml`: governed connection
-  registry APIs, also referenced by the Experiment entry point in prepared 1.2.3.
+  registry APIs, also referenced by the Experiment entry point in 1.2.3.
 
 Public customer and simulation payload schemas belong to this repository.
 Internal runtime commands and authentication declarations remain in the private
 platform repository; the runtime consumes these same shared public schemas.
 Including a public API definition does not imply that every deployment gateway
 exposes every route.
-The current partner SDK still generates from the Experiment entry point only.
+Supporting SDKs generate the Experiment entry point and the evaluation APIs;
+other bundled definitions do not automatically become generated client methods.
 Use native Java/Python SDK clients for partner applications and samples. A
 contract definition alone does not add operations to an installed SDK.
 
@@ -91,7 +96,7 @@ Consumers pin a published tag, asset and checksum and resolve the dependency int
 an ignored build cache. They do not maintain editable contract copies. Validation
 schemas needed at runtime are still included in built SDK artifacts.
 
-Normal builds consume the published `v1.2.2` assets with their pinned checksums;
+Normal builds consume the published `v1.2.3` assets with their pinned checksums;
 a local contract checkout or ZIP is not required. Only for explicit contract
 development, package the bundles above and supply their absolute ZIP paths.
 For the platform API development input:
