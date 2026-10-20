@@ -7,7 +7,8 @@
     "platform-api/v1/openapi/platform/experiment/experiments.yaml",
     "platform-api/v1/openapi/core/common.yaml",
     "platform-api/v1/openapi/platform/experiment/evaluation.yaml",
-    "platform-api/v1/openapi/core/mcp-management.yaml"
+    "platform-api/v1/openapi/core/mcp-management.yaml",
+    "platform-api/v1/openapi/platform/experiment/domain-connections.yaml"
   ],
   "partnerContents": [
     "platform-api/v1/README.md",
@@ -16,12 +17,14 @@
     "platform-api/v1/openapi/platform/experiment/experiments.yaml",
     "platform-api/v1/openapi/core/common.yaml",
     "platform-api/v1/openapi/platform/experiment/evaluation.yaml",
-    "platform-api/v1/openapi/core/mcp-management.yaml"
+    "platform-api/v1/openapi/core/mcp-management.yaml",
+    "platform-api/v1/openapi/platform/experiment/domain-connections.yaml"
   ],
   "openapiFiles": [
     "openapi/platform/experiment/experiments.yaml",
     "openapi/core/common.yaml",
     "openapi/platform/experiment/evaluation.yaml",
-    "openapi/core/mcp-management.yaml"
+    "openapi/core/mcp-management.yaml",
+    "openapi/platform/experiment/domain-connections.yaml"
   ]
 }

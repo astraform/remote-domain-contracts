@@ -1,0 +1,977 @@
+openapi: 3.0.3
+info:
+  title: Domain Connection Registry API
+  version: 1.2.2
+  description: Governed owner-scoped connection revisions for trusted deployment operators.
+    Registration alone neither activates execution nor grants customer tools.
+    REGISTERED launches require authenticated EXECUTE permission and approved active
+    revisions; deployment startup bindings remain a separate selection path.
+    These additive operations require a supporting platform and generated SDK; immutable
+    published 1.2.2 assets do not include them.
+servers:
+- url: http://localhost:7457
+paths:
+  /api/domain-connections:
+    get:
+      tags:
+      - Domain Connections
+      summary: List permitted domain connections
+      operationId: listDomainConnections
+      security:
+      - DomainConnectionOperatorAuth: []
+      responses:
+        '200':
+          description: Owner-scoped result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainConnectionList'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '503':
+          $ref: '#/components/responses/Error503'
+        '413':
+          $ref: '#/components/responses/Error413'
+      description: Bounded keyset listing. Authentication determines ownership; listing
+        neither probes providers nor grants access.
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - name: afterConnectionKey
+        in: query
+        required: false
+        schema:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: ^[a-z0-9][a-z0-9._-]{0,127}$
+  /api/domain-connections/{connectionKey}:
+    get:
+      tags:
+      - Domain Connections
+      summary: Get a permitted connection head
+      operationId: getDomainConnection
+      security:
+      - DomainConnectionOperatorAuth: []
+      responses:
+        '200':
+          description: Owner-scoped result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainConnectionHead'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '503':
+          $ref: '#/components/responses/Error503'
+        '413':
+          $ref: '#/components/responses/Error413'
+      parameters:
+      - $ref: '#/components/parameters/ConnectionKey'
+  /api/domain-connections/{connectionKey}/revisions:
+    get:
+      tags:
+      - Domain Connections
+      summary: List retained connection revisions
+      operationId: listDomainConnectionRevisions
+      security:
+      - DomainConnectionOperatorAuth: []
+      responses:
+        '200':
+          description: Owner-scoped result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainConnectionRevisionList'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '503':
+          $ref: '#/components/responses/Error503'
+        '413':
+          $ref: '#/components/responses/Error413'
+      parameters:
+      - $ref: '#/components/parameters/ConnectionKey'
+      - $ref: '#/components/parameters/Limit'
+      - name: afterBindingRevision
+        in: query
+        required: false
+        schema:
+          type: string
+          minLength: 1
+          maxLength: 256
+          description: Immutable deployment-compatible binding revision; preserve
+            the exact returned value for reconciliation.
+          pattern: ^[a-zA-Z0-9][a-zA-Z0-9._-]{0,255}$
+    post:
+      tags:
+      - Domain Connections
+      summary: Register immutable connection material
+      operationId: registerDomainConnectionRevision
+      security:
+      - DomainConnectionOperatorAuth: []
+      responses:
+        '200':
+          description: Owner-scoped result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainConnectionMutationResponse'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '503':
+          $ref: '#/components/responses/Error503'
+        '413':
+          $ref: '#/components/responses/Error413'
+      parameters:
+      - $ref: '#/components/parameters/ConnectionKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DomainConnectionRegistrationRequest'
+  /api/domain-connections/{connectionKey}/revisions/{bindingRevision}:
+    get:
+      tags:
+      - Domain Connections
+      summary: Get an exact retained connection revision
+      operationId: getDomainConnectionRevision
+      security:
+      - DomainConnectionOperatorAuth: []
+      responses:
+        '200':
+          description: Owner-scoped result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainConnectionRevision'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '503':
+          $ref: '#/components/responses/Error503'
+        '413':
+          $ref: '#/components/responses/Error413'
+      parameters:
+      - $ref: '#/components/parameters/ConnectionKey'
+      - $ref: '#/components/parameters/BindingRevision'
+  /api/domain-connections/{connectionKey}/revisions/{bindingRevision}/probe:
+    post:
+      tags:
+      - Domain Connections
+      summary: Validate a connection through bounded discovery
+      operationId: probeDomainConnectionRevision
+      security:
+      - DomainConnectionOperatorAuth: []
+      responses:
+        '200':
+          description: Owner-scoped result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainConnectionMutationResponse'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '503':
+          $ref: '#/components/responses/Error503'
+        '413':
+          $ref: '#/components/responses/Error413'
+      description: Requires PROBE permission and deployment-approved origin and credential
+        reference before any outbound I/O. Stores only sanitized discovery evidence;
+        no business execution or model calls.
+      parameters:
+      - $ref: '#/components/parameters/ConnectionKey'
+      - $ref: '#/components/parameters/BindingRevision'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DomainConnectionMutationRequest'
+  /api/domain-connections/{connectionKey}/revisions/{bindingRevision}/approve:
+    post:
+      tags:
+      - Domain Connections
+      summary: Approve the exact successful probe
+      operationId: approveDomainConnectionRevision
+      security:
+      - DomainConnectionOperatorAuth: []
+      responses:
+        '200':
+          description: Owner-scoped result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainConnectionMutationResponse'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '503':
+          $ref: '#/components/responses/Error503'
+        '413':
+          $ref: '#/components/responses/Error413'
+      description: Requires APPROVE permission and matching expectedProbeDigest. Approval
+        is separate from registration, activation and customer tool grants.
+      parameters:
+      - $ref: '#/components/parameters/ConnectionKey'
+      - $ref: '#/components/parameters/BindingRevision'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DomainConnectionApproveRequest'
+  /api/domain-connections/{connectionKey}/revisions/{bindingRevision}/activate:
+    post:
+      tags:
+      - Domain Connections
+      summary: Select an approved revision for future admission
+      operationId: activateDomainConnectionRevision
+      security:
+      - DomainConnectionOperatorAuth: []
+      responses:
+        '200':
+          description: Owner-scoped result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainConnectionMutationResponse'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '503':
+          $ref: '#/components/responses/Error503'
+        '413':
+          $ref: '#/components/responses/Error413'
+      description: Requires ACTIVATE permission, current successful approved probe
+        and matching expectedVersion. Selects this revision for new REGISTERED
+        admissions without restarting Runtime. Accepted runs retain their exact
+        frozen revisions; deployment startup bindings are unchanged.
+      parameters:
+      - $ref: '#/components/parameters/ConnectionKey'
+      - $ref: '#/components/parameters/BindingRevision'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DomainConnectionMutationRequest'
+  /api/domain-connections/{connectionKey}/revisions/{bindingRevision}/retire:
+    post:
+      tags:
+      - Domain Connections
+      summary: Retire a revision from future selection
+      operationId: retireDomainConnectionRevision
+      security:
+      - DomainConnectionOperatorAuth: []
+      responses:
+        '200':
+          description: Owner-scoped result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainConnectionMutationResponse'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '503':
+          $ref: '#/components/responses/Error503'
+        '413':
+          $ref: '#/components/responses/Error413'
+      description: Requires RETIRE permission. Clears the active pointer if selected
+        and prevents new REGISTERED admissions from selecting this revision.
+        Accepted runs may continue resolving their exact retained revision under
+        current execution authority; retirement neither deletes nor retargets them.
+      parameters:
+      - $ref: '#/components/parameters/ConnectionKey'
+      - $ref: '#/components/parameters/BindingRevision'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DomainConnectionMutationRequest'
+  /api/domain-connections/{connectionKey}/revisions/{bindingRevision}/revoke:
+    post:
+      tags:
+      - Domain Connections
+      summary: Revoke a revision
+      operationId: revokeDomainConnectionRevision
+      security:
+      - DomainConnectionOperatorAuth: []
+      responses:
+        '200':
+          description: Owner-scoped result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainConnectionMutationResponse'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '503':
+          $ref: '#/components/responses/Error503'
+        '413':
+          $ref: '#/components/responses/Error413'
+      description: Requires REVOKE permission. Terminal state prevents new REGISTERED
+        admission and subsequent governed dispatch using this revision; historical
+        references remain available. Revocation does not undo in-flight work or erase
+        committed receipts. Uncertain A2A outcomes retain their recovery identity,
+        and committed receipt replay does not resend the operation. Deployment
+        startup bindings and external credential revocation remain separate concerns.
+      parameters:
+      - $ref: '#/components/parameters/ConnectionKey'
+      - $ref: '#/components/parameters/BindingRevision'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DomainConnectionMutationRequest'
+  /api/domain-connections/{connectionKey}/capabilities:
+    get:
+      tags:
+      - Domain Connections
+      summary: Discover capabilities of an approved registered connection
+      operationId: getDomainConnectionCapabilities
+      description: Requires configured deployment-operator EXECUTE permission and
+        permitted connection/origin/credential reference. Selects only the currently
+        active approved revision visible to that authority. Does not execute business
+        work or model inference, grant tools, or alter accepted runs.
+      security:
+      - DomainConnectionOperatorAuth: []
+      parameters:
+      - $ref: '#/components/parameters/ConnectionKey'
+      responses:
+        '200':
+          description: Approved connection and sanitized capabilities.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainConnectionCapabilities'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '503':
+          $ref: '#/components/responses/Error503'
+        '413':
+          $ref: '#/components/responses/Error413'
+components:
+  securitySchemes:
+    DomainConnectionOperatorAuth:
+      type: http
+      scheme: bearer
+      description: Opaque deployment-configured operator token. Its server-side configuration
+        supplies owner scope, independent operation permissions, permitted origins
+        and permitted credential references. Not department identity or general tenant
+        RBAC. Never a Runtime internal command token.
+  parameters:
+    ConnectionKey:
+      name: connectionKey
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 128
+        pattern: ^[a-z0-9][a-z0-9._-]{0,127}$
+    BindingRevision:
+      name: bindingRevision
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 256
+        description: Immutable deployment-compatible binding revision; preserve the
+          exact returned value for reconciliation.
+        pattern: ^[a-zA-Z0-9][a-zA-Z0-9._-]{0,255}$
+    Limit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 50
+  responses:
+    Error400:
+      description: Malformed, oversized or invalid request.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DomainConnectionApiError'
+    Error401:
+      description: Authentication required or invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DomainConnectionApiError'
+    Error403:
+      description: Operation, ownership, destination or credential reference denied
+        before outbound I/O.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DomainConnectionApiError'
+    Error404:
+      description: Connection or revision unavailable to this owner.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DomainConnectionApiError'
+    Error409:
+      description: Request identity, immutable material, expected version or lifecycle
+        conflict.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DomainConnectionApiError'
+    Error422:
+      description: Connection discovery or required approval validation failed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DomainConnectionApiError'
+    Error503:
+      description: Registry or bounded discovery unavailable.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DomainConnectionApiError'
+    Error413:
+      description: Request exceeds the deployment request-size bound.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DomainConnectionApiError'
+  schemas:
+    DomainConnectionMaterial:
+      type: object
+      additionalProperties: false
+      required:
+      - connectionKey
+      - kind
+      - bindingRevision
+      - endpoint
+      properties:
+        connectionKey:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: ^[a-z0-9][a-z0-9._-]{0,127}$
+        kind:
+          type: string
+          enum:
+          - A2A
+          - NATIVE_DOMAIN
+          - CUSTOMER_MCP
+        bindingRevision:
+          type: string
+          minLength: 1
+          maxLength: 256
+          description: Immutable deployment-compatible binding revision; preserve
+            the exact returned value for reconciliation.
+          pattern: ^[a-zA-Z0-9][a-zA-Z0-9._-]{0,255}$
+        endpoint:
+          type: string
+          format: uri
+          minLength: 1
+          maxLength: 2048
+          description: Deployment-approved reachable endpoint. No URL credentials,
+            query or fragment. Native-domain endpoints must contain only an origin.
+            Client input cannot override the deployment network policy.
+        credentialRef:
+          type: string
+          minLength: 1
+          maxLength: 256
+          description: Authorized server-side credential reference, supported for
+            A2A only. Never an inline token or credential value.
+          pattern: ^[a-zA-Z0-9][a-zA-Z0-9._-]{0,255}$
+        domainId:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: ^[a-z0-9][a-z0-9._-]{0,127}$
+        inputSchema:
+          type: object
+          additionalProperties: true
+          description: Optional self-contained A2A input schema. No external schema
+            references.
+        allowedToolNames:
+          type: array
+          minItems: 1
+          maxItems: 64
+          uniqueItems: true
+          items:
+            type: string
+            minLength: 1
+            maxLength: 128
+            pattern: ^[A-Za-z0-9_.-]{1,128}$
+        allowedDomainIds:
+          type: array
+          maxItems: 64
+          uniqueItems: true
+          items:
+            type: string
+            minLength: 1
+            maxLength: 128
+            pattern: ^[a-z0-9][a-z0-9._-]{0,127}$
+      description: Canonical immutable connection material. Native domain requires
+        domainId. Customer MCP requires allowedToolNames; allowedDomainIds limits
+        eligibility without granting tool access. Fields not supported for the selected
+        kind are rejected.
+    DomainConnectionRegistrationRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - requestId
+      - expectedVersion
+      - kind
+      - bindingRevision
+      - endpoint
+      properties:
+        requestId:
+          type: string
+          format: uuid
+          description: Caller-owned idempotency identity scoped to the authenticated
+            owner. Retry an uncertain operation with the same identity and body.
+        expectedVersion:
+          type: integer
+          format: int64
+          minimum: 0
+        kind:
+          type: string
+          enum:
+          - A2A
+          - NATIVE_DOMAIN
+          - CUSTOMER_MCP
+        bindingRevision:
+          type: string
+          minLength: 1
+          maxLength: 256
+          description: Immutable deployment-compatible binding revision; preserve
+            the exact returned value for reconciliation.
+          pattern: ^[a-zA-Z0-9][a-zA-Z0-9._-]{0,255}$
+        endpoint:
+          type: string
+          format: uri
+          minLength: 1
+          maxLength: 2048
+          description: Deployment-approved reachable endpoint. No URL credentials,
+            query or fragment. Native-domain endpoints must contain only an origin.
+            Client input cannot override the deployment network policy.
+        credentialRef:
+          type: string
+          minLength: 1
+          maxLength: 256
+          description: Authorized server-side credential reference, supported for
+            A2A only. Never an inline token or credential value.
+          pattern: ^[a-zA-Z0-9][a-zA-Z0-9._-]{0,255}$
+        domainId:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: ^[a-z0-9][a-z0-9._-]{0,127}$
+        inputSchema:
+          type: object
+          additionalProperties: true
+          description: Optional self-contained A2A input schema. No external schema
+            references.
+        allowedToolNames:
+          type: array
+          minItems: 1
+          maxItems: 64
+          uniqueItems: true
+          items:
+            type: string
+            minLength: 1
+            maxLength: 128
+            pattern: ^[A-Za-z0-9_.-]{1,128}$
+        allowedDomainIds:
+          type: array
+          maxItems: 64
+          uniqueItems: true
+          items:
+            type: string
+            minLength: 1
+            maxLength: 128
+            pattern: ^[a-z0-9][a-z0-9._-]{0,127}$
+      description: Register immutable material without approving, activating or granting
+        access. expectedVersion is zero when the connection does not yet exist. Conflicting
+        reuse of a revision or requestId is rejected.
+    DomainConnectionMutationRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - requestId
+      - expectedVersion
+      properties:
+        requestId:
+          type: string
+          format: uuid
+          description: Caller-owned idempotency identity scoped to the authenticated
+            owner. Retry an uncertain operation with the same identity and body.
+        expectedVersion:
+          type: integer
+          format: int64
+          minimum: 0
+    DomainConnectionApproveRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - requestId
+      - expectedVersion
+      - expectedProbeDigest
+      properties:
+        requestId:
+          type: string
+          format: uuid
+          description: Caller-owned idempotency identity scoped to the authenticated
+            owner. Retry an uncertain operation with the same identity and body.
+        expectedVersion:
+          type: integer
+          format: int64
+          minimum: 0
+        expectedProbeDigest:
+          type: string
+          pattern: ^sha256:[0-9a-f]{64}$
+    DomainConnectionHead:
+      type: object
+      additionalProperties: false
+      required:
+      - connectionKey
+      - kind
+      - stateVersion
+      - activeBindingRevision
+      properties:
+        connectionKey:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: ^[a-z0-9][a-z0-9._-]{0,127}$
+        kind:
+          type: string
+          enum:
+          - A2A
+          - NATIVE_DOMAIN
+          - CUSTOMER_MCP
+        stateVersion:
+          type: integer
+          format: int64
+          minimum: 0
+        activeBindingRevision:
+          type: string
+          minLength: 1
+          maxLength: 256
+          description: Immutable deployment-compatible binding revision; preserve
+            the exact returned value for reconciliation.
+          nullable: true
+          pattern: ^[a-zA-Z0-9][a-zA-Z0-9._-]{0,255}$
+    DomainConnectionProbe:
+      type: object
+      additionalProperties: false
+      required:
+      - bindingDigest
+      - capabilitiesDigest
+      - probeDigest
+      properties:
+        bindingDigest:
+          type: string
+          pattern: ^sha256:[0-9a-f]{64}$
+        capabilitiesDigest:
+          type: string
+          pattern: ^sha256:[0-9a-f]{64}$
+        providerRevision:
+          type: string
+          minLength: 1
+          maxLength: 256
+          description: Immutable deployment-compatible binding revision; preserve
+            the exact returned value for reconciliation.
+        manifestDigest:
+          type: string
+          pattern: ^sha256:[0-9a-f]{64}$
+        agentCardDigest:
+          type: string
+          pattern: ^sha256:[0-9a-f]{64}$
+        probeDigest:
+          type: string
+          pattern: ^sha256:[0-9a-f]{64}$
+      description: Sanitized successful discovery evidence. probeDigest identifies
+        the exact stored probe for approval. Discovery never executes business work
+        or model inference.
+    DomainConnectionRevision:
+      type: object
+      additionalProperties: false
+      required:
+      - connectionKey
+      - kind
+      - bindingRevision
+      - bindingDigest
+      - registrationDigest
+      - material
+      - identity
+      - lifecycle
+      - probe
+      - approvedProbeDigest
+      properties:
+        connectionKey:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: ^[a-z0-9][a-z0-9._-]{0,127}$
+        kind:
+          type: string
+          enum:
+          - A2A
+          - NATIVE_DOMAIN
+          - CUSTOMER_MCP
+        bindingRevision:
+          type: string
+          minLength: 1
+          maxLength: 256
+          description: Immutable deployment-compatible binding revision; preserve
+            the exact returned value for reconciliation.
+          pattern: ^[a-zA-Z0-9][a-zA-Z0-9._-]{0,255}$
+        bindingDigest:
+          type: string
+          pattern: ^sha256:[0-9a-f]{64}$
+        registrationDigest:
+          type: string
+          pattern: ^sha256:[0-9a-f]{64}$
+        material:
+          $ref: '#/components/schemas/DomainConnectionMaterial'
+        identity:
+          type: object
+          additionalProperties: true
+          description: Secret-free normalized identity compatible with the existing
+            execution binding digest. Does not confer execution authority.
+        lifecycle:
+          type: string
+          enum:
+          - REGISTERED
+          - RETIRED
+          - REVOKED
+        probe:
+          allOf:
+          - $ref: '#/components/schemas/DomainConnectionProbe'
+          nullable: true
+        approvedProbeDigest:
+          type: string
+          pattern: ^sha256:[0-9a-f]{64}$
+          nullable: true
+    DomainConnectionList:
+      type: object
+      additionalProperties: false
+      required:
+      - connections
+      - hasMore
+      - nextConnectionKey
+      properties:
+        connections:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/DomainConnectionHead'
+        hasMore:
+          type: boolean
+        nextConnectionKey:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: ^[a-z0-9][a-z0-9._-]{0,127}$
+          nullable: true
+    DomainConnectionRevisionList:
+      type: object
+      additionalProperties: false
+      required:
+      - revisions
+      - hasMore
+      - nextBindingRevision
+      properties:
+        revisions:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/DomainConnectionRevision'
+        hasMore:
+          type: boolean
+        nextBindingRevision:
+          type: string
+          minLength: 1
+          maxLength: 256
+          description: Immutable deployment-compatible binding revision; preserve
+            the exact returned value for reconciliation.
+          nullable: true
+          pattern: ^[a-zA-Z0-9][a-zA-Z0-9._-]{0,255}$
+    DomainConnectionMutationResponse:
+      type: object
+      additionalProperties: false
+      required:
+      - requestId
+      - replayed
+      - stateVersion
+      - connection
+      - revision
+      properties:
+        requestId:
+          type: string
+          format: uuid
+          description: Caller-owned idempotency identity scoped to the authenticated
+            owner. Retry an uncertain operation with the same identity and body.
+        replayed:
+          type: boolean
+        stateVersion:
+          type: integer
+          format: int64
+          minimum: 0
+        connection:
+          $ref: '#/components/schemas/DomainConnectionHead'
+        revision:
+          $ref: '#/components/schemas/DomainConnectionRevision'
+      description: Original saved operation result. Idempotent replay returns this
+        same snapshot with replayed=true, even after later connection changes. It
+        does not repeat discovery or lifecycle effects.
+    DomainConnectionApiError:
+      type: object
+      additionalProperties: false
+      required:
+      - code
+      - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+          description: Safe actionable diagnostic without provider responses, private
+            endpoints or credential data.
+        requestId:
+          type: string
+          format: uuid
+          description: Caller-owned idempotency identity scoped to the authenticated
+            owner. Retry an uncertain operation with the same identity and body.
+    DomainConnectionCapabilities:
+      type: object
+      additionalProperties: false
+      required:
+      - connection
+      - revision
+      - capabilities
+      description: Current approved registered connection and its sanitized execution
+        capabilities. Requires EXECUTE authority; discovery does not grant customer
+        tool permissions or accept a run.
+      properties:
+        connection:
+          $ref: '#/components/schemas/DomainConnectionHead'
+        revision:
+          $ref: '#/components/schemas/DomainConnectionRevision'
+        capabilities:
+          type: object
+          additionalProperties: true
+          description: Existing native-domain or customer-MCP capability payload,
+            or sanitized A2A binding/schema/card-digest metadata. No raw credentials
+            or unfiltered provider metadata.
