@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Experiment Registry API
-  version: 1.2.2
+  version: 1.2.3
   description: Registry and evidence APIs for experiment definitions, runs, artifacts, source snapshots, and calibration.
 servers:
   - url: http://localhost:7457
@@ -17,6 +17,26 @@ tags:
   - name: Agent Catalog
     description: Authors versioned agent definitions and publishes immutable revisions.
 paths:
+  /api/domain-connections/{connectionKey}/capabilities:
+    $ref: './domain-connections.yaml#/paths/~1api~1domain-connections~1{connectionKey}~1capabilities'
+  /api/domain-connections:
+    $ref: './domain-connections.yaml#/paths/~1api~1domain-connections'
+  /api/domain-connections/{connectionKey}:
+    $ref: './domain-connections.yaml#/paths/~1api~1domain-connections~1{connectionKey}'
+  /api/domain-connections/{connectionKey}/revisions:
+    $ref: './domain-connections.yaml#/paths/~1api~1domain-connections~1{connectionKey}~1revisions'
+  /api/domain-connections/{connectionKey}/revisions/{bindingRevision}:
+    $ref: './domain-connections.yaml#/paths/~1api~1domain-connections~1{connectionKey}~1revisions~1{bindingRevision}'
+  /api/domain-connections/{connectionKey}/revisions/{bindingRevision}/probe:
+    $ref: './domain-connections.yaml#/paths/~1api~1domain-connections~1{connectionKey}~1revisions~1{bindingRevision}~1probe'
+  /api/domain-connections/{connectionKey}/revisions/{bindingRevision}/approve:
+    $ref: './domain-connections.yaml#/paths/~1api~1domain-connections~1{connectionKey}~1revisions~1{bindingRevision}~1approve'
+  /api/domain-connections/{connectionKey}/revisions/{bindingRevision}/activate:
+    $ref: './domain-connections.yaml#/paths/~1api~1domain-connections~1{connectionKey}~1revisions~1{bindingRevision}~1activate'
+  /api/domain-connections/{connectionKey}/revisions/{bindingRevision}/retire:
+    $ref: './domain-connections.yaml#/paths/~1api~1domain-connections~1{connectionKey}~1revisions~1{bindingRevision}~1retire'
+  /api/domain-connections/{connectionKey}/revisions/{bindingRevision}/revoke:
+    $ref: './domain-connections.yaml#/paths/~1api~1domain-connections~1{connectionKey}~1revisions~1{bindingRevision}~1revoke'
   /api/experiments:
     get:
       tags:
@@ -585,8 +605,13 @@ paths:
         model execution or provider mutation. A 202 response confirms durable acceptance,
         not successful provider preparation; preparation and later failures are recorded in
         run status and evidence. Due provider logical boundaries are applied before their
-        observations are delivered to the customer.
+        observations are delivered to the customer. Selecting connectionSelection REGISTERED
+        requires a deployment-operator bearer with EXECUTE permission; omission preserves
+        legacy deployment selection and does not require that credential.
       operationId: launchAgentJourney
+      security:
+        - DomainConnectionOperatorAuth: []
+        - {}
       requestBody:
         required: true
         description: The UTF-8 JSON request body is limited to 262144 wire bytes before deserialization.
@@ -603,6 +628,18 @@ paths:
                 $ref: '#/components/schemas/AgentJourneyLaunchResponse'
         '400':
           description: The request is missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentJourneyApiError'
+        '401':
+          description: Registered selection requires a valid deployment-operator bearer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentJourneyApiError'
+        '403':
+          description: Registered execution, selected connection, Catalog revision or destination is denied.
           content:
             application/json:
               schema:
@@ -1593,6 +1630,9 @@ paths:
                 $ref: '#/components/schemas/CalibrationDriftSummary'
 
 components:
+  securitySchemes:
+    DomainConnectionOperatorAuth:
+      $ref: './domain-connections.yaml#/components/securitySchemes/DomainConnectionOperatorAuth'
   parameters:
     CatalogAgentId:
       in: path
@@ -1605,6 +1645,30 @@ components:
         maxLength: 36
         pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
   schemas:
+    DomainConnectionCapabilities:
+      $ref: './domain-connections.yaml#/components/schemas/DomainConnectionCapabilities'
+    DomainConnectionMaterial:
+      $ref: './domain-connections.yaml#/components/schemas/DomainConnectionMaterial'
+    DomainConnectionRegistrationRequest:
+      $ref: './domain-connections.yaml#/components/schemas/DomainConnectionRegistrationRequest'
+    DomainConnectionMutationRequest:
+      $ref: './domain-connections.yaml#/components/schemas/DomainConnectionMutationRequest'
+    DomainConnectionApproveRequest:
+      $ref: './domain-connections.yaml#/components/schemas/DomainConnectionApproveRequest'
+    DomainConnectionHead:
+      $ref: './domain-connections.yaml#/components/schemas/DomainConnectionHead'
+    DomainConnectionProbe:
+      $ref: './domain-connections.yaml#/components/schemas/DomainConnectionProbe'
+    DomainConnectionRevision:
+      $ref: './domain-connections.yaml#/components/schemas/DomainConnectionRevision'
+    DomainConnectionList:
+      $ref: './domain-connections.yaml#/components/schemas/DomainConnectionList'
+    DomainConnectionRevisionList:
+      $ref: './domain-connections.yaml#/components/schemas/DomainConnectionRevisionList'
+    DomainConnectionMutationResponse:
+      $ref: './domain-connections.yaml#/components/schemas/DomainConnectionMutationResponse'
+    DomainConnectionApiError:
+      $ref: './domain-connections.yaml#/components/schemas/DomainConnectionApiError'
     ExperimentCreateRequest:
       type: object
       required:
@@ -1762,6 +1826,19 @@ components:
                 required: [participationPolicy]
             - required: [completionPolicy]
       properties:
+        connectionSelection:
+          type: string
+          enum: [REGISTERED]
+          description: >-
+            Optional governed connection selection; no wire default. REGISTERED requires
+            deployment-operator EXECUTE authority. Existing partner, domain and tool binding
+            keys select currently active approved revisions permitted to that authority;
+            published Catalog grants must match their exact binding and descriptor identities.
+            The server derives ownership and freezes exact revision pins before admission.
+            Do not supply owner, endpoint, credential or pin fields. Accepted replay uses its
+            saved selection rather than reselecting current revisions. Omission preserves
+            legacy deployment bindings and request identity. Explicit null and unknown modes
+            are invalid. Requires a platform and generated SDK supporting registered selection.
         requestId:
           type: string
           format: uuid

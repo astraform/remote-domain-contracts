@@ -1,3 +1,7 @@
+# Private local Astraform team configuration and handoffs
+/.codex/astraform-team
+/.codex/agents
+
 build/
 .venv/
 .DS_Store

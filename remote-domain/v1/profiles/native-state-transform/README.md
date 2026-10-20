@@ -71,6 +71,15 @@ Observation contains only customer-visible facts true at processed-through time.
 
 The initial Java banking pure-state implementation supports only automatic monthly credit-card statement close, at most one initial account, no persona scheduledWork, one work item per window and a 262144-byte checkpoint. It reuses the existing statement calculations and trigger policy. These sample limits do not narrow the generic profile or retire broader domain capabilities; broader legacy operations retain their previous contract.
 
-The currently published Java SDK 0.2.0 does not generate the optional nativeSimulation capability or enriched native tool descriptor yet. The sample uses narrow capabilities and descriptor DTO subclasses through its existing SDK controller. Regenerating SDK models from this canonical OpenAPI removes these temporary extensions; it does not require a parallel endpoint.
+Use a native SDK generated from a contract containing this profile, with typed
+`nativeSimulation` capabilities, complete native tool descriptors and matching
+manifest validation schemas. Declare them through the SDK's manifest builder and
+existing controller; no DTO subclasses, serialized-field injection or parallel
+endpoint are needed. Older generated models or closed validation schemas may
+reject these capabilities; upgrade the SDK and its bundled schemas before
+enabling the profile.
 
-The Java banking pure-state sample enables this development capability only with `--astraform.native-simulation.enabled=true` (default `false`). The manifest is stable for that deployment configuration; it never changes by caller or request header. Default-mode published SDK conformance and native-enabled current-contract validation are separate checks. SDK 0.2.0's bundled closed manifest schema does not validate the new capability.
+Select native capabilities through deployment configuration and keep the manifest
+stable for that configuration. It must not change by caller or request header.
+Validate the advertised native profile and tool descriptors with the matching
+contract schemas, including when a provider also offers a legacy deployment mode.
