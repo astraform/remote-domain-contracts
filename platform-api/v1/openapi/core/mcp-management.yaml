@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: MCP Management API
-  version: 1.2.2
+  version: 1.2.3
   description: MCP management APIs for tool catalog, registry, and guarded admin actions.
 servers:
   - url: http://localhost:7456

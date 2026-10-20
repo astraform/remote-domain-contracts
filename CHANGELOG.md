@@ -5,7 +5,48 @@ bundles share the repository-root release version and ship together. Protocol,
 native profile, platform application and Java/Python SDK versions remain separate.
 Unreleased changes are not a published contract dependency.
 
-## 1.2.2 — Unreleased
+## 1.2.3 — Unreleased
+
+### Added
+
+- Owner-scoped domain connection registry operations for immutable A2A,
+  native-domain and customer MCP revisions, bounded listings, capability probes,
+  approval, activation, retirement and revocation. Mutations retain request replay
+  identity and use expected versions for concurrency control.
+- Deployment-operator bearer authorization with separate lifecycle permissions.
+  The server derives registry ownership; permitted origins and credential
+  references remain deployment policy and credentials stay out of registration.
+- `getDomainConnectionCapabilities` for approved active revisions, returning the
+  connection head, exact revision and sanitized capability metadata through
+  generated native clients.
+- Optional non-null `AgentJourneyLaunchRequest.connectionSelection: REGISTERED`
+  without a wire default, conditional `EXECUTE` authorization and typed launch
+  `401`/`403` responses. Registered launches select permitted active approved
+  revisions and retain exact accepted identities. Existing Catalog tool grants
+  must match selected binding/provider/descriptor identities.
+
+### Compatibility
+
+- Omitting registered selection preserves startup bindings and launch identity.
+  Accepted runs retain their revisions after activation changes; replay retains
+  run identity and selection while operational status may advance. A supporting
+  platform can consume new approved bindings without restarting Runtime.
+- Retirement blocks new selection while permitting accepted work; revocation
+  blocks subsequent governed dispatch. In-flight effects can remain uncertain.
+  Committed A2A receipts preserve recovery identity without another send, including
+  when authority is denied or unavailable. Startup-selected bindings remain a
+  separate deployment path.
+- This surface requires a supporting platform and regenerated SDK. It does not
+  provide department identity, enterprise isolation, arbitrary hot destination or
+  secret changes, or model/embedding hot swapping. Existing provider protocol and
+  profile identifiers, discovery signatures and historical assets remain unchanged.
+- Root version, both bundle manifests/version files and all OpenAPI metadata
+  target 1.2.3. Both archives ship together with separate SHA-256 checksums.
+
+## 1.2.2 — Published 2026-10-18
+
+Published as [`v1.2.2`](https://github.com/astraform/remote-domain-contracts/releases/tag/v1.2.2)
+with both contract ZIP assets and their SHA-256 checksums.
 
 ### Added
 
@@ -46,7 +87,7 @@ Unreleased changes are not a published contract dependency.
   tenant authorization. Submitted assessments do not establish authenticated
   evaluator provenance or immutable native evidence. New annotations can appear
   in model-visible replies and do not guarantee identical later decisions.
-- Root, both bundle manifests/version files and OpenAPI metadata target 1.2.2;
+- Root, both bundle manifests/version files and OpenAPI metadata aligned to 1.2.2;
   provider protocol/profile identifiers, archive roots and historical published
   assets remain unchanged. The two existing ZIPs ship together with separate
   SHA-256 checksums. Platform and SDK implementation/publication remain separate;

@@ -1,7 +1,11 @@
 # remote-domain.v1 Partner Contract Bundle
 
 This directory is the source of the partner-facing `remote-domain.v1` handoff.
-It is intentionally about the wire contract, not the monorepo implementation.
+Astraform Runtime calls these HTTP/JSON endpoints on the partner-hosted domain
+provider service. The partner implements the lifecycle through its Java/Python
+provider SDK. Partner applications and authorized deployment operators call the
+separate Astraform-hosted APIs defined in the `platform-api.zip` bundle.
+This bundle defines the wire contract, not the platform implementation.
 
 ## What Partners Receive
 
@@ -80,12 +84,21 @@ The script writes `build/remote-domain-contract/remote-domain.v1/` and
 - `remote-domain.v1` is the protocol identifier and compatibility boundary.
 - The repository-root `VERSION` owns the shared public-contract release version.
   This bundle's `VERSION`, `manifest.json` and OpenAPI `info.version` mirror it
-  (`1.2.2` in this local unreleased candidate). Both provider and platform API
-  bundles share that source version. The latest published release is `v1.2.1`;
-  its archives and all earlier releases remain immutable. Candidate packaging is
-  not publication. Protocol and SDK versions stay separate.
+  (`1.2.3` in these prepared, unreleased sources). Both provider and platform API
+  bundles share that source version. The latest published release is `v1.2.2`,
+  the normal pinned dependency; its archives and all earlier releases remain
+  immutable. Local packaging is not publication. Protocol and SDK versions stay
+  separate.
 - Breaking protocol changes require `remote-domain.v2`.
 - Additive optional fields may stay in `remote-domain.v1` when old clients can ignore them safely.
+
+Prepared 1.2.3 adds governed connection registration and opt-in `REGISTERED`
+launch selection in the platform bundle; provider lifecycle routes and protocol
+identifiers are unchanged. Using the registry requires a matching platform,
+generated SDKs and configured deployment-operator permissions. Registration does
+not activate a provider or grant customer tools. See the platform bundle's
+`README.md` for preapproved destinations, exact revision selection, retirement
+and revocation.
 
 ## Partner Handoff
 
