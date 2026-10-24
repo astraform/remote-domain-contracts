@@ -5,7 +5,40 @@ bundles share the repository-root release version and ship together. Protocol,
 native profile, platform application and Java/Python SDK versions remain separate.
 Unreleased changes are not a published contract dependency.
 
-## 1.2.3 — Unreleased
+## 1.2.4 — Unreleased
+
+### Added
+
+- `ExperimentIngressError` in the Experiment and evaluation API definitions,
+  with required `code` and `message` strings and no additional properties.
+  Write operations document `400` for malformed JSON, `413` for exceeded
+  admission limits and `415` for unsupported request content coding. Other
+  business-validation errors retain their existing shapes.
+- Experiment request admission describes actual-byte limits, bounded JSON
+  depth/tokens and complete raw evidence-batch admission before row or
+  checkpoint-file writes. Agent, event and checkpoint batch schemas declare
+  `maxItems: 10000`; deployments may enforce lower configured limits.
+
+### Compatibility and upgrade
+
+- A supporting platform release enforces these controls. Requests exceeding the
+  deployment's byte, structure, batch or record limits are rejected; split large
+  submissions into admitted batches and send uncompressed JSON. Admission
+  rejection writes no part of the rejected batch, without changing the behavior
+  of unrelated database or filesystem failures.
+- Root version, both bundle manifests/version files and all OpenAPI metadata
+  target 1.2.4. Both archives ship together with separate SHA-256 checksums.
+  After publication, update consumers to the new tag and each asset's checksum,
+  and regenerate SDKs that need the new error models. Source preparation and
+  local packaging do not update a released platform or installed SDK.
+- Provider routes and payloads, `remote-domain.v1`, native profile identifiers,
+  operation IDs and archive roots are unchanged. Published 1.2.3 and earlier
+  assets remain immutable.
+
+## 1.2.3 — Published
+
+Published as [`v1.2.3`](https://github.com/astraform/remote-domain-contracts/releases/tag/v1.2.3)
+with both contract ZIP assets and their SHA-256 checksums.
 
 ### Added
 
@@ -41,7 +74,7 @@ Unreleased changes are not a published contract dependency.
   secret changes, or model/embedding hot swapping. Existing provider protocol and
   profile identifiers, discovery signatures and historical assets remain unchanged.
 - Root version, both bundle manifests/version files and all OpenAPI metadata
-  target 1.2.3. Both archives ship together with separate SHA-256 checksums.
+  aligned to 1.2.3. Both archives shipped together with separate SHA-256 checksums.
 
 ## 1.2.2 — Published 2026-10-18
 

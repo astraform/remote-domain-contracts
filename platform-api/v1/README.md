@@ -15,8 +15,9 @@ individual deployments determine which routes their gateway exposes.
 
 Supporting SDKs generate the Experiment entry point and evaluation APIs;
 including other public API documents does not expand their operation surface.
-- Shared published contract version: `1.2.3`, tag `v1.2.3`. Both bundles share
-  the repository-root `VERSION` and ship together in one release.
+- Prepared shared contract version: `1.2.4` (publication pending). Both bundles
+  share the repository-root `VERSION` and ship together in one release. The
+  latest published version remains `1.2.3`, tag `v1.2.3`.
 - Release asset: `platform-api.zip`, containing top-level `platform-api/`.
 
 This bundle contains API definitions, not platform implementation or deployment
@@ -31,6 +32,43 @@ The platform repository and both language SDKs consume the same checksum-pinned
 release. Edit these canonical files here and publish a new immutable contract
 version before updating consumers. The published `v1.2.3` asset is the normal
 build input; explicit local ZIP builds are for development only.
+
+## Experiment admission errors (1.2.4)
+
+Prepared contract 1.2.4 defines `ExperimentIngressError` with required string
+fields `code` and `message`, and no additional properties. It documents
+admission failures for write APIs under `/api/experiments`,
+`/api/experiment-runs`, `/api/simulation-runs`, `/api/evaluations` and
+`/api/calibration-observations`, including descendant routes:
+
+| HTTP status | Code | Client action |
+| --- | --- | --- |
+| `400` | `INVALID_EXPERIMENT_REQUEST` | Correct malformed JSON. Other business-validation errors retain their existing shapes. |
+| `413` | `EXPERIMENT_PAYLOAD_TOO_LARGE` | Reduce request bytes, JSON complexity, batch count or record size. |
+| `415` | `EXPERIMENT_CONTENT_ENCODING_UNSUPPORTED` | Send uncompressed JSON with no content coding or `identity`. |
+
+Branch on the status and code; messages describe the breached limit. Actual
+request bytes are bounded even without a declared length or with chunked
+transfer encoding. The default request limit is 16 MiB, with maximum JSON depth
+64 and 100,000 tokens. Evidence batches default to 1,000 raw records; each
+serialized UTF-8 record defaults to 1 MiB. The configured record limit cannot
+exceed the request limit.
+
+Operators can configure `EXPERIMENT_INGRESS_MAX_REQUEST_BYTES` from 1 to
+67,108,864 bytes, `EXPERIMENT_INGRESS_MAX_BATCH_RECORDS` from 1 to 10,000 records,
+and `EXPERIMENT_INGRESS_MAX_RECORD_BYTES` from 1 to 16,777,216 bytes. The schemas'
+`maxItems: 10000` is the maximum configurable batch count; a deployment's lower
+configured count still applies. Split larger submissions into admitted batches.
+Complete batch admission precedes row or checkpoint-file writes, so an admission
+rejection does not partially persist that batch. This does not make unrelated
+database or filesystem failures atomic.
+
+These definitions require a platform release containing the admission controls;
+publishing the contract or setting variables does not upgrade an older image.
+Regenerate supporting native SDK clients from the new published tag and checksum
+to obtain its error models. Existing installed clients and immutable earlier
+archives are unchanged. Until publication, select a local ZIP explicitly for
+development; it is not a published dependency.
 
 ## Typed completion updates
 
@@ -89,9 +127,9 @@ for owner-scoped immutable `A2A`, `NATIVE_DOMAIN` and `CUSTOMER_MCP` revisions.
 It requires a matching platform implementation and Java/Python SDKs containing
 `DomainConnectionsApi` and registered-selection launch models. Published contract
 1.2.2, Java SDK 0.4.4 and Python SDK 0.3.4 do not contain these operations.
-Generate compatible SDKs from both checksum-pinned published 1.2.3 bundles. The
-next Java 0.4.5 and Python 0.3.5 SDKs require their own publication before registry
-installation. Explicitly selected local ZIPs remain `LOCAL_PRERELEASE` development
+Generate compatible SDKs from both checksum-pinned published 1.2.3 or newer
+bundles, and verify that the selected published SDK package includes these
+operations before installation. Explicitly selected local ZIPs remain `LOCAL_PRERELEASE` development
 inputs. Use native clients and request models in applications and samples; do
 not substitute raw platform HTTP. Source documentation edits do not update the
 published bundles or their checksums.

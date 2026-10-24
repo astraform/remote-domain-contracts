@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Domain Connection Registry API
-  version: 1.2.3
+  version: 1.2.4
   description: Governed owner-scoped connection revisions for trusted deployment operators.
     Registration alone neither activates execution nor grants customer tools.
     REGISTERED launches require authenticated EXECUTE permission and approved active

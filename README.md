@@ -4,6 +4,16 @@ Canonical public API definitions for partner services, SDK generation and the
 Astraform platform. Implementation code stays in the platform and SDK
 repositories. The provider protocol is `remote-domain.v1`; platform APIs form a separate bundle.
 
+## Prepared 1.2.4
+
+Source version 1.2.4 documents bounded Experiment JSON and evidence admission,
+including typed `400`, `413` and `415` errors. The provider protocol remains
+`remote-domain.v1`. These sources are not yet a published dependency; use a
+platform release containing the admission controls and update consumer pins only
+after both new archives and their checksums are published. See the
+[admission guide](platform-api/v1/README.md#experiment-admission-errors-124) and
+[release notes](RELEASE_NOTES.md).
+
 ## Published 1.2.3
 
 Shared [contract 1.2.3](https://github.com/astraform/remote-domain-contracts/releases/tag/v1.2.3)
@@ -18,8 +28,9 @@ do not include these operations. See the
 Partner applications use the [Astraform SDK for Java](https://github.com/astraform/sdk-java)
 or [Astraform SDK for Python](https://github.com/astraform/sdk-python). A domain
 provider is the partner-owned business service; `remote-domain.v1` remains its
-stable protocol identifier. Prepared SDK versions 0.4.5 and 0.3.5 require their
-own publication before registry installation.
+stable protocol identifier. Select published SDK packages that include the
+operations your application needs; contract publication does not update an
+installed client.
 
 Published archives and checksums remain immutable. Source documentation updates
 are carried into a future contract release if its bundles are repackaged; a
@@ -27,10 +38,10 @@ local rebuild is not a replacement for the published 1.2.3 assets.
 
 ## Contract bundles
 
-| Bundle | Purpose | Shared release |
+| Bundle | Purpose | Prepared shared version |
 | --- | --- | --- |
-| `remote-domain/v1/` | Astraform Runtime calls partner-hosted domain services | [`1.2.3`, tag `v1.2.3`](https://github.com/astraform/remote-domain-contracts/releases/tag/v1.2.3) |
-| `platform-api/v1/` | Partner applications and authorized operators call Astraform-hosted APIs | [`1.2.3`, tag `v1.2.3`](https://github.com/astraform/remote-domain-contracts/releases/tag/v1.2.3) |
+| `remote-domain/v1/` | Astraform Runtime calls partner-hosted domain services | `1.2.4` (publication pending) |
+| `platform-api/v1/` | Partner applications and authorized operators call Astraform-hosted APIs | `1.2.4` (publication pending) |
 
 The repository-root `VERSION` owns one release version for both bundles. Each
 bundle's `VERSION`, manifest and OpenAPI `info.version` must match it. One GitHub

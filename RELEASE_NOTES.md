@@ -1,70 +1,60 @@
-Adds an opt-in domain connection registry and governed Agent Journey selection
-to the public platform API. Supporting platform and generated SDK versions are
-required; publishing these definitions does not deploy features or update an
-installed client. The provider protocol remains `remote-domain.v1`.
+Public contracts 1.2.4 document bounded Experiment JSON and evidence admission
+and typed admission errors. A platform release containing the controls is
+required to enforce them. Contract publication does not deploy the platform or
+update an installed SDK. The provider protocol remains `remote-domain.v1`.
 
-## Connection registry
+## Experiment admission
 
-- Register immutable revisions of A2A, native-domain and customer MCP connections.
-  List owner-scoped connections and retained revisions with bounded pagination.
-- Probe capabilities separately from approval and activation. Discovery performs
-  no business work, tool execution or model inference. Activation requires the
-  current approved probe and selects the revision for subsequent governed launches.
-- Reconcile uncertain mutations with the same request ID and identical body.
-  Expected versions fence concurrent changes; retained lifecycle records cannot
-  be hard-deleted through this API.
-- Use configured deployment-operator bearer permissions and permitted origins
-  and credential references. Ownership comes from server configuration, not a
-  caller-supplied owner field. Credential values are not part of registration.
+- Adds `ExperimentIngressError` to the Experiment and evaluation API definitions.
+  Its JSON body has required string fields `code` and `message`, with no
+  additional properties. Other business-validation errors retain their existing
+  response shapes.
+- Documents `400` / `INVALID_EXPERIMENT_REQUEST` for malformed JSON,
+  `413` / `EXPERIMENT_PAYLOAD_TOO_LARGE` for exceeded byte, JSON structure,
+  batch or record limits, and `415` /
+  `EXPERIMENT_CONTENT_ENCODING_UNSUPPORTED` for non-identity request content
+  coding. Clients should branch on the status and code.
+- Covers write requests under `/api/experiments`, `/api/experiment-runs`,
+  `/api/simulation-runs`, `/api/evaluations` and `/api/calibration-observations`,
+  including descendant routes. Actual request bytes are bounded even with
+  unknown or chunked lengths. The default request limit is 16 MiB, with maximum
+  JSON depth 64 and 100,000 tokens.
+- Describes complete raw evidence-batch and serialized UTF-8 record admission
+  before row or checkpoint-file effects. An admission rejection does not
+  partially persist the rejected batch; unrelated database or filesystem failures
+  retain their existing behavior.
 
-## Governed launches and discovery
+## Limits and compatibility
 
-- Adds optional non-null `AgentJourneyLaunchRequest.connectionSelection` with
-  value `REGISTERED` and no wire default. Existing partner, native-domain and
-  MCP binding keys select active approved revisions allowed to the authenticated
-  operator. Omitting the field preserves startup binding selection and existing
-  launch identity.
-- Registered selection requires `EXECUTE` permission and explicit connection-key
-  and Catalog-agent grants. Existing published Catalog tool grants must match the
-  selected binding, provider and descriptor identities; discovery grants no tools.
-- Adds `getDomainConnectionCapabilities` to inspect an approved active connection
-  through native Java/Python clients. The response contains the connection head,
-  exact revision and sanitized capabilities. Legacy discovery signatures remain
-  available. Registered launch authentication failures use typed `401`/`403`
-  responses.
-- A supporting implementation freezes exact revision identities before admission
-  and uses them without restarting Runtime. Later activation affects new launches;
-  accepted replay retains its original run identity and selection, while its
-  operational status may advance.
+Evidence batches default to 1,000 records and records to 1 MiB. Operators can
+configure request bytes from 1 to 67,108,864, batch count from 1 to 10,000, and
+record bytes from 1 to 16,777,216; the record limit cannot exceed the request
+limit. Agent, event and checkpoint batch schemas declare `maxItems: 10000`,
+while each deployment's configured admission limit still applies.
 
-## Lifecycle and compatibility
+Split larger submissions into admitted batches, and send uncompressed JSON.
+Setting the new limit variables does not upgrade an older platform image. See
+the [platform admission guide](platform-api/v1/README.md#experiment-admission-errors-124)
+for variable names and error handling.
 
-Retirement prevents new selection while permitting accepted exact work. Revocation
-blocks subsequent governed dispatch without undoing already dispatched work or
-discarding uncertain effects. Committed A2A receipt recovery retains the original
-operation identity and does not resend the operation when authority is denied or
-unavailable. Startup-selected bindings remain a separate path governed by deployment
-configuration.
-
-This is trusted deployment-operator functionality, not department self-service
-identity or enterprise isolation. New connections must use already permitted
-origins and configured credential references. Model and embedding bindings remain
-deployment configuration.
-
-Published contract 1.2.2 and its archives remain immutable. Supporting SDKs must
-regenerate the new operations and selection model; changing a contract pin alone
-does not add them to an installed package. Existing provider routes, profile
-identifiers, completion rules and assessment payloads remain available.
+Existing operation IDs, successful response schemas and provider lifecycle
+payloads are unchanged. Provider and native profile identifiers remain stable.
+The governed connection registry and frozen-revision behavior introduced in
+1.2.3 remain available with supporting platform and SDK versions. Published
+1.2.3 and earlier archives and checksums remain immutable; see the
+[changelog](CHANGELOG.md) for their features and provenance.
 
 ## Downloads and upgrade
 
-Both bundles share version 1.2.3 and ship with separate checksums:
+Both bundles share version 1.2.4 and ship with separate checksums:
 
 - `remote-domain.v1.zip` and `remote-domain.v1.zip.sha256`, rooted at
   `remote-domain.v1/`.
 - `platform-api.zip` and `platform-api.zip.sha256`, rooted at `platform-api/`.
 
-After publication, pin `v1.2.3` and verify each asset's own checksum before
-regenerating consumers. Until then, select development ZIPs explicitly as
-`LOCAL_PRERELEASE` inputs; they do not replace published dependencies. See the
-[release procedure](README.md#release) and [changelog](CHANGELOG.md).
+After publication, pin `v1.2.4` and verify each asset's own checksum before
+regenerating consumers. SDKs that need the new error models require generation
+from the new published contract and their own package publication; changing a
+contract pin does not update an installed client. Until publication, select
+development ZIPs explicitly as `LOCAL_PRERELEASE` inputs. They do not replace
+published dependencies. See the [release procedure](README.md#release).
