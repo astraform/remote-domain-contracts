@@ -1,4 +1,4 @@
-# remote-domain.v1 Partner Contract Bundle
+# Domain provider contract (`remote-domain.v1`)
 
 This directory is the source of the partner-facing `remote-domain.v1` handoff.
 Astraform Runtime calls these HTTP/JSON endpoints on the partner-hosted domain
@@ -12,7 +12,7 @@ This bundle defines the wire contract, not the platform implementation.
 - `openapi/remote-domain.yaml`: HTTP/JSON API contract.
 - `schemas/remote-domain.schema.json`: JSON Schema bundle for lifecycle payload validation.
 - `schemas/*.v1.schema.json`: language-neutral schema source for reusable
-  remote-domain documents such as scorecards, Wind Tunnel metadata, cohort
+  provider documents such as scorecards, Wind Tunnel metadata, cohort
   bundles, population catalogs, and evidence exports.
 - `docs/remote-domain-protocol-v1.md`: rendered protocol guide and ownership boundary.
 - `docs/opportunity-worker-conformance-profile.md`: optional out-of-band worker
@@ -42,7 +42,7 @@ source in this bundle is the cross-language source of truth.
 - Java: use `openapi-generator-maven-plugin` for OpenAPI model generation.
 - Python: use `datamodel-code-generator` to generate Pydantic v2 models from
   OpenAPI/JSON Schema.
-- SDK author kits may add builders, adapters, and conformance helpers around
+- SDKs may add builders, adapters, and conformance helpers around
   generated models.
 - Contract generation must not generate domain business behavior, CEL execution,
   scorecard execution, Spring/FastAPI adapters, or private platform internals.
@@ -84,15 +84,21 @@ The script writes `build/remote-domain-contract/remote-domain.v1/` and
 - `remote-domain.v1` is the protocol identifier and compatibility boundary.
 - The repository-root `VERSION` owns the shared public-contract release version.
   This bundle's `VERSION`, `manifest.json` and OpenAPI `info.version` mirror it
-  (`1.2.3` in these prepared, unreleased sources). Both provider and platform API
-  bundles share that source version. The latest published release is `v1.2.2`,
+  (`1.2.4` in these prepared, unreleased sources). Both provider and platform API
+  bundles share that source version. The latest published release is `v1.2.3`,
   the normal pinned dependency; its archives and all earlier releases remain
   immutable. Local packaging is not publication. Protocol and SDK versions stay
   separate.
 - Breaking protocol changes require `remote-domain.v2`.
 - Additive optional fields may stay in `remote-domain.v1` when old clients can ignore them safely.
 
-Prepared 1.2.3 adds governed connection registration and opt-in `REGISTERED`
+Prepared 1.2.4 documents bounded Experiment JSON and evidence admission in the
+platform bundle. It adds no provider lifecycle routes or payload changes; the
+provider protocol and native profile identifiers stay unchanged. A supporting
+platform release and new published consumer pins are required to use the new
+admission error contract. Local packaging does not update installed clients.
+
+Published 1.2.3 introduced governed connection registration and opt-in `REGISTERED`
 launch selection in the platform bundle; provider lifecycle routes and protocol
 identifiers are unchanged. Using the registry requires a matching platform,
 generated SDKs and configured deployment-operator permissions. Registration does

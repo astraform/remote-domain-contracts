@@ -1,37 +1,25 @@
-# Remote Domain Protocol v1
+<a id="remote-domain-protocol-v1"></a>
 
-Status: v1 source of truth for issue `#230`, with live Java banking, Python
-banking, and Marketing Ops sample implementations now owned by
-`astraform/remote-domain-samples`.
+# Domain provider protocol (`remote-domain.v1`)
 
-This note defines the first versioned out-of-process domain contract for the
-Astraform platform.
+This guide defines the versioned HTTP/JSON boundary through which Astraform calls
+partner-owned domain services. Banking and Marketing Ops reference providers are
+available in [Astraform Samples](https://github.com/astraform/samples).
 
-Product framing: buyers should first understand Astraform as customer outcome
-simulation. This protocol becomes relevant when a team needs to bring its own
-business state, actions, and evidence projections into that simulation.
-The buyer-facing trust boundary is summarized in
-[Customer Outcome Platform Boundary](./customer-outcome-platform-boundary.md).
+A domain provider owns business behavior and its inspection projections in a
+separate service. It may run on the same machine as Astraform or another host;
+no cloud deployment is implied. The exact protocol identifier, routes, media
+types and schema IDs retain their existing `remote-domain.v1` names.
 
-Brutal truth: if this protocol just serializes half of `agent-runtime` over
-HTTP, we do not have a platform. We have a distributed monolith with better
-marketing. The whole point of this spec is to keep the host kernel honest while
-letting non-Java domains participate as first-class runtime modules.
-
-## Why This Exists
-
-The current Java SPI is now clean enough to expose the real next constraint:
-polyglot domain support.
-
-If Python, TypeScript, Go, or any non-JVM domain is real product intent, the
-platform needs a protocol boundary that preserves host ownership of runtime
-control while letting domains own domain semantics out of process.
-
-This document is that boundary for v1.
+The host owns runtime coordination, scheduling and canonical runtime state.
+Providers implement domain semantics without loading business implementation
+classes into the host. See the
+[domain provider guide](https://astraform.ai/docs/domain-provider/) for the
+separation between platform coordination and provider behavior.
 
 ## V1 Scope
 
-V1 remote domains are:
+V1 domain providers are:
 
 - synchronous HTTP/JSON services
 - registered separately from this protocol spec
@@ -39,7 +27,7 @@ V1 remote domains are:
 - responsible for domain semantics and domain projections
 - not responsible for canonical runtime persistence
 
-V1 remote domains are **not**:
+V1 domain providers are **not**:
 
 - independent simulation kernels
 - owners of clock or replay control
@@ -56,16 +44,16 @@ The host keeps ownership of the things that make the platform a platform.
 | Clock and replay contract | Host | There must be one time authority. |
 | Agent lifecycle and registration | Host | Public runtime identity and lifecycle events are kernel concerns. |
 | Scheduling and due-work dispatch | Host | Work queues must stay deterministic and replay-aware. |
-| Canonical runtime persistence | Host | Remote domains do not become hidden databases. |
+| Canonical runtime persistence | Host | Domain providers do not become hidden databases. |
 | Stable memory keys | Host | Memory scoping is a platform concern. |
 | MCP and A2A allow-list policy | Host | Tool and external-agent policy must stay centralized. |
 | Telemetry and operator visibility | Host | Observability cannot depend on domain-specific side channels. |
 | Shared `AgentEngine` execution shell | Host | The kernel owns the turn loop in v1. |
-| Domain validation, domain state evolution, domain projections | Remote domain | This is the whole reason the remote boundary exists. |
+| Domain validation, domain state evolution, domain projections | Domain provider | This is the whole reason the remote boundary exists. |
 
-## Remote Domain Responsibilities
+## Domain provider responsibilities
 
-The remote domain may own:
+The domain provider may own:
 
 - persona validation and normalization
 - runtime identity suggestion
@@ -76,7 +64,7 @@ The remote domain may own:
 - domain-specific schedule shaping expressed through generic host contracts
 - creator-only UI metadata through `uiProfile`
 
-The remote domain may **not** assume:
+The domain provider may **not** assume:
 
 - direct access to host internals
 - direct access to `AgentEngine`
@@ -87,13 +75,13 @@ The remote domain may **not** assume:
 
 ## Creator UI Metadata
 
-`remote-domain.v1` allows a remote domain to publish optional `uiProfile`
+`remote-domain.v1` allows a domain provider to publish optional `uiProfile`
 metadata in its manifest.
 
 That metadata exists so the shared dashboard can render deterministic
 domain-specific setup fields and write them into `domainConfig`.
 
-It does **not** mean the remote domain can ship executable UI bundles or remote
+It does **not** mean the domain provider can ship executable UI bundles or remote
 frontend code for the dashboard to mount dynamically. In v1:
 
 - the domain may describe creator UI
@@ -102,7 +90,7 @@ frontend code for the dashboard to mount dynamically. In v1:
 
 ## Manifest Capabilities
 
-The manifest is also the place where a remote domain tells the host which shared
+The manifest is also the place where a domain provider tells the host which shared
 authoring surfaces are valid for that domain. For dashboard-backed simulation,
 be explicit:
 
@@ -114,7 +102,7 @@ be explicit:
   execute institution-side work over a simulated time window
 - `domainSystemWorkKinds`: the business/system work kinds owned by the domain,
   such as interest accrual, statement close, fees, SLA expiry, or policy refresh
-- `tools`: the persona-mountable tools the remote domain actually implements.
+- `tools`: the persona-mountable tools the domain provider actually implements.
   The host mounts these as local callbacks and routes calls through
   `execute-work` as `TOOL_CALL` work items. Tool effect classification is not a
   `remote-domain.v1` manifest field. Hosts that execute tools asynchronously
@@ -161,7 +149,7 @@ optional domain-system work operation, and named payload schemas:
 - `inspection`: return the detailed inspection projection
 - `turn-context`: the execute-work payload shape that carries host-owned time and due-work context
 
-The host calls the remote domain through these lifecycle operations:
+The host calls the domain provider through these lifecycle operations:
 
 | Operation | Purpose | Mutates opaque state |
 | --- | --- | --- |
@@ -219,7 +207,7 @@ rejected-trigger reconciliation debt. A malformed entry is rejected
 independently so one provider mistake does not roll back valid peers.
 
 The host may skip `shutdown` if the runtime crashes or the process is killed.
-Remote domains must not rely on it for correctness.
+Domain providers must not rely on it for correctness.
 
 ## Request Envelope
 
@@ -411,7 +399,7 @@ All non-success responses must return JSON with the same top-level structure.
 
 Purpose:
 
-- validate the incoming persona for the remote domain
+- validate the incoming persona for the domain provider
 - normalize remote-domain-specific configuration
 - produce initial opaque state
 - suggest runtime identity and initial projection fragments
@@ -419,7 +407,7 @@ Purpose:
 Rules:
 
 - the host sends persona context plus any domain-specific configuration payload
-- the remote domain returns the first `nextState`
+- the domain provider returns the first `nextState`
 - the host persists that opaque state atomically with the runtime record if and only if the request succeeds
 - the host remains the owner of final registration, stable memory key derivation, and public lifecycle emission
 
@@ -434,9 +422,9 @@ Purpose:
 Rules:
 
 - the host owns scheduling order and due-work selection
-- the remote domain must treat `payload.turnContext.dueWork` as the authoritative work set for that call
-- the remote domain must not assume it can reorder or reschedule host work by side effect
-- the remote domain may propose updated generic schedule projections in the response, but the host remains the scheduler of record
+- the domain provider must treat `payload.turnContext.dueWork` as the authoritative work set for that call
+- the domain provider must not assume it can reorder or reschedule host work by side effect
+- the domain provider may propose updated generic schedule projections in the response, but the host remains the scheduler of record
 
 ### `status`
 
@@ -466,29 +454,29 @@ Rules:
 
 Purpose:
 
-- notify the remote domain that the host is intentionally ending the active runtime session
+- notify the domain provider that the host is intentionally ending the active runtime session
 
 Rules:
 
 - this is advisory only
 - failure to receive `shutdown` must not corrupt correctness
-- remote domains must not depend on shutdown to flush canonical state, because canonical state is host-owned
+- domain providers must not depend on shutdown to flush canonical state, because canonical state is host-owned
 
 ## Opaque Domain State
 
 Opaque domain state is the heart of this protocol.
 
 The host stores it.
-The remote domain defines it.
+The domain provider defines it.
 Nobody else gets to reinterpret it.
 
 Rules:
 
-- `state.data` and `nextState.data` are JSON objects owned entirely by the remote domain
+- `state.data` and `nextState.data` are JSON objects owned entirely by the domain provider
 - the host persists the blob without semantic merging
 - the host may log size, schema version, and checksum, but not parse domain semantics out of it
-- the remote domain should include its own schema/version discipline inside `schemaVersion`
-- remote domains should keep the blob bounded; v1 target budget is `<= 256 KiB` per agent unless explicitly justified
+- the domain provider should include its own schema/version discipline inside `schemaVersion`
+- domain providers should keep the blob bounded; v1 target budget is `<= 256 KiB` per agent unless explicitly justified
 
 If a domain needs more than that routinely, it is probably trying to turn the
 protocol into a hidden persistence backplane. That is the wrong architecture.
@@ -510,8 +498,8 @@ Rules:
 - every mutating request (`prepare`, `execute-work`) must carry `idempotencyKey`
 - retries of the same logical operation must reuse the same `idempotencyKey`
 - a retried request with the same `idempotencyKey` must use the same request body
-- the remote domain must treat repeated delivery of the same mutating request as safe
-- the remote domain must not require its own durable idempotency store for correctness
+- the domain provider must treat repeated delivery of the same mutating request as safe
+- the domain provider must not require its own durable idempotency store for correctness
 
 Opportunity-worker execution adds stronger transport/effect guarantees through
 an explicit out-of-band profile. Those guarantees do not change baseline v1
@@ -521,7 +509,7 @@ conformance. See
 For `execute-work`, a mutating due-work item carries a stable `workId`. The host
 keeps that `workId` stable across retries of the same business command, even
 when a later worker attempt uses a new request body and transport
-`idempotencyKey`. The remote domain must consult the supplied canonical state
+`idempotencyKey`. The domain provider must consult the supplied canonical state
 and return an idempotent replay result when that `workId` has already been
 applied. That replay must not append another business mutation or emit a second
 effect-applied evidence event.
@@ -550,7 +538,7 @@ function over:
 
 The host commits `nextState` only after a successful response. If that commit is
 followed by a worker crash, the next attempt receives the committed canonical
-state and can suppress the stable `workId` without turning the remote domain
+state and can suppress the stable `workId` without turning the domain provider
 into another database coordinator.
 
 Each business transition must be atomic inside the response. Validate and stage
@@ -574,8 +562,8 @@ The host is the authority on request deadlines.
 Rules:
 
 - every request carries `deadlineEpochMs`
-- the remote domain must stop work once the deadline is no longer satisfiable
-- the remote domain must not continue background mutation after the deadline
+- the domain provider must stop work once the deadline is no longer satisfiable
+- the domain provider must not continue background mutation after the deadline
 - the host treats local transport timeout as an unknown outcome and may retry
   that same immutable request with the same body and `idempotencyKey`; a new
   worker attempt builds a new request and transport key
@@ -589,7 +577,7 @@ Recommended initial host budgets:
 - `shutdown`: `2s`
 
 Those are starting points, not sacred numbers. But they force the right design
-pressure: remote domains must be synchronous and bounded.
+pressure: domain providers must be synchronous and bounded.
 
 ## Error Contract
 
@@ -623,7 +611,7 @@ That means:
 - the host stores the customer/persona due-work queue
 - the host decides when customer/persona work is due
 - the host passes the due customer/persona work set into `execute-work`
-- the remote domain may shape customer schedule projections, but not rely on
+- the domain provider may shape customer schedule projections, but not rely on
   private host schedulers
 
 The protocol therefore carries only generic due-work envelopes, not Java
@@ -644,13 +632,14 @@ simulated time window
      warnings/errors, and next-due hints
 ```
 
-Kafka clock topics remain internal to the platform. A remote domain should never
-need to subscribe to raw platform topics to implement business rules.
+The host advances logical time through durable events and supplies bounded work
+windows through this protocol. A domain provider does not subscribe to a global
+clock or platform tick stream to implement business rules.
 
 ## Read Surface Contract
 
 The host owns public APIs.
-The remote domain owns domain fragments inserted into them.
+The domain provider owns domain fragments inserted into them.
 
 V1 read surfaces therefore follow this rule:
 
@@ -688,7 +677,7 @@ method-for-method RPC mirror.
 | `inspectionSchedule()` | `result.projection.inspectionSchedule` |
 | `runtimeMetadata()` | `result.projection.runtimeMetadata` |
 | `executionPlan()` | host-side runtime binding choice, not remote-owned engine control |
-| `turnHandler()` | remains host-owned in v1; remote domains do not get direct engine hooks through this protocol |
+| `turnHandler()` | remains host-owned in v1; domain providers do not get direct engine hooks through this protocol |
 
 That distinction is deliberate. A remote protocol should preserve stable
 meaning, not fossilize the current Java package structure.
@@ -707,7 +696,7 @@ These are explicitly out of scope:
 
 ## Decision
 
-For v1, the platform will treat a remote domain as a synchronous,
+For v1, the platform will treat a domain provider as a synchronous,
 state-transition and projection service behind a versioned HTTP/JSON protocol.
 
 That is the right constraint.
