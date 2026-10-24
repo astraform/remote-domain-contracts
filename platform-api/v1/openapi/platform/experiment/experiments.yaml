@@ -64,6 +64,24 @@ paths:
             schema:
               $ref: '#/components/schemas/ExperimentCreateRequest'
       responses:
+        '400':
+          description: Malformed JSON rejected before decoding; other business-validation errors retain their existing shapes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
+        '413':
+          description: Request bytes, JSON structure, batch count or serialized record exceeds Experiment admission limits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
+        '415':
+          description: Non-identity request Content-Encoding is unsupported.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
         '200':
           description: Experiment created
           content:
@@ -333,6 +351,24 @@ paths:
             schema:
               $ref: '#/components/schemas/ExperimentRunCreateRequest'
       responses:
+        '400':
+          description: Malformed JSON rejected before decoding; other business-validation errors retain their existing shapes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
+        '413':
+          description: Request bytes, JSON structure, batch count or serialized record exceeds Experiment admission limits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
+        '415':
+          description: Non-identity request Content-Encoding is unsupported.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
         '200':
           description: Experiment run created
           content:
@@ -378,6 +414,24 @@ paths:
             schema:
               $ref: '#/components/schemas/ExperimentRunUpdateRequest'
       responses:
+        '400':
+          description: Malformed JSON rejected before decoding; other business-validation errors retain their existing shapes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
+        '413':
+          description: Request bytes, JSON structure, batch count or serialized record exceeds Experiment admission limits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
+        '415':
+          description: Non-identity request Content-Encoding is unsupported.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
         '200':
           description: Experiment run updated
           content:
@@ -1135,6 +1189,24 @@ paths:
             schema:
               $ref: '#/components/schemas/SimulationRunCreateRequest'
       responses:
+        '400':
+          description: Malformed JSON rejected before decoding; other business-validation errors retain their existing shapes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
+        '413':
+          description: Request bytes, JSON structure, batch count or serialized record exceeds Experiment admission limits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
+        '415':
+          description: Non-identity request Content-Encoding is unsupported.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
         '200':
           description: Simulation run created
           content:
@@ -1180,6 +1252,24 @@ paths:
             schema:
               $ref: '#/components/schemas/SimulationRunUpdateRequest'
       responses:
+        '400':
+          description: Malformed JSON rejected before decoding; other business-validation errors retain their existing shapes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
+        '413':
+          description: Request bytes, JSON structure, batch count or serialized record exceeds Experiment admission limits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
+        '415':
+          description: Non-identity request Content-Encoding is unsupported.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
         '200':
           description: Simulation run updated
           content:
@@ -1207,6 +1297,24 @@ paths:
             schema:
               $ref: '#/components/schemas/SimulationRunAgentBatchRequest'
       responses:
+        '400':
+          description: Malformed JSON rejected before decoding; other business-validation errors retain their existing shapes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
+        '413':
+          description: Request bytes, JSON structure, batch count or serialized record exceeds Experiment admission limits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
+        '415':
+          description: Non-identity request Content-Encoding is unsupported.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
         '200':
           description: Agents accepted
           content:
@@ -1263,6 +1371,24 @@ paths:
             schema:
               $ref: '#/components/schemas/SimulationRunEventBatchRequest'
       responses:
+        '400':
+          description: Malformed JSON rejected before decoding; other business-validation errors retain their existing shapes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
+        '413':
+          description: Request bytes, JSON structure, batch count or serialized record exceeds Experiment admission limits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
+        '415':
+          description: Non-identity request Content-Encoding is unsupported.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
         '200':
           description: Events accepted
           content:
@@ -1290,6 +1416,24 @@ paths:
             schema:
               $ref: '#/components/schemas/SimulationRunCheckpointBatchRequest'
       responses:
+        '400':
+          description: Malformed JSON rejected before decoding; other business-validation errors retain their existing shapes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
+        '413':
+          description: Request bytes, JSON structure, batch count or serialized record exceeds Experiment admission limits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
+        '415':
+          description: Non-identity request Content-Encoding is unsupported.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
         '200':
           description: Checkpoints accepted
           content:
@@ -1417,6 +1561,24 @@ paths:
             schema:
               $ref: '#/components/schemas/ArtifactRegisterRequest'
       responses:
+        '400':
+          description: Malformed JSON rejected before decoding; other business-validation errors retain their existing shapes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
+        '413':
+          description: Request bytes, JSON structure, batch count or serialized record exceeds Experiment admission limits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
+        '415':
+          description: Non-identity request Content-Encoding is unsupported.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
         '200':
           description: Registered artifact
           content:
@@ -1534,6 +1696,24 @@ paths:
             schema:
               $ref: '#/components/schemas/RunEvaluationLinkRequest'
       responses:
+        '400':
+          description: Malformed JSON rejected before decoding; other business-validation errors retain their existing shapes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
+        '413':
+          description: Request bytes, JSON structure, batch count or serialized record exceeds Experiment admission limits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
+        '415':
+          description: Non-identity request Content-Encoding is unsupported.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
         '200':
           description: Updated experiment run
           content:
@@ -1561,6 +1741,24 @@ paths:
             schema:
               $ref: '#/components/schemas/SourceSnapshotRegisterRequest'
       responses:
+        '400':
+          description: Malformed JSON rejected before decoding; other business-validation errors retain their existing shapes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
+        '413':
+          description: Request bytes, JSON structure, batch count or serialized record exceeds Experiment admission limits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
+        '415':
+          description: Non-identity request Content-Encoding is unsupported.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
         '200':
           description: Registered source snapshot
           content:
@@ -1582,6 +1780,24 @@ paths:
             schema:
               $ref: '#/components/schemas/CalibrationObservationCreateRequest'
       responses:
+        '400':
+          description: Malformed JSON rejected before decoding; other business-validation errors retain their existing shapes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
+        '413':
+          description: Request bytes, JSON structure, batch count or serialized record exceeds Experiment admission limits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
+        '415':
+          description: Non-identity request Content-Encoding is unsupported.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
         '200':
           description: Created calibration observation
           content:
@@ -1645,6 +1861,28 @@ components:
         maxLength: 36
         pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
   schemas:
+    ExperimentIngressError:
+      type: object
+      description: >
+        Admission failure before JSON decoding or persistence. Write requests under
+        /api/experiments, /api/experiment-runs, /api/simulation-runs,
+        /api/evaluations and /api/calibration-observations have a default 16 MiB
+        actual-byte limit (EXPERIMENT_INGRESS_MAX_REQUEST_BYTES; range 1..67108864),
+        including descendant routes and unknown/chunked lengths. JSON has depth 64
+        and 100000 tokens. Evidence batches default to 1000 raw records
+        (EXPERIMENT_INGRESS_MAX_BATCH_RECORDS; range 1..10000); each serialized
+        UTF-8 record defaults to 1 MiB (EXPERIMENT_INGRESS_MAX_RECORD_BYTES;
+        range 1..16777216, no larger than the request limit).
+        Complete admission precedes row/file effects; a rejected batch is not
+        partially persisted. Non-identity Content-Encoding is rejected.
+      additionalProperties: false
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          enum: [EXPERIMENT_PAYLOAD_TOO_LARGE, INVALID_EXPERIMENT_REQUEST, EXPERIMENT_CONTENT_ENCODING_UNSUPPORTED]
+        message:
+          type: string
     DomainConnectionCapabilities:
       $ref: './domain-connections.yaml#/components/schemas/DomainConnectionCapabilities'
     DomainConnectionMaterial:
@@ -3302,6 +3540,8 @@ components:
           type: string
         agents:
           type: array
+          maxItems: 10000
+          description: Raw batch count is also subject to the configured admission limit (default 1000); serialized record and aggregate byte limits apply before persistence.
           items:
             type: object
             additionalProperties: true
@@ -3310,6 +3550,8 @@ components:
       properties:
         events:
           type: array
+          maxItems: 10000
+          description: Raw batch count is also subject to the configured admission limit (default 1000); serialized record and aggregate byte limits apply before persistence.
           items:
             $ref: '#/components/schemas/SimulationRunEvent'
     SimulationRunCheckpointBatchRequest:
@@ -3317,6 +3559,8 @@ components:
       properties:
         checkpoints:
           type: array
+          maxItems: 10000
+          description: Raw batch count is also subject to the configured admission limit (default 1000); serialized record and aggregate byte limits apply before persistence.
           items:
             $ref: '#/components/schemas/SimulationRunCheckpoint'
     SimulationRunEvent:

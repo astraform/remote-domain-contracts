@@ -90,6 +90,24 @@ paths:
             schema:
               $ref: '#/components/schemas/EvaluateRunRequest'
       responses:
+        '400':
+          description: Malformed JSON rejected before decoding; other business-validation errors retain their existing shapes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
+        '413':
+          description: Request bytes, JSON structure, batch count or serialized record exceeds Experiment admission limits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
+        '415':
+          description: Non-identity request Content-Encoding is unsupported.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
         '200':
           description: Evaluation report
           content:
@@ -133,6 +151,24 @@ paths:
             schema:
               $ref: '#/components/schemas/CompareInlineRequest'
       responses:
+        '400':
+          description: Malformed JSON rejected before decoding; other business-validation errors retain their existing shapes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
+        '413':
+          description: Request bytes, JSON structure, batch count or serialized record exceeds Experiment admission limits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
+        '415':
+          description: Non-identity request Content-Encoding is unsupported.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentIngressError'
         '200':
           description: Regression comparison
           content:
@@ -154,6 +190,28 @@ paths:
                 $ref: '#/components/schemas/RegressionPolicy'
 components:
   schemas:
+    ExperimentIngressError:
+      type: object
+      description: >
+        Admission failure before JSON decoding or persistence. Write requests under
+        /api/experiments, /api/experiment-runs, /api/simulation-runs,
+        /api/evaluations and /api/calibration-observations have a default 16 MiB
+        actual-byte limit (EXPERIMENT_INGRESS_MAX_REQUEST_BYTES; range 1..67108864),
+        including descendant routes and unknown/chunked lengths. JSON has depth 64
+        and 100000 tokens. Evidence batches default to 1000 raw records
+        (EXPERIMENT_INGRESS_MAX_BATCH_RECORDS; range 1..10000); each serialized
+        UTF-8 record defaults to 1 MiB (EXPERIMENT_INGRESS_MAX_RECORD_BYTES;
+        range 1..16777216, no larger than the request limit).
+        Complete admission precedes row/file effects; a rejected batch is not
+        partially persisted. Non-identity Content-Encoding is rejected.
+      additionalProperties: false
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          enum: [EXPERIMENT_PAYLOAD_TOO_LARGE, INVALID_EXPERIMENT_REQUEST, EXPERIMENT_CONTENT_ENCODING_UNSUPPORTED]
+        message:
+          type: string
     EvaluateRunRequest:
       type: object
       properties:
